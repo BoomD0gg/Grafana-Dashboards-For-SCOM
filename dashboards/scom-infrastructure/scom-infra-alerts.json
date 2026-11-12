@@ -1,0 +1,425 @@
+{
+  "refresh": "1m",
+  "time": {
+    "to": "now",
+    "from": "now-24h"
+  },
+  "version": 1,
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "table",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "SELECT TOP 20\n  a.AlertName AS Alert,\n  COUNT(*) AS Raised,\n  SUM(CASE WHEN a.Severity = 2 THEN 1 ELSE 0 END) AS Critical,\n  SUM(CASE WHEN a.Severity = 1 THEN 1 ELSE 0 END) AS Warning,\n  COUNT(DISTINCT a.ManagedEntityRowId) AS \"Distinct sources\",\n  SUM(a.RepeatCount) AS \"Total repeats\",\n  MAX(a.RaisedDateTime) AS \"Last raised (UTC)\"\nFROM Alert.vAlert a\nWHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()\nGROUP BY a.AlertName\nORDER BY COUNT(*) DESC",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "format": "table",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto",
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "options": "Raised",
+              "id": "byName"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#FF9830",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "h": 10,
+        "w": 14
+      },
+      "description": "Alert names raised most often. Tune or override the top entries first.",
+      "id": 1,
+      "title": "Noisiest alerts in range"
+    },
+    {
+      "type": "timeseries",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "SELECT\n  DATEADD(hour, DATEDIFF(hour, 0, a.RaisedDateTime), 0) AS time,\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS metric,\n  COUNT(*) AS value\nFROM Alert.vAlert a\nWHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()\nGROUP BY DATEADD(hour, DATEDIFF(hour, 0, a.RaisedDateTime), 0), a.Severity\nORDER BY 1",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "format": "time_series",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": 3900000
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none",
+          "min": 0,
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 0,
+        "h": 10,
+        "w": 10
+      },
+      "description": "",
+      "id": 2,
+      "title": "Alerts raised per hour"
+    },
+    {
+      "type": "table",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.SystemCenter.%'\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "format": "table",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto",
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "options": "Severity",
+              "id": "byName"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "options": "Alert",
+              "id": "byName"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Open alert details",
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "options": "AlertId",
+              "id": "byName"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "h": 8,
+        "w": 24
+      },
+      "description": "",
+      "id": 3,
+      "title": "Open SCOM infrastructure alerts"
+    },
+    {
+      "type": "timeseries",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'ManagementGroupAlerts' AND r.CounterName = 'AlertsCount'\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n  UNION ALL\n  SELECT p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'ManagementGroupAlerts' AND r.CounterName = 'AlertsCount'\n  GROUP BY p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n) x ORDER BY time",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "format": "time_series",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": 3900000
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none",
+          "min": 0,
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "h": 7,
+        "w": 24
+      },
+      "description": "",
+      "id": 4,
+      "title": "Open alerts in the management group"
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "multi": true,
+        "type": "query",
+        "current": {},
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthService'\nORDER BY 1",
+        "options": [],
+        "name": "agent",
+        "label": "Agent / management server",
+        "sort": 1,
+        "refresh": 2,
+        "includeAll": true,
+        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthService'\nORDER BY 1"
+      }
+    ]
+  },
+  "editable": true,
+  "uid": "scom-infra-alerts",
+  "description": "Which alerts fire most, how alert volume changes, and what SCOM infrastructure alerts are open.",
+  "graphTooltip": 1,
+  "tags": [
+    "scom",
+    "scom-pack",
+    "scom-infrastructure",
+    "pack:scom-infrastructure"
+  ],
+  "title": "SCOM Infrastructure - Alert Noise",
+  "links": [
+    {
+      "keepTime": true,
+      "tags": [
+        "scom-core"
+      ],
+      "type": "dashboards",
+      "title": "SCOM Platform",
+      "asDropdown": true,
+      "includeVars": true
+    },
+    {
+      "keepTime": true,
+      "tags": [
+        "scom-pack"
+      ],
+      "type": "dashboards",
+      "title": "Technology packs",
+      "asDropdown": true,
+      "includeVars": false
+    }
+  ],
+  "schemaVersion": 39,
+  "annotations": {
+    "list": []
+  }
+}

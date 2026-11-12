@@ -1,0 +1,1171 @@
+{
+  "refresh": "1m",
+  "links": [
+    {
+      "includeVars": true,
+      "asDropdown": true,
+      "title": "SCOM Platform",
+      "tags": [
+        "scom-core"
+      ],
+      "type": "dashboards",
+      "keepTime": true
+    },
+    {
+      "includeVars": false,
+      "asDropdown": true,
+      "title": "Technology packs",
+      "tags": [
+        "scom-pack"
+      ],
+      "type": "dashboards",
+      "keepTime": true
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "uid": "scom-fs-overview",
+  "description": "File Services server health, SMB services, alerts and collected counters from the SCOM File Services management pack.",
+  "panels": [
+    {
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ],
+            "mode": "absolute"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "Computers with the File Services Server role monitored by SCOM.",
+      "id": 1,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"File Services servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.FileServ%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${fshost:singlequote})) AS \"Open File Services alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^File Services servers$/"
+        },
+        "colorMode": "background_solid",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "y": 0,
+        "h": 4,
+        "x": 0,
+        "w": 4
+      },
+      "title": "File Services servers"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "#56A64B",
+                "value": null
+              },
+              {
+                "color": "#E02F44",
+                "value": 1
+              }
+            ],
+            "mode": "absolute"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "Servers whose File Services role is Warning or Critical.",
+      "id": 2,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"File Services servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.FileServ%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${fshost:singlequote})) AS \"Open File Services alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Servers not healthy$/"
+        },
+        "colorMode": "background_solid",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "y": 0,
+        "h": 4,
+        "x": 4,
+        "w": 4
+      },
+      "title": "Servers not healthy"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ],
+            "mode": "absolute"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "SMB services discovered on the selected servers.",
+      "id": 3,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"File Services servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.FileServ%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${fshost:singlequote})) AS \"Open File Services alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^SMB services$/"
+        },
+        "colorMode": "background_solid",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "y": 0,
+        "h": 4,
+        "x": 8,
+        "w": 4
+      },
+      "title": "SMB services"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "#56A64B",
+                "value": null
+              },
+              {
+                "color": "#E02F44",
+                "value": 1
+              }
+            ],
+            "mode": "absolute"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "SMB services in Warning or Critical state.",
+      "id": 4,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"File Services servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.FileServ%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${fshost:singlequote})) AS \"Open File Services alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^SMB services not healthy$/"
+        },
+        "colorMode": "background_solid",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "y": 0,
+        "h": 4,
+        "x": 12,
+        "w": 4
+      },
+      "title": "SMB services not healthy"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "#56A64B",
+                "value": null
+              },
+              {
+                "color": "#FF9830",
+                "value": 1
+              }
+            ],
+            "mode": "absolute"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "Open alerts raised by File Services objects on the selected servers.",
+      "id": 5,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"File Services servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.FileServ%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${fshost:singlequote})) AS \"Open File Services alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Open File Services alerts$/"
+        },
+        "colorMode": "background_solid",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "y": 0,
+        "h": 4,
+        "x": 16,
+        "w": 8
+      },
+      "title": "Open File Services alerts"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-fs-server/file-services-server-detail?var-fshost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "options": {
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "options": "Health",
+              "id": "byName"
+            }
+          }
+        ]
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "Role health with SMB service counts.",
+      "id": 6,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 200\n  g.Path AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path AND v.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')) AS \"SMB services not healthy\",\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IN (${fshost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.10.0.FileServer')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.Path",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "table",
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "y": 4,
+        "h": 8,
+        "x": 0,
+        "w": 12
+      },
+      "title": "File Services servers (click a server for detail)"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-fs-server/file-services-server-detail?var-fshost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "options": {
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "options": "Health",
+              "id": "byName"
+            }
+          }
+        ]
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "Health of each SMB service, worst first.",
+      "id": 7,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'SMB service ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"SMB service\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "table",
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "y": 4,
+        "h": 8,
+        "x": 12,
+        "w": 12
+      },
+      "title": "SMB services"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-fs-server/file-services-server-detail?var-fshost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "options": {
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "options": "Health",
+              "id": "byName"
+            }
+          }
+        ]
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "Warning / Critical monitors on File Services objects.",
+      "id": 8,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0 AND e.FullName LIKE 'Microsoft.Windows.FileServ%'\n  AND LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) IN (${fshost:singlequote})\nORDER BY 1 DESC, 5 DESC",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "table",
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "y": 12,
+        "h": 8,
+        "x": 0,
+        "w": 12
+      },
+      "title": "Unhealthy File Services monitors"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "links": [],
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "options": {
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "options": "Severity",
+              "id": "byName"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "title": "Open alert details",
+                    "targetBlank": false,
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
+                  }
+                ],
+                "id": "links"
+              }
+            ],
+            "matcher": {
+              "options": "Alert",
+              "id": "byName"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": true,
+                "id": "custom.hidden"
+              }
+            ],
+            "matcher": {
+              "options": "AlertId",
+              "id": "byName"
+            }
+          }
+        ]
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "Open alerts raised in the selected time range.",
+      "id": 9,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.FileServ%'\n  AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${fshost:singlequote})\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "table",
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "y": 12,
+        "h": 8,
+        "x": 12,
+        "w": 12
+      },
+      "title": "Active File Services alerts"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-fs-server/file-services-server-detail?var-fshost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "description": "Newest sample of every counter collected for File Services objects (24 h).",
+      "id": 10,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS host,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0' THEN REPLACE(REPLACE(e.DisplayName, 'SMB service ', ''), ' on ' + h.DisplayName, '') ELSE '(server)' END AS scope,\n         r.ObjectName AS o, r.CounterName AS c, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.ManagedEntityRowId, r.RuleRowId, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServ%'\n    AND p.DateTime > DATEADD(hour, -24, GETUTCDATE())\n    AND h.DisplayName IN (${fshost:singlequote})\n)\nSELECT TOP 500 host AS Host, scope AS Scope, o AS Object, c AS Counter, v AS Value, t AS \"Sampled (UTC)\"\nFROM x WHERE rn = 1 ORDER BY host, scope, o, c",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "table",
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "y": 20,
+        "h": 8,
+        "x": 0,
+        "w": 24
+      },
+      "title": "Latest performance samples"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-fs-server/file-services-server-detail?var-fshost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "options": {
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "options": "Health",
+              "id": "byName"
+            }
+          }
+        ]
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "description": "Health of each DFS replicated folder.",
+      "id": 11,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Replicated folder ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Replicated folder\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${fshost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.FileServer.DFSR.ReplicatedFolder')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "table"
+        }
+      ],
+      "type": "table",
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "y": 28,
+        "h": 8,
+        "x": 0,
+        "w": 12
+      },
+      "title": "DFS replicated folders"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "No data in range",
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "spanNulls": 3900000
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "description": "Staging, conflict and deleted space in use by DFS Replication, per server.",
+      "id": 12,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         REPLACE(r.CounterName, ' In Use', '') + ' (' + h.DisplayName + ')' AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServ%'\n    AND r.ObjectName = 'DFS Replicated Folders' AND r.CounterName IN ('Staging Space In Use', 'Conflict Space In Use', 'Deleted Space In Use')\n    AND h.DisplayName IN (${fshost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         REPLACE(r.CounterName, ' In Use', '') + ' (' + h.DisplayName + ')',\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServ%'\n    AND r.ObjectName = 'DFS Replicated Folders' AND r.CounterName IN ('Staging Space In Use', 'Conflict Space In Use', 'Deleted Space In Use')\n    AND h.DisplayName IN (${fshost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "time_series"
+        }
+      ],
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "y": 28,
+        "h": 8,
+        "x": 12,
+        "w": 12
+      },
+      "title": "DFS Replication space in use"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "No data in range",
+          "custom": {
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "spanNulls": 3900000
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "description": "Any counter SCOM collects for File Services objects. Choose it in the Counter drop-down.",
+      "id": 13,
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0' THEN REPLACE(REPLACE(e.DisplayName, 'SMB service ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServ%'\n    AND r.ObjectName + '|' + r.CounterName = '${fscounter}'\n    AND h.DisplayName IN (${fshost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServices.Service.SMB.10.0' THEN REPLACE(REPLACE(e.DisplayName, 'SMB service ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServ%'\n    AND r.ObjectName + '|' + r.CounterName = '${fscounter}'\n    AND h.DisplayName IN (${fshost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "format": "time_series"
+        }
+      ],
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "y": 36,
+        "h": 8,
+        "x": 0,
+        "w": 24
+      },
+      "title": "Selected File Services counter (choose in the Counter drop-down)"
+    }
+  ],
+  "schemaVersion": 39,
+  "title": "File Services - Overview",
+  "version": 1,
+  "tags": [
+    "scom",
+    "scom-pack",
+    "file-services",
+    "pack:file-services"
+  ],
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "options": [],
+        "type": "query",
+        "refresh": 2,
+        "current": {},
+        "datasource": {
+          "uid": "${ds_dw}",
+          "type": "mssql"
+        },
+        "definition": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServices.10.0.FileServer'\nORDER BY 1",
+        "includeAll": true,
+        "query": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServices.10.0.FileServer'\nORDER BY 1",
+        "label": "File Services server",
+        "multi": true,
+        "sort": 1,
+        "name": "fshost"
+      },
+      {
+        "options": [],
+        "type": "query",
+        "refresh": 2,
+        "current": {},
+        "datasource": {
+          "uid": "${ds_dw}",
+          "type": "mssql"
+        },
+        "definition": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServ%'\nORDER BY 1",
+        "includeAll": false,
+        "query": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.FileServ%'\nORDER BY 1",
+        "label": "Counter",
+        "multi": false,
+        "sort": 1,
+        "name": "fscounter"
+      }
+    ]
+  },
+  "graphTooltip": 1,
+  "timezone": "browser",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  }
+}

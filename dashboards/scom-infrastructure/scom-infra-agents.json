@@ -1,0 +1,610 @@
+{
+  "refresh": "1m",
+  "time": {
+    "to": "now",
+    "from": "now-24h"
+  },
+  "version": 1,
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "table",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "WITH m0 AS (\n  SELECT m.*, CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM m0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT TOP 1000\n  m.DisplayName AS Agent,\n  CASE WHEN m.IsManagementServer = 1 THEN 'Management server' ELSE 'Agent' END AS Role,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  m.Version AS Version,\n  CASE WHEN m.IsManagementServer = 1 OR m.vnum >= topv.v THEN 'Current' ELSE 'Older than management server' END AS \"Version status\",\n  CASE WHEN m.IsManagementServer = 1 THEN 'n/a' WHEN m.ProxyingEnabled = 1 THEN 'Enabled' ELSE 'Disabled' END AS Proxy,\n  CASE WHEN m.IsManagementServer = 1 THEN 'n/a' WHEN m.IsManuallyInstalled = 1 THEN 'Manual' ELSE 'Console push' END AS \"Install method\",\n  m.InstallTime AS Installed\nFROM m0 m CROSS JOIN topv\nJOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = m.DisplayName\nWHERE m.rn = 1 AND m.DisplayName IN (${agent:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, m.DisplayName",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "format": "table",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto",
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "options": "Health",
+              "id": "byName"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "options": "Version status",
+              "id": "byName"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Current": {
+                        "color": "#56A64B",
+                        "index": 1
+                      },
+                      "Older than management server": {
+                        "color": "#FF9830",
+                        "index": 0
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "options": "Proxy",
+              "id": "byName"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Disabled": {
+                        "color": "#FF9830",
+                        "index": 0
+                      },
+                      "Enabled": {
+                        "color": "#56A64B",
+                        "index": 1
+                      },
+                      "n/a": {
+                        "color": "#8E8E93",
+                        "index": 2
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "h": 10,
+        "w": 24
+      },
+      "description": "Every health service with health, build, version drift, proxy state and how it was installed.",
+      "id": 1,
+      "title": "Agent inventory"
+    },
+    {
+      "type": "table",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "SELECT TOP 500\n  e.DisplayName AS Agent,\n  o.StartDateTime AS \"Start (UTC)\",\n  o.EndDateTime AS \"End (UTC)\",\n  DATEDIFF(minute, o.StartDateTime, COALESCE(o.EndDateTime, GETUTCDATE())) AS \"Minutes\",\n  o.ReasonCode AS \"Reason code\"\nFROM dbo.vHealthServiceOutage o\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = o.ManagedEntityRowId\nWHERE o.StartDateTime <= $__timeTo() AND COALESCE(o.EndDateTime, GETUTCDATE()) >= $__timeFrom()\n  AND e.DisplayName IN (${agent:singlequote})\nORDER BY o.StartDateTime DESC",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "format": "table",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto",
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "options": "Minutes",
+              "id": "byName"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "m"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "steps": [
+                    {
+                      "color": "#56A64B",
+                      "value": null
+                    },
+                    {
+                      "color": "#FF9830",
+                      "value": 5
+                    },
+                    {
+                      "color": "#E02F44",
+                      "value": 30
+                    }
+                  ],
+                  "mode": "absolute"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "h": 7,
+        "w": 24
+      },
+      "description": "",
+      "id": 2,
+      "title": "Agent outages in range"
+    },
+    {
+      "type": "timeseries",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Health Service' AND r.CounterName = 'agent processor utilization'\n    AND e.DisplayName IN (${agent:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Health Service' AND r.CounterName = 'agent processor utilization'\n    AND e.DisplayName IN (${agent:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "format": "time_series",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": 3900000
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "percent",
+          "min": 0,
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "h": 7,
+        "w": 12
+      },
+      "description": "",
+      "id": 3,
+      "title": "Agent processor utilization (%)"
+    },
+    {
+      "type": "timeseries",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Health Service Management Groups' AND r.CounterName = 'Send Queue % Used'\n    AND e.DisplayName IN (${agent:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Health Service Management Groups' AND r.CounterName = 'Send Queue % Used'\n    AND e.DisplayName IN (${agent:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "format": "time_series",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": 3900000
+          },
+          "noValue": "No data in range",
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 17,
+        "h": 7,
+        "w": 12
+      },
+      "description": "",
+      "id": 4,
+      "title": "Send queue - % used"
+    },
+    {
+      "type": "timeseries",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Health Service' AND r.CounterName = 'Workflow Count'\n    AND e.DisplayName IN (${agent:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Health Service' AND r.CounterName = 'Workflow Count'\n    AND e.DisplayName IN (${agent:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "format": "time_series",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": 3900000
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none",
+          "min": 0,
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "h": 7,
+        "w": 12
+      },
+      "description": "",
+      "id": 5,
+      "title": "Workflows running"
+    },
+    {
+      "type": "timeseries",
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Health Service' AND r.CounterName = 'Module Count'\n    AND e.DisplayName IN (${agent:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Health Service' AND r.CounterName = 'Module Count'\n    AND e.DisplayName IN (${agent:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "format": "time_series",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": 3900000
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none",
+          "min": 0,
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "h": 7,
+        "w": 12
+      },
+      "description": "",
+      "id": 6,
+      "title": "Modules loaded"
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "multi": true,
+        "type": "query",
+        "current": {},
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthService'\nORDER BY 1",
+        "options": [],
+        "name": "agent",
+        "label": "Agent / management server",
+        "sort": 1,
+        "refresh": 2,
+        "includeAll": true,
+        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthService'\nORDER BY 1"
+      }
+    ]
+  },
+  "editable": true,
+  "uid": "scom-infra-agents",
+  "description": "Agent inventory, version drift, proxy state, outages and health-service performance.",
+  "graphTooltip": 1,
+  "tags": [
+    "scom",
+    "scom-pack",
+    "scom-infrastructure",
+    "pack:scom-infrastructure"
+  ],
+  "title": "SCOM Infrastructure - Agents",
+  "links": [
+    {
+      "keepTime": true,
+      "tags": [
+        "scom-core"
+      ],
+      "type": "dashboards",
+      "title": "SCOM Platform",
+      "asDropdown": true,
+      "includeVars": true
+    },
+    {
+      "keepTime": true,
+      "tags": [
+        "scom-pack"
+      ],
+      "type": "dashboards",
+      "title": "Technology packs",
+      "asDropdown": true,
+      "includeVars": false
+    }
+  ],
+  "schemaVersion": 39,
+  "annotations": {
+    "list": []
+  }
+}

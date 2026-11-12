@@ -1,0 +1,11 @@
+SCOM Grafana Packs
+Copyright 2026 SCOM Grafana Packs contributors
+
+This product contains dashboards and SQL queries that read data from Microsoft System Center
+Operations Manager (SCOM) databases. It contains no Microsoft code, management packs or data.
+"System Center", "Operations Manager", "Windows Server", "Exchange" and "SQL Server" are trademarks
+of Microsoft Corporation. "Grafana" is a trademark of Grafana Labs. This project is not affiliated
+with or endorsed by either company.
+
+The management packs that the technology packs depend on are Microsoft products. They are NOT
+included; download them from Microsoft and review their own licence terms.

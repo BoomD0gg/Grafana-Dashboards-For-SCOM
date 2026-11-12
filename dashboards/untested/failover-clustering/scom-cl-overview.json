@@ -1,0 +1,1004 @@
+{
+  "version": 1,
+  "timezone": "browser",
+  "graphTooltip": 1,
+  "tags": [
+    "scom",
+    "scom-pack",
+    "failover-clustering",
+    "pack:failover-clustering",
+    "untested"
+  ],
+  "panels": [
+    {
+      "type": "stat",
+      "description": "Computers with the Failover Clustering Server role monitored by SCOM.",
+      "id": 1,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "fields": "/^Failover Clustering servers$/",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "colorMode": "background_solid",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Failover Clustering servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.Cluster%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))) AS \"Open Failover Clustering alerts\"",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "x": 0,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#5794F2"
+              }
+            ],
+            "mode": "absolute"
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "title": "Failover Clustering servers"
+    },
+    {
+      "type": "stat",
+      "description": "Servers whose Failover Clustering role is Warning or Critical.",
+      "id": 2,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "fields": "/^Servers not healthy$/",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "colorMode": "background_solid",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Failover Clustering servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.Cluster%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))) AS \"Open Failover Clustering alerts\"",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "x": 4,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#E02F44"
+              }
+            ],
+            "mode": "absolute"
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "title": "Servers not healthy"
+    },
+    {
+      "type": "stat",
+      "description": "Cluster groups discovered on the selected servers.",
+      "id": 3,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "fields": "/^Cluster groups$/",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "colorMode": "background_solid",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Failover Clustering servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.Cluster%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))) AS \"Open Failover Clustering alerts\"",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "x": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#5794F2"
+              }
+            ],
+            "mode": "absolute"
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "title": "Cluster groups"
+    },
+    {
+      "type": "stat",
+      "description": "Cluster groups in Warning or Critical state.",
+      "id": 4,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "fields": "/^Cluster groups not healthy$/",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "colorMode": "background_solid",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Failover Clustering servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.Cluster%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))) AS \"Open Failover Clustering alerts\"",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "x": 12,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#E02F44"
+              }
+            ],
+            "mode": "absolute"
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "title": "Cluster groups not healthy"
+    },
+    {
+      "type": "stat",
+      "description": "Open alerts raised by Failover Clustering objects on the selected servers.",
+      "id": 5,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "fields": "/^Open Failover Clustering alerts$/",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "colorMode": "background_solid",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Failover Clustering servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ',')) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.Cluster%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))) AS \"Open Failover Clustering alerts\"",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 0,
+        "w": 8,
+        "x": 16,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#FF9830"
+              }
+            ],
+            "mode": "absolute"
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "title": "Open Failover Clustering alerts"
+    },
+    {
+      "type": "table",
+      "description": "Role health with Cluster group counts.",
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT TOP 200\n  g.Path AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path AND v.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')) AS \"Cluster groups not healthy\",\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.NodeRole')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.Path",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 4,
+        "w": 12,
+        "x": 0,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "targetBlank": false,
+              "url": "/d/scom-cl-server/failover-clustering-server-detail?var-clhost=${__data.fields.Host}&${__url_time_range}",
+              "title": "Open server detail"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "title": "Failover Clustering servers (click a server for detail)"
+    },
+    {
+      "type": "table",
+      "description": "Health of each Cluster group, worst first.",
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Cluster group ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Cluster group\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.Cluster.Group')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 4,
+        "w": 12,
+        "x": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "targetBlank": false,
+              "url": "/d/scom-cl-server/failover-clustering-server-detail?var-clhost=${__data.fields.Host}&${__url_time_range}",
+              "title": "Open server detail"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "title": "Cluster groups"
+    },
+    {
+      "type": "table",
+      "description": "Warning / Critical monitors on Failover Clustering objects.",
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0 AND e.FullName LIKE 'Microsoft.Windows.Cluster%'\n  AND LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\nORDER BY 1 DESC, 5 DESC",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 12,
+        "w": 12,
+        "x": 0,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "targetBlank": false,
+              "url": "/d/scom-cl-server/failover-clustering-server-detail?var-clhost=${__data.fields.Host}&${__url_time_range}",
+              "title": "Open server detail"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "title": "Unhealthy Failover Clustering monitors"
+    },
+    {
+      "type": "table",
+      "description": "Open alerts raised in the selected time range.",
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.Cluster%'\n  AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 12,
+        "w": 12,
+        "x": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [],
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}",
+                    "title": "Open alert details"
+                  }
+                ]
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "AlertId"
+            }
+          }
+        ]
+      },
+      "title": "Active Failover Clustering alerts"
+    },
+    {
+      "type": "table",
+      "description": "Newest sample of every counter collected for Failover Clustering objects (24 h).",
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "targets": [
+        {
+          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS host,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster.Group' THEN REPLACE(REPLACE(e.DisplayName, 'Cluster group ', ''), ' on ' + h.DisplayName, '') ELSE '(server)' END AS scope,\n         r.ObjectName AS o, r.CounterName AS c, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.ManagedEntityRowId, r.RuleRowId, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster%'\n    AND p.DateTime > DATEADD(hour, -24, GETUTCDATE())\n    AND h.DisplayName IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n)\nSELECT TOP 500 host AS Host, scope AS Scope, o AS Object, c AS Counter, v AS Value, t AS \"Sampled (UTC)\"\nFROM x WHERE rn = 1 ORDER BY host, scope, o, c",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 20,
+        "w": 24,
+        "x": 0,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "targetBlank": false,
+              "url": "/d/scom-cl-server/failover-clustering-server-detail?var-clhost=${__data.fields.Host}&${__url_time_range}",
+              "title": "Open server detail"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "title": "Latest performance samples"
+    },
+    {
+      "type": "timeseries",
+      "description": "Any counter SCOM collects for Failover Clustering objects. Choose it in the Counter drop-down.",
+      "id": 11,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster.Group' THEN REPLACE(REPLACE(e.DisplayName, 'Cluster group ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster%'\n    AND r.ObjectName + '|' + r.CounterName = '${clcounter}'\n    AND h.DisplayName IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster.Group' THEN REPLACE(REPLACE(e.DisplayName, 'Cluster group ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster%'\n    AND r.ObjectName + '|' + r.CounterName = '${clcounter}'\n    AND h.DisplayName IN (SELECT value FROM STRING_SPLIT('${clhost:csv}', ','))\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+          "editorMode": "code",
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true
+        }
+      ],
+      "gridPos": {
+        "y": 20,
+        "w": 24,
+        "x": 0,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data in range",
+          "custom": {
+            "fillOpacity": 8,
+            "spanNulls": 3900000,
+            "showPoints": "never",
+            "lineWidth": 2
+          },
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "title": "Selected Failover Clustering counter (choose in the Counter drop-down)"
+    }
+  ],
+  "schemaVersion": 39,
+  "annotations": {
+    "list": []
+  },
+  "description": "Failover Clustering server health, cluster groups, alerts and collected counters from the SCOM Failover Clustering management pack.",
+  "editable": true,
+  "title": "Failover Clustering - Overview (UNTESTED)",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "links": [
+    {
+      "keepTime": true,
+      "includeVars": true,
+      "tags": [
+        "scom-core"
+      ],
+      "title": "SCOM Platform",
+      "asDropdown": true,
+      "type": "dashboards"
+    },
+    {
+      "keepTime": true,
+      "includeVars": false,
+      "tags": [
+        "scom-pack"
+      ],
+      "title": "Technology packs",
+      "asDropdown": true,
+      "type": "dashboards"
+    }
+  ],
+  "uid": "scom-cl-overview",
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "query",
+        "refresh": 2,
+        "current": {},
+        "sort": 1,
+        "definition": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster.NodeRole'\nORDER BY 1",
+        "name": "clhost",
+        "options": [],
+        "includeAll": true,
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "multi": true,
+        "label": "Failover Clustering server",
+        "query": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster.NodeRole'\nORDER BY 1"
+      },
+      {
+        "type": "query",
+        "refresh": 2,
+        "current": {},
+        "sort": 1,
+        "definition": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster%'\nORDER BY 1",
+        "name": "clcounter",
+        "options": [],
+        "includeAll": false,
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "multi": false,
+        "label": "Counter",
+        "query": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.Cluster%'\nORDER BY 1"
+      }
+    ]
+  },
+  "refresh": "1m"
+}

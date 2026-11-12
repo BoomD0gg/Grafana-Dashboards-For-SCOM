@@ -1,0 +1,1059 @@
+{
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "includeAll": true,
+        "multi": true,
+        "name": "hvhost",
+        "refresh": 2,
+        "definition": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.HyperV.ServerRole'\nORDER BY 1",
+        "query": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.HyperV.ServerRole'\nORDER BY 1",
+        "datasource": {
+          "uid": "${ds_dw}",
+          "type": "mssql"
+        },
+        "label": "Hyper-V host",
+        "current": {},
+        "options": [],
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "includeAll": false,
+        "multi": false,
+        "name": "hvcounter",
+        "refresh": 2,
+        "definition": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.HyperV.%'\nORDER BY 1",
+        "query": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.HyperV.%'\nORDER BY 1",
+        "datasource": {
+          "uid": "${ds_dw}",
+          "type": "mssql"
+        },
+        "label": "Counter",
+        "current": {},
+        "options": [],
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "version": 1,
+  "title": "Hyper-V - Overview",
+  "links": [
+    {
+      "type": "dashboards",
+      "tags": [
+        "scom-core"
+      ],
+      "asDropdown": true,
+      "keepTime": true,
+      "includeVars": true,
+      "title": "SCOM Platform"
+    },
+    {
+      "type": "dashboards",
+      "tags": [
+        "scom-pack"
+      ],
+      "asDropdown": true,
+      "keepTime": true,
+      "includeVars": false,
+      "title": "Technology packs"
+    }
+  ],
+  "uid": "scom-hv-overview",
+  "graphTooltip": 1,
+  "timezone": "browser",
+  "annotations": {
+    "list": []
+  },
+  "schemaVersion": 39,
+  "refresh": "1m",
+  "description": "Hyper-V host and virtual machine health, alerts, inventory and collected counters from the SCOM Hyper-V management pack.",
+  "tags": [
+    "scom",
+    "scom-pack",
+    "hyper-v",
+    "pack:hyper-v"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#5794F2"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "description": "Computers with the Hyper-V role monitored by SCOM.",
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "reduceOptions": {
+          "fields": "/^Hosts$/",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "justifyMode": "center",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "x": 0,
+        "y": 0,
+        "w": 4
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole')) AS Hosts,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole') AND g.HealthState IN (2, 3)) AS \"Hosts not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine')) AS \"Virtual machines\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine') AND g.HealthState IN (2, 3)) AS \"VMs not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.HyperV.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${hvhost:singlequote})) AS \"Open Hyper-V alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Hyper-V hosts",
+      "type": "stat"
+    },
+    {
+      "id": 2,
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#E02F44"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "description": "Hosts whose Hyper-V role is Warning or Critical.",
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "reduceOptions": {
+          "fields": "/^Hosts not healthy$/",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "justifyMode": "center",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "x": 4,
+        "y": 0,
+        "w": 4
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole')) AS Hosts,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole') AND g.HealthState IN (2, 3)) AS \"Hosts not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine')) AS \"Virtual machines\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine') AND g.HealthState IN (2, 3)) AS \"VMs not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.HyperV.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${hvhost:singlequote})) AS \"Open Hyper-V alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Hosts not healthy",
+      "type": "stat"
+    },
+    {
+      "id": 3,
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#5794F2"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "description": "Virtual machines discovered on the selected hosts.",
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "reduceOptions": {
+          "fields": "/^Virtual machines$/",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "justifyMode": "center",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "x": 8,
+        "y": 0,
+        "w": 4
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole')) AS Hosts,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole') AND g.HealthState IN (2, 3)) AS \"Hosts not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine')) AS \"Virtual machines\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine') AND g.HealthState IN (2, 3)) AS \"VMs not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.HyperV.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${hvhost:singlequote})) AS \"Open Hyper-V alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Virtual machines",
+      "type": "stat"
+    },
+    {
+      "id": 4,
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#E02F44"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "description": "Virtual machines in Warning or Critical state.",
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "reduceOptions": {
+          "fields": "/^VMs not healthy$/",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "justifyMode": "center",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "x": 12,
+        "y": 0,
+        "w": 4
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole')) AS Hosts,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole') AND g.HealthState IN (2, 3)) AS \"Hosts not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine')) AS \"Virtual machines\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine') AND g.HealthState IN (2, 3)) AS \"VMs not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.HyperV.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${hvhost:singlequote})) AS \"Open Hyper-V alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "VMs not healthy",
+      "type": "stat"
+    },
+    {
+      "id": 5,
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#FF9830"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "description": "Open alerts raised by Hyper-V objects on the selected hosts.",
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "reduceOptions": {
+          "fields": "/^Open Hyper-V alerts$/",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "justifyMode": "center",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "x": 16,
+        "y": 0,
+        "w": 8
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole')) AS Hosts,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole') AND g.HealthState IN (2, 3)) AS \"Hosts not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine')) AS \"Virtual machines\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine') AND g.HealthState IN (2, 3)) AS \"VMs not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.HyperV.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${hvhost:singlequote})) AS \"Open Hyper-V alerts\"",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Open Hyper-V alerts",
+      "type": "stat"
+    },
+    {
+      "id": 6,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "No data",
+          "links": [
+            {
+              "url": "/d/scom-hv-host/hyper-v-host-detail?var-hvhost=${__data.fields.Host}&${__url_time_range}",
+              "title": "Open host detail",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          }
+        ]
+      },
+      "description": "Role health, number of VMs and how many are not healthy.",
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 8,
+        "x": 0,
+        "y": 4,
+        "w": 12
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 200\n  g.Path AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine')) AS \"Virtual machines\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path AND v.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine')) AS \"VMs not healthy\",\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IN (${hvhost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.ServerRole')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.Path",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Hyper-V hosts (click a host for detail)",
+      "type": "table"
+    },
+    {
+      "id": 7,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "No data",
+          "links": [
+            {
+              "url": "/d/scom-hv-host/hyper-v-host-detail?var-hvhost=${__data.fields.Host}&${__url_time_range}",
+              "title": "Open host detail",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          }
+        ]
+      },
+      "description": "Health of each VM, worst first.",
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 8,
+        "x": 12,
+        "y": 4,
+        "w": 12
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 1000\n  g.DisplayName AS VM,\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${hvhost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.HyperV.VirtualMachine')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 2, 1",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Virtual machines",
+      "type": "table"
+    },
+    {
+      "id": 8,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "No data",
+          "links": [
+            {
+              "url": "/d/scom-hv-host/hyper-v-host-detail?var-hvhost=${__data.fields.Host}&${__url_time_range}",
+              "title": "Open host detail",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          }
+        ]
+      },
+      "description": "Warning / Critical monitors: management service, virtual hard disk free space, replication state, GPU.",
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 8,
+        "x": 0,
+        "y": 12,
+        "w": 12
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0 AND e.FullName LIKE 'Microsoft.Windows.HyperV.%'\n  AND LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) IN (${hvhost:singlequote})\nORDER BY 1 DESC, 5 DESC",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Unhealthy Hyper-V monitors",
+      "type": "table"
+    },
+    {
+      "id": 9,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "No data",
+          "links": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}",
+                    "title": "Open alert details",
+                    "targetBlank": false
+                  }
+                ],
+                "id": "links"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AlertId"
+            },
+            "properties": [
+              {
+                "value": true,
+                "id": "custom.hidden"
+              }
+            ]
+          }
+        ]
+      },
+      "description": "Open alerts raised in the selected time range.",
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 8,
+        "x": 12,
+        "y": 12,
+        "w": 12
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.HyperV.%'\n  AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${hvhost:singlequote})\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Active Hyper-V alerts",
+      "type": "table"
+    },
+    {
+      "id": 10,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "No data",
+          "links": [
+            {
+              "url": "/d/scom-hv-host/hyper-v-host-detail?var-hvhost=${__data.fields.Host}&${__url_time_range}",
+              "title": "Open host detail",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "description": "Built from the VM-hosts-hardware relationships SCOM discovered.",
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 8,
+        "x": 0,
+        "y": 20,
+        "w": 12
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 1000\n  h.DisplayName AS Host,\n  vm.DisplayName AS VM,\n  (SELECT COUNT(*) FROM dbo.vRelationship r2 JOIN dbo.vManagedEntity c ON c.ManagedEntityRowId = r2.TargetManagedEntityRowId\n     JOIN dbo.vManagedEntityType ct ON ct.ManagedEntityTypeRowId = c.ManagedEntityTypeRowId\n     WHERE r2.SourceManagedEntityRowId = vm.ManagedEntityRowId AND ct.ManagedEntityTypeSystemName = 'Microsoft.Windows.HyperV.VirtualDrive') AS \"Virtual drives\",\n  (SELECT COUNT(*) FROM dbo.vRelationship r2 JOIN dbo.vManagedEntity c ON c.ManagedEntityRowId = r2.TargetManagedEntityRowId\n     JOIN dbo.vManagedEntityType ct ON ct.ManagedEntityTypeRowId = c.ManagedEntityTypeRowId\n     WHERE r2.SourceManagedEntityRowId = vm.ManagedEntityRowId AND ct.ManagedEntityTypeSystemName = 'Microsoft.Windows.HyperV.VirtualNetworkAdapter') AS \"Network adapters\"\nFROM dbo.vManagedEntity vm\nJOIN dbo.vManagedEntityType vt ON vt.ManagedEntityTypeRowId = vm.ManagedEntityTypeRowId AND vt.ManagedEntityTypeSystemName = 'Microsoft.Windows.HyperV.VirtualMachine'\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = vm.TopLevelHostManagedEntityRowId\nWHERE h.DisplayName IN (${hvhost:singlequote})\nORDER BY h.DisplayName, vm.DisplayName",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "VM inventory (drives and network adapters)",
+      "type": "table"
+    },
+    {
+      "id": 11,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          },
+          "noValue": "No data",
+          "links": [
+            {
+              "url": "/d/scom-hv-host/hyper-v-host-detail?var-hvhost=${__data.fields.Host}&${__url_time_range}",
+              "title": "Open host detail",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "description": "Newest sample of every counter collected for Hyper-V objects (24 h). Empty until the management pack rules have run.",
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "options": {
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 8,
+        "x": 12,
+        "y": 20,
+        "w": 12
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS host, vm.DisplayName AS vmname, r.ObjectName AS o, r.CounterName AS c, i.InstanceName AS inst, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.ManagedEntityRowId, r.RuleRowId, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  LEFT JOIN dbo.vRelationship rel ON rel.TargetManagedEntityRowId = e.ManagedEntityRowId\n       AND rel.RelationshipTypeRowId IN (SELECT RelationshipTypeRowId FROM dbo.vRelationshipType WHERE RelationshipTypeSystemName LIKE 'Microsoft.Windows.HyperV.VirtualMachine.Hosts.%')\n  LEFT JOIN dbo.vManagedEntity vm ON vm.ManagedEntityRowId = rel.SourceManagedEntityRowId\n  WHERE et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.HyperV.%'\n    AND p.DateTime > DATEADD(hour, -24, GETUTCDATE())\n    AND h.DisplayName IN (${hvhost:singlequote})\n)\nSELECT TOP 500 host AS Host, COALESCE(vmname, '(host)') AS VM, o AS Object, c AS Counter, inst AS Instance, v AS Value, t AS \"Sampled (UTC)\"\nFROM x WHERE rn = 1 ORDER BY host, vmname, o, c",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "table"
+        }
+      ],
+      "title": "Latest performance samples",
+      "type": "table"
+    },
+    {
+      "id": 12,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 8,
+            "spanNulls": 3900000,
+            "lineWidth": 2,
+            "showPoints": "never"
+          },
+          "noValue": "No data in range",
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "description": "Any counter SCOM collects for Hyper-V objects. The Hyper-V 2019 management pack collects virtual network throughput and virtual drive used space; samples arrive hourly for drives.",
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom",
+          "displayMode": "table"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "x": 0,
+        "y": 28,
+        "w": 24
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         COALESCE(vm.DisplayName, h.DisplayName) + CASE WHEN i.InstanceName = '' THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  LEFT JOIN dbo.vRelationship rel ON rel.TargetManagedEntityRowId = e.ManagedEntityRowId\n       AND rel.RelationshipTypeRowId IN (SELECT RelationshipTypeRowId FROM dbo.vRelationshipType WHERE RelationshipTypeSystemName LIKE 'Microsoft.Windows.HyperV.VirtualMachine.Hosts.%')\n  LEFT JOIN dbo.vManagedEntity vm ON vm.ManagedEntityRowId = rel.SourceManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.HyperV.%'\n    AND r.ObjectName + '|' + r.CounterName = '${hvcounter}'\n    AND h.DisplayName IN (${hvhost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), COALESCE(vm.DisplayName, h.DisplayName), i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         COALESCE(vm.DisplayName, h.DisplayName) + CASE WHEN i.InstanceName = '' THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  LEFT JOIN dbo.vRelationship rel ON rel.TargetManagedEntityRowId = e.ManagedEntityRowId\n       AND rel.RelationshipTypeRowId IN (SELECT RelationshipTypeRowId FROM dbo.vRelationshipType WHERE RelationshipTypeSystemName LIKE 'Microsoft.Windows.HyperV.VirtualMachine.Hosts.%')\n  LEFT JOIN dbo.vManagedEntity vm ON vm.ManagedEntityRowId = rel.SourceManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.HyperV.%'\n    AND r.ObjectName + '|' + r.CounterName = '${hvcounter}'\n    AND h.DisplayName IN (${hvhost:singlequote})\n  GROUP BY p.DateTime, COALESCE(vm.DisplayName, h.DisplayName), i.InstanceName\n) x ORDER BY time",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "editorMode": "code",
+          "refId": "A",
+          "format": "time_series"
+        }
+      ],
+      "title": "Selected Hyper-V counter (choose in the Counter drop-down)",
+      "type": "timeseries"
+    }
+  ],
+  "editable": true
+}

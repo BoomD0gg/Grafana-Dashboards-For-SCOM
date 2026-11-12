@@ -1,0 +1,33 @@
+# Same data sources using a SQL login (for Grafana on Linux or a host that is not domain joined).
+# NOT TESTED in the validation lab, which used Windows authentication. The password comes from an environment variable on the
+# Grafana host (never put it in this file or in Git).
+apiVersion: 1
+datasources:
+  - name: SCOM Data Warehouse
+    uid: scom-dw
+    type: mssql
+    access: proxy
+    url: {{SQL_HOST}}:1433
+    user: {{SQL_LOGIN}}
+    jsonData:
+      database: OperationsManagerDW
+      authenticationType: SQL Server Authentication
+      encrypt: "true"
+      connMaxLifetime: 14400
+      maxOpenConns: 10
+      maxIdleConns: 5
+    secureJsonData:
+      password: $SCOM_RO_PASSWORD
+  - name: SCOM Operational DB
+    uid: scom-om
+    type: mssql
+    access: proxy
+    url: {{SQL_HOST}}:1433
+    user: {{SQL_LOGIN}}
+    jsonData:
+      database: OperationsManager
+      authenticationType: SQL Server Authentication
+      encrypt: "true"
+      maxOpenConns: 5
+    secureJsonData:
+      password: $SCOM_RO_PASSWORD

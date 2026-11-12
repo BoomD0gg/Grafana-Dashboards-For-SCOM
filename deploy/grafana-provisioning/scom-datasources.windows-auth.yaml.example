@@ -1,0 +1,27 @@
+# Grafana data sources for the packs. Copy to <grafana>/conf/provisioning/datasources/scom.yaml and replace {{SQL_HOST}}, then restart Grafana.
+# Windows authentication: Grafana running on a domain-joined Windows host, connecting as the Grafana service identity
+# (the computer account unless you changed the service logon). The uids scom-dw and scom-om are required by the packs.
+apiVersion: 1
+datasources:
+  - name: SCOM Data Warehouse
+    uid: scom-dw
+    type: mssql
+    access: proxy
+    url: {{SQL_HOST}}:1433
+    jsonData:
+      database: OperationsManagerDW
+      authenticationType: Windows Authentication
+      encrypt: "true"            # use a trusted certificate on the SQL Server; do not disable verification
+      connMaxLifetime: 14400
+      maxOpenConns: 10
+      maxIdleConns: 5
+  - name: SCOM Operational DB
+    uid: scom-om
+    type: mssql
+    access: proxy
+    url: {{SQL_HOST}}:1433
+    jsonData:
+      database: OperationsManager
+      authenticationType: Windows Authentication
+      encrypt: "true"
+      maxOpenConns: 5

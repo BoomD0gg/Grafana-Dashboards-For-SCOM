@@ -1,0 +1,1062 @@
+{
+  "timezone": "browser",
+  "time": {
+    "to": "now",
+    "from": "now-24h"
+  },
+  "title": "DHCP - Overview",
+  "editable": true,
+  "uid": "scom-dhcp-overview",
+  "annotations": {
+    "list": []
+  },
+  "tags": [
+    "scom",
+    "scom-pack",
+    "dhcp-server",
+    "pack:dhcp-server"
+  ],
+  "schemaVersion": 39,
+  "refresh": "1m",
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "definition": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.Library.Server'\nORDER BY 1",
+        "name": "dhcphost",
+        "multi": true,
+        "includeAll": true,
+        "current": {},
+        "sort": 1,
+        "options": [],
+        "label": "DHCP server",
+        "datasource": {
+          "uid": "${ds_dw}",
+          "type": "mssql"
+        },
+        "refresh": 2,
+        "query": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.Library.Server'\nORDER BY 1",
+        "type": "query"
+      },
+      {
+        "definition": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.%'\nORDER BY 1",
+        "name": "dhcpcounter",
+        "multi": false,
+        "includeAll": false,
+        "current": {},
+        "sort": 1,
+        "options": [],
+        "label": "Counter",
+        "datasource": {
+          "uid": "${ds_dw}",
+          "type": "mssql"
+        },
+        "refresh": 2,
+        "query": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.%'\nORDER BY 1",
+        "type": "query"
+      }
+    ]
+  },
+  "graphTooltip": 1,
+  "description": "DHCP server health, scopes, alerts and collected counters from the SCOM DHCP management pack.",
+  "links": [
+    {
+      "type": "dashboards",
+      "includeVars": true,
+      "asDropdown": true,
+      "keepTime": true,
+      "title": "SCOM Platform",
+      "tags": [
+        "scom-core"
+      ]
+    },
+    {
+      "type": "dashboards",
+      "includeVars": false,
+      "asDropdown": true,
+      "keepTime": true,
+      "title": "Technology packs",
+      "tags": [
+        "scom-pack"
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"DHCP servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DHCPServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dhcphost:singlequote})) AS \"Open DHCP alerts\"",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 1,
+      "title": "DHCP servers",
+      "description": "Computers with the DHCP Server role monitored by SCOM.",
+      "gridPos": {
+        "w": 4,
+        "y": 0,
+        "x": 0,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^DHCP servers$/",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "type": "stat"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"DHCP servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DHCPServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dhcphost:singlequote})) AS \"Open DHCP alerts\"",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 2,
+      "title": "Servers not healthy",
+      "description": "Servers whose DHCP role is Warning or Critical.",
+      "gridPos": {
+        "w": 4,
+        "y": 0,
+        "x": 4,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#56A64B",
+                "value": null
+              },
+              {
+                "color": "#E02F44",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Servers not healthy$/",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "type": "stat"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"DHCP servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DHCPServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dhcphost:singlequote})) AS \"Open DHCP alerts\"",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 3,
+      "title": "Scopes",
+      "description": "Scopes discovered on the selected servers.",
+      "gridPos": {
+        "w": 4,
+        "y": 0,
+        "x": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Scopes$/",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "type": "stat"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"DHCP servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DHCPServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dhcphost:singlequote})) AS \"Open DHCP alerts\"",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 4,
+      "title": "Scopes not healthy",
+      "description": "Scopes in Warning or Critical state.",
+      "gridPos": {
+        "w": 4,
+        "y": 0,
+        "x": 12,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#56A64B",
+                "value": null
+              },
+              {
+                "color": "#E02F44",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Scopes not healthy$/",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "type": "stat"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"DHCP servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DHCPServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dhcphost:singlequote})) AS \"Open DHCP alerts\"",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 5,
+      "title": "Open DHCP alerts",
+      "description": "Open alerts raised by DHCP objects on the selected servers.",
+      "gridPos": {
+        "w": 8,
+        "y": 0,
+        "x": 16,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#56A64B",
+                "value": null
+              },
+              {
+                "color": "#FF9830",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "colorMode": "background_solid",
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Open DHCP alerts$/",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "type": "stat"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT TOP 200\n  g.Path AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path AND v.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')) AS \"Scopes not healthy\",\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IN (${dhcphost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.Server')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.Path",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 6,
+      "title": "DHCP servers (click a server for detail)",
+      "description": "Role health with Scope counts.",
+      "gridPos": {
+        "w": 12,
+        "y": 4,
+        "x": 0,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": [
+            {
+              "url": "/d/scom-dhcp-server/dhcp-server-server-detail?var-dhcphost=${__data.fields.Host}&${__url_time_range}",
+              "targetBlank": false,
+              "title": "Open server detail"
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "options": {
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          }
+        ]
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "type": "table"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Scope ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Scope\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dhcphost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 7,
+      "title": "Scopes",
+      "description": "Health of each Scope, worst first.",
+      "gridPos": {
+        "w": 12,
+        "y": 4,
+        "x": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": [
+            {
+              "url": "/d/scom-dhcp-server/dhcp-server-server-detail?var-dhcphost=${__data.fields.Host}&${__url_time_range}",
+              "targetBlank": false,
+              "title": "Open server detail"
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "options": {
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          }
+        ]
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "type": "table"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0 AND e.FullName LIKE 'Microsoft.Windows.DHCPServer.%'\n  AND LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) IN (${dhcphost:singlequote})\nORDER BY 1 DESC, 5 DESC",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 8,
+      "title": "Unhealthy DHCP monitors",
+      "description": "Warning / Critical monitors on DHCP objects.",
+      "gridPos": {
+        "w": 12,
+        "y": 12,
+        "x": 0,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": [
+            {
+              "url": "/d/scom-dhcp-server/dhcp-server-server-detail?var-dhcphost=${__data.fields.Host}&${__url_time_range}",
+              "targetBlank": false,
+              "title": "Open server detail"
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "options": {
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          }
+        ]
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "type": "table"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DHCPServer.%'\n  AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dhcphost:singlequote})\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 9,
+      "title": "Active DHCP alerts",
+      "description": "Open alerts raised in the selected time range.",
+      "gridPos": {
+        "w": 12,
+        "y": 12,
+        "x": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "options": {
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}",
+                    "targetBlank": false,
+                    "title": "Open alert details"
+                  }
+                ],
+                "id": "links"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AlertId"
+            },
+            "properties": [
+              {
+                "value": true,
+                "id": "custom.hidden"
+              }
+            ]
+          }
+        ]
+      },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "type": "table"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS host,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope' THEN REPLACE(REPLACE(e.DisplayName, 'Scope ', ''), ' on ' + h.DisplayName, '') ELSE '(server)' END AS scope,\n         r.ObjectName AS o, r.CounterName AS c, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.ManagedEntityRowId, r.RuleRowId, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.%'\n    AND p.DateTime > DATEADD(hour, -24, GETUTCDATE())\n    AND h.DisplayName IN (${dhcphost:singlequote})\n)\nSELECT TOP 500 host AS Host, scope AS Scope, o AS Object, c AS Counter, v AS Value, t AS \"Sampled (UTC)\"\nFROM x WHERE rn = 1 ORDER BY host, scope, o, c",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 10,
+      "title": "Latest performance samples",
+      "description": "Newest sample of every counter collected for DHCP objects (24 h).",
+      "gridPos": {
+        "w": 24,
+        "y": 20,
+        "x": 0,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": [
+            {
+              "url": "/d/scom-dhcp-server/dhcp-server-server-detail?var-dhcphost=${__data.fields.Host}&${__url_time_range}",
+              "targetBlank": false,
+              "title": "Open server detail"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "type": "table"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')' AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.%'\n    AND r.ObjectName = 'DHCP Server' AND r.CounterName IN ('Discovers/sec', 'Offers/sec', 'Requests/sec', 'Acks/sec', 'Nacks/sec')\n    AND h.DisplayName IN (${dhcphost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')',\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.%'\n    AND r.ObjectName = 'DHCP Server' AND r.CounterName IN ('Discovers/sec', 'Offers/sec', 'Requests/sec', 'Acks/sec', 'Nacks/sec')\n    AND h.DisplayName IN (${dhcphost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 11,
+      "title": "DHCP message rates per second",
+      "description": "Discovers, Offers, Requests, Acks and Nacks per second from the DHCP Server performance object.",
+      "gridPos": {
+        "w": 24,
+        "y": 28,
+        "x": 0,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data in range",
+          "unit": "reqps",
+          "custom": {
+            "spanNulls": 3900000,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "type": "timeseries"
+    },
+    {
+      "targets": [
+        {
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope' THEN REPLACE(REPLACE(e.DisplayName, 'Scope ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.%'\n    AND r.ObjectName + '|' + r.CounterName = '${dhcpcounter}'\n    AND h.DisplayName IN (${dhcphost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.Library.IPv4Scope' THEN REPLACE(REPLACE(e.DisplayName, 'Scope ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DHCPServer.%'\n    AND r.ObjectName + '|' + r.CounterName = '${dhcpcounter}'\n    AND h.DisplayName IN (${dhcphost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ],
+      "id": 12,
+      "title": "Selected DHCP counter (choose in the Counter drop-down)",
+      "description": "Any counter SCOM collects for DHCP objects. Choose it in the Counter drop-down.",
+      "gridPos": {
+        "w": 24,
+        "y": 36,
+        "x": 0,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data in range",
+          "unit": "none",
+          "custom": {
+            "spanNulls": 3900000,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "displayMode": "table",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "type": "timeseries"
+    }
+  ],
+  "version": 1
+}

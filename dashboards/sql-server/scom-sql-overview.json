@@ -1,0 +1,1543 @@
+{
+  "links": [
+    {
+      "asDropdown": true,
+      "includeVars": true,
+      "tags": [
+        "scom-core"
+      ],
+      "title": "SCOM Platform",
+      "keepTime": true,
+      "type": "dashboards"
+    },
+    {
+      "asDropdown": true,
+      "includeVars": false,
+      "tags": [
+        "scom-pack"
+      ],
+      "title": "Technology packs",
+      "keepTime": true,
+      "type": "dashboards"
+    }
+  ],
+  "graphTooltip": 1,
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "options": [],
+        "type": "query",
+        "refresh": 2,
+        "multi": true,
+        "name": "sqlengine",
+        "label": "SQL Server instance",
+        "sort": 1,
+        "query": "SELECT DISTINCT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SQLServer.Windows.DBEngine'\nORDER BY 1",
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "current": {},
+        "includeAll": true,
+        "definition": "SELECT DISTINCT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SQLServer.Windows.DBEngine'\nORDER BY 1"
+      }
+    ]
+  },
+  "description": "SQL Server instance health, SQL Agent, key engine counters, unhealthy monitors, alerts and databases from SCOM.",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "schemaVersion": 39,
+  "annotations": {
+    "list": []
+  },
+  "title": "SQL Server - Overview",
+  "panels": [
+    {
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "fields": "/^Total$/",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      },
+      "type": "stat",
+      "gridPos": {
+        "w": 6,
+        "h": 4,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#5794F2"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        }
+      },
+      "description": "Database engines discovered by the SQL Server management pack.",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS Total,\n  COALESCE(SUM(CASE WHEN g.HealthState = 1 THEN 1 ELSE 0 END),0) AS Healthy,\n  COALESCE(SUM(CASE WHEN g.HealthState = 2 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN g.HealthState = 3 THEN 1 ELSE 0 END),0) AS Critical\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.SQLServer.Windows.DBEngine') AND g.IsDeleted = 0\n  AND g.DisplayName IN (${sqlengine:singlequote})"
+        }
+      ],
+      "title": "SQL Server instances",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "id": 1
+    },
+    {
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "fields": "/^Healthy$/",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      },
+      "type": "stat",
+      "gridPos": {
+        "w": 6,
+        "h": 4,
+        "x": 6,
+        "y": 0
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        }
+      },
+      "description": "Engines in Healthy state.",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS Total,\n  COALESCE(SUM(CASE WHEN g.HealthState = 1 THEN 1 ELSE 0 END),0) AS Healthy,\n  COALESCE(SUM(CASE WHEN g.HealthState = 2 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN g.HealthState = 3 THEN 1 ELSE 0 END),0) AS Critical\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.SQLServer.Windows.DBEngine') AND g.IsDeleted = 0\n  AND g.DisplayName IN (${sqlengine:singlequote})"
+        }
+      ],
+      "title": "Healthy",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "id": 2
+    },
+    {
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "fields": "/^Warning$/",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      },
+      "type": "stat",
+      "gridPos": {
+        "w": 6,
+        "h": 4,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#FF9830"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        }
+      },
+      "description": "Engines in Warning state (e.g. SQL Server Agent stopped, product version compliance).",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS Total,\n  COALESCE(SUM(CASE WHEN g.HealthState = 1 THEN 1 ELSE 0 END),0) AS Healthy,\n  COALESCE(SUM(CASE WHEN g.HealthState = 2 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN g.HealthState = 3 THEN 1 ELSE 0 END),0) AS Critical\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.SQLServer.Windows.DBEngine') AND g.IsDeleted = 0\n  AND g.DisplayName IN (${sqlengine:singlequote})"
+        }
+      ],
+      "title": "Warning",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "id": 3
+    },
+    {
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "reduceOptions": {
+          "fields": "/^Critical$/",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      },
+      "type": "stat",
+      "gridPos": {
+        "w": 6,
+        "h": 4,
+        "x": 18,
+        "y": 0
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#E02F44"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        }
+      },
+      "description": "Engines in Critical state.",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS Total,\n  COALESCE(SUM(CASE WHEN g.HealthState = 1 THEN 1 ELSE 0 END),0) AS Healthy,\n  COALESCE(SUM(CASE WHEN g.HealthState = 2 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN g.HealthState = 3 THEN 1 ELSE 0 END),0) AS Critical\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.SQLServer.Windows.DBEngine') AND g.IsDeleted = 0\n  AND g.DisplayName IN (${sqlengine:singlequote})"
+        }
+      ],
+      "title": "Critical",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "id": 4
+    },
+    {
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "type": "table",
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 4
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Agent"
+            }
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open instance detail",
+              "url": "/d/scom-sql-detail/sql-server-instance-detail?var-sqlengine=${__data.fields.Engine}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data"
+        }
+      },
+      "description": "Rolled-up health of each database engine, health of its SQL Server Agent, and how many databases are monitored.",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 200\n  g.DisplayName AS Engine,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  COALESCE((SELECT TOP 1 CASE a.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END\n            FROM dbo.ManagedEntityGenericView a\n            WHERE a.Path IS NOT NULL AND CHARINDEX('.', a.Path) > 0 AND a.IsDeleted = 0 AND a.DisplayName LIKE 'SQL Server Agent (%'\n              AND LEFT(a.Path, CHARINDEX('.', a.Path) - 1) + '\\' + RIGHT(a.Path, CHARINDEX('.', REVERSE(a.Path)) - 1) = g.DisplayName), 'Not monitored') AS \"Agent\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView d\n     WHERE d.IsDeleted = 0 AND d.Path IS NOT NULL AND CHARINDEX('.', d.Path) > 0\n       AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = d.MonitoringClassId AND t.Name = 'Microsoft.SQLServer.Windows.Database')\n       AND LEFT(d.Path, CHARINDEX('.', d.Path) - 1) + '\\' + RIGHT(d.Path, CHARINDEX('.', REVERSE(d.Path)) - 1) = g.DisplayName) AS Databases,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.SQLServer.Windows.DBEngine') AND g.IsDeleted = 0\n  AND g.DisplayName IN (${sqlengine:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.DisplayName"
+        }
+      ],
+      "title": "Instance health (click an instance for detail)",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "id": 5
+    },
+    {
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "type": "table",
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 4
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": "none",
+                "id": "unit"
+              },
+              {
+                "value": 0,
+                "id": "decimals"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "User connections"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": "none",
+                "id": "unit"
+              },
+              {
+                "value": 2,
+                "id": "decimals"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Logins/s"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": "s",
+                "id": "unit"
+              },
+              {
+                "value": 0,
+                "id": "decimals"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              },
+              {
+                "value": {
+                  "type": "color-background"
+                },
+                "id": "custom.cellOptions"
+              },
+              {
+                "value": {
+                  "mode": "thresholds"
+                },
+                "id": "color"
+              },
+              {
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "value": null,
+                      "color": "#E02F44"
+                    },
+                    {
+                      "value": 300,
+                      "color": "#FF9830"
+                    },
+                    {
+                      "value": 1000,
+                      "color": "#56A64B"
+                    }
+                  ]
+                },
+                "id": "thresholds"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Page life expectancy (s)"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": "percent",
+                "id": "unit"
+              },
+              {
+                "value": 1,
+                "id": "decimals"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              },
+              {
+                "value": {
+                  "type": "color-background"
+                },
+                "id": "custom.cellOptions"
+              },
+              {
+                "value": {
+                  "mode": "thresholds"
+                },
+                "id": "color"
+              },
+              {
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "value": null,
+                      "color": "#E02F44"
+                    },
+                    {
+                      "value": 90,
+                      "color": "#FF9830"
+                    },
+                    {
+                      "value": 95,
+                      "color": "#56A64B"
+                    }
+                  ]
+                },
+                "id": "thresholds"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Buffer cache hit %"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": "none",
+                "id": "unit"
+              },
+              {
+                "value": 1,
+                "id": "decimals"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Transactions/s"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": "none",
+                "id": "unit"
+              },
+              {
+                "value": 2,
+                "id": "decimals"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Lock waits/s"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": "none",
+                "id": "unit"
+              },
+              {
+                "value": 3,
+                "id": "decimals"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              },
+              {
+                "value": {
+                  "type": "color-background"
+                },
+                "id": "custom.cellOptions"
+              },
+              {
+                "value": {
+                  "mode": "thresholds"
+                },
+                "id": "color"
+              },
+              {
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "value": null,
+                      "color": "#56A64B"
+                    },
+                    {
+                      "value": 0.01,
+                      "color": "#E02F44"
+                    }
+                  ]
+                },
+                "id": "thresholds"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Deadlocks/s"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": "none",
+                "id": "unit"
+              },
+              {
+                "value": 1,
+                "id": "decimals"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Compilations/s"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": "none",
+                "id": "unit"
+              },
+              {
+                "value": 0,
+                "id": "decimals"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Stolen memory (MB)"
+            }
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open instance detail",
+              "url": "/d/scom-sql-detail/sql-server-instance-detail?var-sqlengine=${__data.fields.Engine}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data"
+        }
+      },
+      "description": "Newest sample per counter in the last 3 hours. NO DATA = no sample delivered. Page life expectancy: amber under 1000 s, red under 300 s. Buffer cache hit: amber under 95 %.",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "WITH x AS (\n  SELECT e.DisplayName AS eng, r.CounterName AS c, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.DisplayName, r.ObjectName, r.CounterName, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE p.DateTime > DATEADD(hour, -3, GETUTCDATE())\n    AND e.DisplayName IN (${sqlengine:singlequote})\n    AND ( (r.ObjectName = 'SQL DB Engine:General Statistics' AND r.CounterName IN ('User Connections', 'Logins/sec'))\n       OR (r.ObjectName = 'SQL DB Engine:Buffer Manager' AND r.CounterName IN ('Page life expectancy', 'Buffer cache hit ratio'))\n       OR (r.ObjectName = 'SQL DB Engine:Databases' AND r.CounterName = 'Transactions/sec')\n       OR (r.ObjectName = 'SQL DB Engine:Locks' AND r.CounterName IN ('Lock Waits/sec', 'Number of Deadlocks/sec'))\n       OR (r.ObjectName = 'SQL DB Engine:SQL Statistics' AND r.CounterName = 'SQL Compilations/sec')\n       OR (r.ObjectName = 'SQL DB Engine' AND r.CounterName = 'Stolen Server Memory (MB)') )\n)\nSELECT eng AS Engine,\n  MAX(CASE WHEN c = 'User Connections' THEN v END) AS \"User connections\",\n  MAX(CASE WHEN c = 'Logins/sec' THEN v END) AS \"Logins/s\",\n  MAX(CASE WHEN c = 'Page life expectancy' THEN v END) AS \"Page life expectancy (s)\",\n  MAX(CASE WHEN c = 'Buffer cache hit ratio' THEN v END) AS \"Buffer cache hit %\",\n  MAX(CASE WHEN c = 'Transactions/sec' THEN v END) AS \"Transactions/s\",\n  MAX(CASE WHEN c = 'Lock Waits/sec' THEN v END) AS \"Lock waits/s\",\n  MAX(CASE WHEN c = 'Number of Deadlocks/sec' THEN v END) AS \"Deadlocks/s\",\n  MAX(CASE WHEN c = 'SQL Compilations/sec' THEN v END) AS \"Compilations/s\",\n  MAX(CASE WHEN c = 'Stolen Server Memory (MB)' THEN v END) AS \"Stolen memory (MB)\",\n  MAX(t) AS \"Latest sample (UTC)\"\nFROM x WHERE rn = 1 GROUP BY eng ORDER BY eng"
+        }
+      ],
+      "title": "Key engine counters - latest sample",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "id": 6
+    },
+    {
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "type": "table",
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 12
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open instance detail",
+              "url": "/d/scom-sql-detail/sql-server-instance-detail?var-sqlengine=${__data.fields.Engine}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data"
+        }
+      },
+      "description": "Warning / Critical unit monitors on the selected instances and the SQL objects they host.",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  CASE WHEN e.Path IS NULL THEN e.DisplayName WHEN CHARINDEX('.', e.Path) > 0 THEN LEFT(e.Path, CHARINDEX('.', e.Path) - 1) + '\\' + RIGHT(e.Path, CHARINDEX('.', REVERSE(e.Path)) - 1) END AS Engine,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0\n  AND (e.Path IS NULL OR CHARINDEX('.', e.Path) > 0)\n  AND CASE WHEN e.Path IS NULL THEN e.DisplayName WHEN CHARINDEX('.', e.Path) > 0 THEN LEFT(e.Path, CHARINDEX('.', e.Path) - 1) + '\\' + RIGHT(e.Path, CHARINDEX('.', REVERSE(e.Path)) - 1) END IN (${sqlengine:singlequote})\n  AND (e.Path IS NULL OR e.FullName LIKE 'Microsoft.SQLServer.%')\nORDER BY 1 DESC, 5 DESC"
+        }
+      ],
+      "title": "Unhealthy SQL monitors",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "id": 7
+    },
+    {
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "type": "table",
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 12
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open alert details",
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
+                  }
+                ],
+                "id": "links"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            }
+          },
+          {
+            "properties": [
+              {
+                "value": true,
+                "id": "custom.hidden"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "AlertId"
+            }
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "description": "Open alerts raised in the selected time range.",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  CASE WHEN a.MonitoringObjectPath IS NULL THEN a.MonitoringObjectDisplayName\n       WHEN CHARINDEX('.', a.MonitoringObjectPath) > 0 THEN LEFT(a.MonitoringObjectPath, CHARINDEX('.', a.MonitoringObjectPath) - 1) + '\\' + RIGHT(a.MonitoringObjectPath, CHARINDEX('.', REVERSE(a.MonitoringObjectPath)) - 1) END AS Engine,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.SQLServer.%'\n  AND CASE WHEN a.MonitoringObjectPath IS NULL THEN a.MonitoringObjectDisplayName\n           WHEN CHARINDEX('.', a.MonitoringObjectPath) > 0 THEN LEFT(a.MonitoringObjectPath, CHARINDEX('.', a.MonitoringObjectPath) - 1) + '\\' + RIGHT(a.MonitoringObjectPath, CHARINDEX('.', REVERSE(a.MonitoringObjectPath)) - 1) END IN (${sqlengine:singlequote})\nORDER BY a.Severity DESC, a.TimeRaised DESC"
+        }
+      ],
+      "title": "Active SQL alerts",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "id": 8
+    },
+    {
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "type": "timeseries",
+      "gridPos": {
+        "w": 8,
+        "h": 7,
+        "x": 0,
+        "y": 20
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "custom": {
+            "showPoints": "never",
+            "spanNulls": 3900000,
+            "fillOpacity": 8,
+            "lineWidth": 2
+          },
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "No data in range",
+          "min": 0
+        }
+      },
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:General Statistics' AND r.CounterName = 'User Connections'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:General Statistics' AND r.CounterName = 'User Connections'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time"
+        }
+      ],
+      "title": "User connections",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "id": 9
+    },
+    {
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "type": "timeseries",
+      "gridPos": {
+        "w": 8,
+        "h": 7,
+        "x": 8,
+        "y": 20
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "custom": {
+            "showPoints": "never",
+            "spanNulls": 3900000,
+            "fillOpacity": 8,
+            "lineWidth": 2
+          },
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "No data in range",
+          "min": 0
+        }
+      },
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:Databases' AND r.CounterName = 'Transactions/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:Databases' AND r.CounterName = 'Transactions/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time"
+        }
+      ],
+      "title": "Transactions per second",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "id": 10
+    },
+    {
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "type": "timeseries",
+      "gridPos": {
+        "w": 8,
+        "h": 7,
+        "x": 16,
+        "y": 20
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "custom": {
+            "showPoints": "never",
+            "spanNulls": 3900000,
+            "fillOpacity": 8,
+            "lineWidth": 2
+          },
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "No data in range",
+          "min": 0
+        }
+      },
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:Buffer Manager' AND r.CounterName = 'Page life expectancy'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:Buffer Manager' AND r.CounterName = 'Page life expectancy'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time"
+        }
+      ],
+      "title": "Page life expectancy",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "id": 11
+    },
+    {
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "type": "timeseries",
+      "gridPos": {
+        "w": 8,
+        "h": 7,
+        "x": 0,
+        "y": 27
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "showPoints": "never",
+            "spanNulls": 3900000,
+            "fillOpacity": 8,
+            "lineWidth": 2
+          },
+          "unit": "percent",
+          "max": 100,
+          "min": 0,
+          "noValue": "No data in range"
+        }
+      },
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:Buffer Manager' AND r.CounterName = 'Buffer cache hit ratio'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:Buffer Manager' AND r.CounterName = 'Buffer cache hit ratio'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time"
+        }
+      ],
+      "title": "Buffer cache hit ratio",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "id": 12
+    },
+    {
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "type": "timeseries",
+      "gridPos": {
+        "w": 8,
+        "h": 7,
+        "x": 8,
+        "y": 27
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "custom": {
+            "showPoints": "never",
+            "spanNulls": 3900000,
+            "fillOpacity": 8,
+            "lineWidth": 2
+          },
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "No data in range",
+          "min": 0
+        }
+      },
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:Locks' AND r.CounterName = 'Lock Waits/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:Locks' AND r.CounterName = 'Lock Waits/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time"
+        }
+      ],
+      "title": "Lock waits per second",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "id": 13
+    },
+    {
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "type": "timeseries",
+      "gridPos": {
+        "w": 8,
+        "h": 7,
+        "x": 16,
+        "y": 27
+      },
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "custom": {
+            "showPoints": "never",
+            "spanNulls": 3900000,
+            "fillOpacity": 8,
+            "lineWidth": 2
+          },
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "noValue": "No data in range",
+          "min": 0
+        }
+      },
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:SQL Statistics' AND r.CounterName = 'SQL Compilations/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         e.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'SQL DB Engine:SQL Statistics' AND r.CounterName = 'SQL Compilations/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND e.DisplayName IN (${sqlengine:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, i.InstanceName\n) x ORDER BY time"
+        }
+      ],
+      "title": "SQL compilations per second",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "id": 14
+    },
+    {
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "type": "table",
+      "gridPos": {
+        "w": 24,
+        "h": 8,
+        "x": 0,
+        "y": 34
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "description": "Monitored databases and their current health, worst first.",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 500\n  CASE WHEN g.Path IS NULL THEN g.DisplayName WHEN CHARINDEX('.', g.Path) > 0 THEN LEFT(g.Path, CHARINDEX('.', g.Path) - 1) + '\\' + RIGHT(g.Path, CHARINDEX('.', REVERSE(g.Path)) - 1) END AS Engine,\n  g.DisplayName AS [Database],\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IS NOT NULL AND CHARINDEX('.', g.Path) > 0\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.SQLServer.Windows.Database')\n  AND CASE WHEN g.Path IS NULL THEN g.DisplayName WHEN CHARINDEX('.', g.Path) > 0 THEN LEFT(g.Path, CHARINDEX('.', g.Path) - 1) + '\\' + RIGHT(g.Path, CHARINDEX('.', REVERSE(g.Path)) - 1) END IN (${sqlengine:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 1, 2"
+        }
+      ],
+      "title": "Databases",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "id": 15
+    }
+  ],
+  "refresh": "1m",
+  "tags": [
+    "scom",
+    "scom-pack",
+    "sql-server",
+    "pack:sql-server"
+  ],
+  "editable": true,
+  "uid": "scom-sql-overview",
+  "version": 1,
+  "timezone": "browser"
+}

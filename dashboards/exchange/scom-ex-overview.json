@@ -1,0 +1,1339 @@
+{
+  "version": 1,
+  "tags": [
+    "scom",
+    "scom-pack",
+    "exchange",
+    "pack:exchange"
+  ],
+  "uid": "scom-ex-overview",
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "query": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.15.Server'\nORDER BY 1",
+        "multi": true,
+        "includeAll": true,
+        "name": "exhost",
+        "label": "Exchange server",
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "type": "query",
+        "current": {},
+        "definition": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.15.Server'\nORDER BY 1"
+      },
+      {
+        "query": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.%'\nORDER BY 1",
+        "multi": false,
+        "includeAll": false,
+        "name": "excounter",
+        "label": "Counter",
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "type": "query",
+        "current": {},
+        "definition": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.%'\nORDER BY 1"
+      }
+    ]
+  },
+  "time": {
+    "to": "now",
+    "from": "now-24h"
+  },
+  "title": "Exchange - Overview",
+  "links": [
+    {
+      "title": "SCOM Platform",
+      "asDropdown": true,
+      "includeVars": true,
+      "tags": [
+        "scom-core"
+      ],
+      "type": "dashboards",
+      "keepTime": true
+    },
+    {
+      "title": "Technology packs",
+      "asDropdown": true,
+      "includeVars": false,
+      "tags": [
+        "scom-pack"
+      ],
+      "type": "dashboards",
+      "keepTime": true
+    }
+  ],
+  "graphTooltip": 1,
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "1m",
+  "description": "Exchange server health, health sets, alerts and collected counters from the SCOM Exchange management pack.",
+  "editable": true,
+  "panels": [
+    {
+      "title": "Exchange servers",
+      "id": 1,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Exchange servers$/",
+          "values": false
+        },
+        "graphMode": "none",
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "description": "Computers with the Exchange Server role monitored by SCOM.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Exchange servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Exchange.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${exhost:singlequote})) AS \"Open Exchange alerts\""
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "x": 0,
+        "h": 4
+      }
+    },
+    {
+      "title": "Servers not healthy",
+      "id": 2,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#56A64B",
+                "value": null
+              },
+              {
+                "color": "#E02F44",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Servers not healthy$/",
+          "values": false
+        },
+        "graphMode": "none",
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "description": "Servers whose Exchange role is Warning or Critical.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Exchange servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Exchange.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${exhost:singlequote})) AS \"Open Exchange alerts\""
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "x": 4,
+        "h": 4
+      }
+    },
+    {
+      "title": "Health sets",
+      "id": 3,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5794F2",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Health sets$/",
+          "values": false
+        },
+        "graphMode": "none",
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "description": "Health sets discovered on the selected servers.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Exchange servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Exchange.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${exhost:singlequote})) AS \"Open Exchange alerts\""
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "x": 8,
+        "h": 4
+      }
+    },
+    {
+      "title": "Health sets not healthy",
+      "id": 4,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#56A64B",
+                "value": null
+              },
+              {
+                "color": "#E02F44",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Health sets not healthy$/",
+          "values": false
+        },
+        "graphMode": "none",
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "description": "Health sets in Warning or Critical state.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Exchange servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Exchange.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${exhost:singlequote})) AS \"Open Exchange alerts\""
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "x": 12,
+        "h": 4
+      }
+    },
+    {
+      "title": "Open Exchange alerts",
+      "id": 5,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#56A64B",
+                "value": null
+              },
+              {
+                "color": "#FF9830",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "type": "stat",
+      "options": {
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Open Exchange alerts$/",
+          "values": false
+        },
+        "graphMode": "none",
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "description": "Open alerts raised by Exchange objects on the selected servers.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Exchange servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Exchange.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${exhost:singlequote})) AS \"Open Exchange alerts\""
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 0,
+        "w": 8,
+        "x": 16,
+        "h": 4
+      }
+    },
+    {
+      "title": "Exchange servers (click a server for detail)",
+      "id": 6,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-ex-server/exchange-server-detail?var-exhost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Role health with Health set counts.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 200\n  g.Path AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path AND v.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')) AS \"Health sets not healthy\",\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IN (${exhost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.Server')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.Path"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 4,
+        "w": 12,
+        "x": 0,
+        "h": 8
+      }
+    },
+    {
+      "title": "Health sets",
+      "id": 7,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-ex-server/exchange-server-detail?var-exhost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Health of each Health set, worst first.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Health set ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Health set\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.%HealthSet')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 4,
+        "w": 12,
+        "x": 12,
+        "h": 8
+      }
+    },
+    {
+      "title": "Unhealthy Exchange monitors",
+      "id": 8,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-ex-server/exchange-server-detail?var-exhost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Warning / Critical monitors on Exchange objects.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0 AND e.FullName LIKE 'Microsoft.Exchange.%'\n  AND LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) IN (${exhost:singlequote})\nORDER BY 1 DESC, 5 DESC"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 12,
+        "w": 12,
+        "x": 0,
+        "h": 8
+      }
+    },
+    {
+      "title": "Active Exchange alerts",
+      "id": 9,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [],
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Open alert details",
+                    "targetBlank": false,
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
+                  }
+                ]
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "AlertId"
+            }
+          }
+        ]
+      },
+      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Open alerts raised in the selected time range.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.Exchange.%'\n  AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${exhost:singlequote})\nORDER BY a.Severity DESC, a.TimeRaised DESC"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 12,
+        "w": 12,
+        "x": 12,
+        "h": 8
+      }
+    },
+    {
+      "title": "Latest performance samples",
+      "id": 10,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-ex-server/exchange-server-detail?var-exhost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Newest sample of every counter collected for Exchange objects (24 h).",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS host,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.15.%HealthSet' THEN REPLACE(REPLACE(e.DisplayName, 'Health set ', ''), ' on ' + h.DisplayName, '') ELSE '(server)' END AS scope,\n         r.ObjectName AS o, r.CounterName AS c, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.ManagedEntityRowId, r.RuleRowId, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.%'\n    AND p.DateTime > DATEADD(hour, -24, GETUTCDATE())\n    AND h.DisplayName IN (${exhost:singlequote})\n)\nSELECT TOP 500 host AS Host, scope AS Scope, o AS Object, c AS Counter, v AS Value, t AS \"Sampled (UTC)\"\nFROM x WHERE rn = 1 ORDER BY host, scope, o, c"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "gridPos": {
+        "y": 20,
+        "w": 24,
+        "x": 0,
+        "h": 8
+      }
+    },
+    {
+      "title": "Database copies",
+      "id": 11,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-ex-server/exchange-server-detail?var-exhost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Health of each mailbox database copy.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Database copy ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Database copy\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.MailboxDatabaseCopy')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 28,
+        "w": 12,
+        "x": 0,
+        "h": 8
+      }
+    },
+    {
+      "title": "Exchange services",
+      "id": 12,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "links": [
+            {
+              "title": "Open server detail",
+              "targetBlank": false,
+              "url": "/d/scom-ex-server/exchange-server-detail?var-exhost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "type": "table",
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "description": "Health of each Exchange Windows service.",
+      "targets": [
+        {
+          "format": "table",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Service ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Service\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${exhost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Exchange.15.NTService')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "gridPos": {
+        "y": 28,
+        "w": 12,
+        "x": 12,
+        "h": 8
+      }
+    },
+    {
+      "title": "Exchange server CPU usage",
+      "id": 13,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data in range",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "percent",
+          "custom": {
+            "fillOpacity": 8,
+            "spanNulls": 3900000,
+            "showPoints": "never",
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "type": "timeseries",
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom",
+          "displayMode": "table"
+        }
+      },
+      "description": "Counter Exchange Server | Cpu Usage (%) per server.",
+      "targets": [
+        {
+          "format": "time_series",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         r.CounterName + ' (' + h.DisplayName + ')' AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.%'\n    AND r.ObjectName = 'Exchange Server' AND r.CounterName = 'Cpu Usage (%)'\n    AND h.DisplayName IN (${exhost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         r.CounterName + ' (' + h.DisplayName + ')',\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.%'\n    AND r.ObjectName = 'Exchange Server' AND r.CounterName = 'Cpu Usage (%)'\n    AND h.DisplayName IN (${exhost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "gridPos": {
+        "y": 36,
+        "w": 12,
+        "x": 0,
+        "h": 8
+      }
+    },
+    {
+      "title": "Exchange server memory (MB)",
+      "id": 14,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data in range",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none",
+          "custom": {
+            "fillOpacity": 8,
+            "spanNulls": 3900000,
+            "showPoints": "never",
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "type": "timeseries",
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom",
+          "displayMode": "table"
+        }
+      },
+      "description": "Counters Exchange Server | Private Memory Size (MB) and Total Memory (MB) per server.",
+      "targets": [
+        {
+          "format": "time_series",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         r.CounterName + ' (' + h.DisplayName + ')' AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.%'\n    AND r.ObjectName = 'Exchange Server' AND r.CounterName IN ('Private Memory Size (MB)', 'Total Memory (MB)')\n    AND h.DisplayName IN (${exhost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         r.CounterName + ' (' + h.DisplayName + ')',\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.%'\n    AND r.ObjectName = 'Exchange Server' AND r.CounterName IN ('Private Memory Size (MB)', 'Total Memory (MB)')\n    AND h.DisplayName IN (${exhost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "gridPos": {
+        "y": 36,
+        "w": 12,
+        "x": 12,
+        "h": 8
+      }
+    },
+    {
+      "title": "Selected Exchange counter (choose in the Counter drop-down)",
+      "id": 15,
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data in range",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none",
+          "custom": {
+            "fillOpacity": 8,
+            "spanNulls": 3900000,
+            "showPoints": "never",
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "type": "timeseries",
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom",
+          "displayMode": "table"
+        }
+      },
+      "description": "Any counter SCOM collects for Exchange objects. Choose it in the Counter drop-down.",
+      "targets": [
+        {
+          "format": "time_series",
+          "refId": "A",
+          "editorMode": "code",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.15.%HealthSet' THEN REPLACE(REPLACE(e.DisplayName, 'Health set ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.%'\n    AND r.ObjectName + '|' + r.CounterName = '${excounter}'\n    AND h.DisplayName IN (${exhost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.15.%HealthSet' THEN REPLACE(REPLACE(e.DisplayName, 'Health set ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Exchange.%'\n    AND r.ObjectName + '|' + r.CounterName = '${excounter}'\n    AND h.DisplayName IN (${exhost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time"
+        }
+      ],
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "gridPos": {
+        "y": 44,
+        "w": 24,
+        "x": 0,
+        "h": 8
+      }
+    }
+  ],
+  "annotations": {
+    "list": []
+  }
+}

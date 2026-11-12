@@ -1,0 +1,15 @@
+# Loads every SCOM dashboard from a folder on the Grafana server, in one go.
+# 1. Copy the repository's "dashboards" folder to the Grafana server and set "path" below to it.
+# 2. Save this file as scom-dashboards.yaml in Grafana's provisioning/dashboards/ folder
+#    (Windows: C:\Program Files\GrafanaLabs\grafana\conf\provisioning\dashboards\   Linux: /etc/grafana/provisioning/dashboards/)
+# 3. Restart Grafana.
+# Folders are created from the directory names (windows-server, sql-server, ...). README and image files in them are ignored.
+apiVersion: 1
+providers:
+  - name: SCOM dashboards
+    type: file
+    allowUiUpdates: true            # people may edit the dashboards in the UI (changes are kept until the file changes)
+    updateIntervalSeconds: 30       # picks up changed files automatically
+    options:
+      path: C:\SCOMDashboards       # <-- change to where you copied the dashboards folder (Linux example: /var/lib/grafana/scom-dashboards)
+      foldersFromFilesStructure: true

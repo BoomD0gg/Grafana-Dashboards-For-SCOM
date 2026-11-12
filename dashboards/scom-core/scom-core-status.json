@@ -1,0 +1,448 @@
+{
+  "description": "Version detection, management pack prerequisites and data freshness for the SCOM data layer.",
+  "title": "SCOM Platform Status",
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "multi": true,
+        "options": [],
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
+        "label": "Server",
+        "refresh": 2,
+        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
+        "name": "server",
+        "sort": 1,
+        "type": "query",
+        "current": {},
+        "includeAll": true
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "graphTooltip": 1,
+  "uid": "scom-core-status",
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "links": [
+    {
+      "asDropdown": true,
+      "tags": [
+        "scom-core"
+      ],
+      "keepTime": true,
+      "includeVars": true,
+      "title": "SCOM Platform",
+      "type": "dashboards"
+    },
+    {
+      "asDropdown": true,
+      "tags": [
+        "scom-pack"
+      ],
+      "keepTime": true,
+      "includeVars": false,
+      "title": "Technology packs",
+      "type": "dashboards"
+    }
+  ],
+  "editable": true,
+  "timezone": "browser",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "editorMode": "code",
+          "rawQuery": true,
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT ManagementGroupName AS \"Management group\",\n       DBVersion AS \"Database version\",\n       CASE WHEN DBVersion LIKE '10.19.%' THEN 'SCOM 2019'\n            WHEN DBVersion LIKE '10.22.%' THEN 'SCOM 2022'\n            WHEN DBVersion LIKE '10.25.%' THEN 'SCOM 2025'\n            ELSE 'Unrecognised - latest adapter assumed' END AS \"Detected product\",\n       CASE WHEN DBVersion LIKE '10.19.%' OR DBVersion LIKE '10.22.%' OR DBVersion LIKE '10.25.%'\n            THEN 'adapter-' + SUBSTRING(DBVersion,1,5) ELSE 'adapter-default' END AS \"Adapter\"\nFROM dbo.__MOMManagementGroupInfo__",
+          "refId": "A"
+        }
+      ],
+      "id": 1,
+      "title": "SCOM version detection (selects the data-layer adapter)",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Detected from the OperationsManager database version. Unrecognised versions fall back to the latest adapter.",
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 4,
+        "y": 0,
+        "x": 0,
+        "w": 24
+      },
+      "type": "table"
+    },
+    {
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "editorMode": "code",
+          "rawQuery": true,
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawSql": "SELECT g.ManagementGroupDefaultName AS \"Management group\",\n       (SELECT COUNT(*) FROM dbo.vManagementPack) AS \"Management packs\",\n       (SELECT COUNT(*) FROM dbo.vManagedEntity) AS \"Managed entities\",\n       (SELECT MAX(DateTime) FROM Perf.vPerfRaw) AS \"Latest perf sample (UTC)\",\n       (SELECT MAX(DateTime) FROM State.vStateRaw) AS \"Latest state change (UTC)\"\nFROM dbo.vManagementGroup g WHERE g.OwnerManagementGroupInd = 1",
+          "refId": "A"
+        }
+      ],
+      "id": 2,
+      "title": "Management group and latest data",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "description": "Latest sample and state timestamps are UTC.",
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 4,
+        "y": 4,
+        "x": 0,
+        "w": 24
+      },
+      "type": "table"
+    },
+    {
+      "fieldConfig": {
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "options": "Status",
+              "id": "byName"
+            }
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "editorMode": "code",
+          "rawQuery": true,
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawSql": "SELECT p.Pack, p.Required AS \"Required MP\",\n       CASE WHEN m.ManagementPackSystemName IS NULL THEN 'MISSING' ELSE 'Present' END AS Status\nFROM (VALUES\n  ('Windows Server','Microsoft.Windows.Server.Library'),\n  ('Windows Server','Microsoft.Windows.Server.2016.Monitoring'),\n  ('Active Directory','Microsoft.Windows.Server.AD.Class.Library'),\n  ('Active Directory','Microsoft.Windows.Server.AD.2016.Monitoring'),\n  ('SQL Server','Microsoft.SQLServer.Core.Library'),\n  ('SQL Server','Microsoft.SQLServer.Windows.Monitoring')\n) p(Pack, Required)\nLEFT JOIN dbo.vManagementPack m ON m.ManagementPackSystemName = p.Required\nORDER BY p.Pack, p.Required",
+          "refId": "A"
+        }
+      ],
+      "id": 3,
+      "title": "Management Pack prerequisites for the dashboard packs",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "description": "MISSING means the corresponding dashboard pack will show no data.",
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 9,
+        "y": 8,
+        "x": 0,
+        "w": 12
+      },
+      "type": "table"
+    },
+    {
+      "fieldConfig": {
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "unit",
+                "value": "m"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "steps": [
+                    {
+                      "value": null,
+                      "color": "#56A64B"
+                    },
+                    {
+                      "value": 30,
+                      "color": "#FF9830"
+                    },
+                    {
+                      "value": 120,
+                      "color": "#E02F44"
+                    }
+                  ],
+                  "mode": "absolute"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "noValue",
+                "value": "NO DATA"
+              }
+            ],
+            "matcher": {
+              "options": "Minutes since last perf sample",
+              "id": "byName"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "unit",
+                "value": "m"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "steps": [
+                    {
+                      "value": null,
+                      "color": "#56A64B"
+                    },
+                    {
+                      "value": 30,
+                      "color": "#FF9830"
+                    },
+                    {
+                      "value": 120,
+                      "color": "#E02F44"
+                    }
+                  ],
+                  "mode": "absolute"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "noValue",
+                "value": "NO DATA"
+              }
+            ],
+            "matcher": {
+              "options": "Minutes since last state change",
+              "id": "byName"
+            }
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "editorMode": "code",
+          "rawQuery": true,
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawSql": "SELECT e.DisplayName AS Computer,\n  (SELECT DATEDIFF(minute, MAX(p.DateTime), GETUTCDATE())\n     FROM dbo.vManagedEntity c\n     JOIN Perf.vPerfRaw p ON p.ManagedEntityRowId = c.ManagedEntityRowId\n     WHERE c.TopLevelHostManagedEntityRowId = e.ManagedEntityRowId AND p.DateTime > DATEADD(day, -7, GETUTCDATE())) AS \"Minutes since last perf sample\",\n  (SELECT DATEDIFF(minute, MAX(s.DateTime), GETUTCDATE())\n     FROM dbo.vManagedEntity c\n     JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = c.ManagedEntityRowId\n     JOIN State.vStateRaw s ON s.ManagedEntityMonitorRowId = em.ManagedEntityMonitorRowId\n     WHERE (c.TopLevelHostManagedEntityRowId = e.ManagedEntityRowId OR c.ManagedEntityRowId = e.ManagedEntityRowId)\n       AND s.DateTime > DATEADD(day, -7, GETUTCDATE())) AS \"Minutes since last state change\"\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nWHERE e.DisplayName IN (${server:singlequote})\nORDER BY 2 DESC",
+          "refId": "A"
+        }
+      ],
+      "id": 4,
+      "title": "Data freshness (missing-data indicator)",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "description": "Red or NO DATA means SCOM has stopped delivering data for that computer.",
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "gridPos": {
+        "h": 9,
+        "y": 8,
+        "x": 12,
+        "w": 12
+      },
+      "type": "table"
+    }
+  ],
+  "version": 1,
+  "tags": [
+    "scom",
+    "scom-core",
+    "pack:scom-core"
+  ]
+}

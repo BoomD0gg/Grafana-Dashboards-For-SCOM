@@ -1,0 +1,47 @@
+# Changelog
+
+## 0.1.3 - alerts page, alert details, and alerts repeated in several languages
+
+### Added
+- **SCOM Alerts** (new, in `scom-core`): every alert on one page. Choose *Open*, *Closed* or *All*, filter by severity, server and alert name, and select an alert to see its details. Closed alerts are those resolved inside the time range (SCOM grooms closed alerts after its retention period, 7 days by default).
+- **SCOM Alert Details** (new, in `scom-core`): what the SCOM console shows for one alert: summary (severity, priority, status, source, path, raised/modified/resolved times, owner, ticket, custom fields), the description with its parameters filled in, the **alert context** (every field that triggered the alert), the history (state changes, owner, comments) and the product knowledge from the management pack.
+- **Every "Active alerts" table now links through to the alert details**: select an alert name on the overview, the server pages and every technology page.
+- Because the new pages and the links live in `scom-core`, import `scom-core` first.
+
+### Fixed
+- **Alerts appeared several times, in different languages, and alert counts were too high.** Some management packs (for example the Virtual Machine Manager / PRO packs) ship translations of their alert text, and SCOM stores one row per language for every alert. The dashboards counted and listed every language row, so one alert showed up once per language (for example "PRO Hyper-V VM Memory Pressure" in English, Chinese, Czech, German, Spanish...) and the *Open alerts* tiles were multiplied. Every alert query now keeps exactly **one row per alert**, preferring English and falling back to the first available language.
+- Monitor names in the *Unhealthy monitors* tables also prefer English now (they could appear in a random language).
+- Tested by simulating three languages for every alert on the test SCOM: all 24 affected queries returned exactly the same result as on single-language data, while the old queries returned three times as many rows.
+- To update: import the new `.json` files over the old ones (choose **Overwrite**), or replace the files if you use file provisioning.
+
+## 0.1.2 - find the SCOM data sources automatically
+
+### Changed
+- **No more mapping at import.** Each dashboard now has two data source drop-downs (*SCOM Data Warehouse*, *SCOM Operational DB*) that list the SQL Server connections in Grafana and pick the right ones by name, instead of asking you to choose them at every import. If your connections are named differently, choose them from the drop-downs.
+- Tested with connections that have different names and ids from the lab's own: all 28 dashboards imported with no mapping, chose them automatically and rendered with no errors.
+
+### Added
+- Import everything at once with Grafana file provisioning: [docs/INSTALLATION.md](docs/INSTALLATION.md) and `deploy/dashboards-provisioning/scom-dashboards.yaml.example` (tested on Windows, Grafana 13.3: 28 dashboards in 12 folders).
+- To update from 0.1.1: import the new files over the old ones (choose **Overwrite**).
+
+## 0.1.1 - chart gaps
+
+### Added
+- A page for every validated dashboard folder (`dashboards/<folder>/README.md`) with a screenshot of each dashboard, the panels it contains, the management packs it needs and its known limits. Screenshots come from a small test lab with server, domain and database names masked.
+
+### Fixed
+- **Performance charts showed gaps where nothing was missing.** Many SCOM performance rules use *optimized collection*: a sample is stored only when the value changes meaningfully, and the last value is stored again at least once an hour. Quiet counters (for example disk latency) therefore have no new samples for up to about 55 minutes, and the charts drew holes. Charts now connect gaps of up to 65 minutes. A genuine outage longer than that still shows as a break.
+- To update, import the new `.json` over the old one into the same folder and choose **Overwrite**.
+
+## 0.1.0 — first release
+
+### Dashboards
+- **Validated on SCOM 2022 (24 dashboards):** SCOM Enterprise Overview, Server Drill-down and Platform Status; Windows Server; Active Directory; SQL Server; Exchange; Hyper-V; IIS; DNS Server; DHCP Server; File Services; SCOM Infrastructure.
+- **Untested (4 dashboards):** Remote Access and Failover Clustering, in `dashboards/untested/`. No matching servers were available to test them.
+
+### Setup files
+- `deploy/sql/Grant-ReadOnly.sql` — read-only SQL access for Grafana.
+- `deploy/grafana-provisioning/` — example data source provisioning files (Windows authentication, tested; SQL authentication, not tested).
+
+### Known limits
+See [docs/PACKS.md](docs/PACKS.md) and [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). In short: SCOM 2019 and 2025 are not tested; File Services fault detection was not demonstrated; Exchange was tested on a single server; Remote Access and Failover Clustering are untested.
