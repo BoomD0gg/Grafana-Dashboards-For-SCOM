@@ -1,6 +1,6 @@
 # Dashboards and management packs
 
-All dashboards are version 0.2.0. "Validated" means tested in a lab against real SCOM 2022 data (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)). Each technology needs its Microsoft management pack imported in SCOM.
+All dashboards are version 0.2.1. "Validated" means tested in a lab against real SCOM 2022 data (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)). Each technology needs its Microsoft management pack imported in SCOM.
 
 | Folder | Dashboards | Management packs to import | Status |
 |---|---|---|---|

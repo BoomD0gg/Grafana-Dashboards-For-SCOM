@@ -26,31 +26,31 @@
         "options": [
           {
             "selected": true,
-            "value": "My stacks",
-            "text": "My stacks"
+            "value": "All groups and applications",
+            "text": "All groups and applications"
           },
           {
             "selected": false,
-            "value": "All groups and applications",
-            "text": "All groups and applications"
+            "value": "My stacks",
+            "text": "My stacks"
           }
         ],
         "type": "custom",
         "includeAll": false,
         "label": "Stacks",
-        "query": "My stacks,All groups and applications",
+        "query": "All groups and applications,My stacks",
         "name": "stackscope",
         "multi": false,
         "hide": 0,
         "current": {
-          "text": "My stacks",
-          "value": "My stacks"
+          "text": "All groups and applications",
+          "value": "All groups and applications"
         }
       },
       {
         "options": [],
         "refresh": 2,
-        "definition": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n)\nSELECT DISTINCT e.DisplayName AS __text, e.DisplayName AS __value\nFROM tree\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\nJOIN dbo.vManagementPack mp ON mp.ManagementPackRowId = t.ManagementPackRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\nWHERE '${stackscope}' = 'All groups and applications' OR mp.SealedInd = 0\nORDER BY e.DisplayName",
+        "definition": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nfound AS (\n  SELECT DISTINCT e.DisplayName AS n\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagementPack mp ON mp.ManagementPackRowId = t.ManagementPackRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE '${stackscope}' = 'All groups and applications' OR mp.SealedInd = 0\n)\nSELECT n AS __text, n AS __value FROM found\nUNION ALL\nSELECT '(no stacks found)', '(no stacks found)' WHERE NOT EXISTS (SELECT 1 FROM found)\nORDER BY 1",
         "type": "query",
         "includeAll": true,
         "label": "Stack",
@@ -60,7 +60,7 @@
         },
         "name": "stack",
         "multi": true,
-        "query": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n)\nSELECT DISTINCT e.DisplayName AS __text, e.DisplayName AS __value\nFROM tree\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\nJOIN dbo.vManagementPack mp ON mp.ManagementPackRowId = t.ManagementPackRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\nWHERE '${stackscope}' = 'All groups and applications' OR mp.SealedInd = 0\nORDER BY e.DisplayName",
+        "query": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nfound AS (\n  SELECT DISTINCT e.DisplayName AS n\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagementPack mp ON mp.ManagementPackRowId = t.ManagementPackRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE '${stackscope}' = 'All groups and applications' OR mp.SealedInd = 0\n)\nSELECT n AS __text, n AS __value FROM found\nUNION ALL\nSELECT '(no stacks found)', '(no stacks found)' WHERE NOT EXISTS (SELECT 1 FROM found)\nORDER BY 1",
         "sort": 1,
         "current": {}
       },

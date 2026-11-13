@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 - availability dashboards: no stacks no longer shows an error
+
+### Fixed
+- **The Availability dashboards showed an SQL error ("Incorrect syntax near ')'") when no stack was selected**, which happened when SCOM had no groups of your own yet. They now show "No stacks found". The Stacks and servers drop-downs always contain at least one entry.
+
+### Changed
+- **The Stacks drop-down now starts on "All groups and applications"** (it used to start on "My stacks"), so the dashboard shows data straight away. Choose "My stacks" to list only the groups and distributed applications you created yourself. With every group selected the page works through all the members of all of those groups, so on a large SCOM it can take a while to load (about 5 seconds in the 18-server test lab with 17 stacks); if it is slow, choose "My stacks" or select fewer stacks.
 ## 0.2.0 - Availability dashboards, and a fix to the availability percentage
 
 ### Added
