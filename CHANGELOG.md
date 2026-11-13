@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Documentation
+- **Updating** in [INSTALLATION.md](docs/INSTALLATION.md) now covers three ways to update: file provisioning (copy the new files), a PowerShell script that overwrites every dashboard in one go, and a manual import.
+
 ## 0.1.4 - zooming into older periods
 
 ### Fixed

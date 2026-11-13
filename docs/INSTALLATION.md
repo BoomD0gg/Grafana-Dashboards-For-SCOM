@@ -84,7 +84,53 @@ Each dashboard has a **Technology packs** drop-down at the top left that lists e
 
 ## Updating
 
-Import the newer `.json` over the old one into the **same folder** and choose **Overwrite**, or replace the files if you use file provisioning. If you edited a dashboard in place, your edit is replaced — *Save as* a copy under a different name first.
+Each new version is published on the [Releases page](../../../releases) as `scom-grafana-dashboards-vX.Y.Z.zip`, with the changes listed in [CHANGELOG.md](../CHANGELOG.md). Download the zip, unzip it, and use one of these. If you edited a dashboard in place, your edit is replaced. *Save as* a copy under a different name first.
+
+**Option 1: file provisioning (easiest, nothing to run).** If you set up provisioning in step 4, copy the new `.json` files over the old ones in the folder you pointed it at. Grafana picks them up within 30 seconds. Nothing else to do.
+
+**Option 2: one script (Windows PowerShell).** Unzip the release into a folder, set `$Root` to it, and run this. It asks for a Grafana admin login, creates any missing folders, and overwrites the dashboards already there, `scom-core` first. Every line should say `success`; a failure shows `FAILED` and the reason.
+
+<details>
+<summary>Show the update script</summary>
+
+```powershell
+$Root = 'C:\Temp\Grafana'          # the unzipped release (contains scom-core, windows-server, ...)
+$Url  = 'http://localhost:3000'    # your Grafana address
+
+$cred = Get-Credential -Message 'Grafana admin login'
+$pair = '{0}:{1}' -f $cred.UserName, $cred.GetNetworkCredential().Password
+$h = @{ Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($pair)) }
+
+# The ForEach-Object unrolls the list. Without it, Windows PowerShell 5.1 treats several folders as one.
+$folders = @(Invoke-RestMethod "$Url/api/folders" -Headers $h | ForEach-Object { $_ })
+
+$dirs = Get-ChildItem $Root -Directory | Sort-Object { if ($_.Name -eq 'scom-core') { 0 } else { 1 } }, Name
+
+foreach ($dir in $dirs) {
+    $f = $folders | Where-Object { $_.title -eq $dir.Name } | Select-Object -First 1
+    if (-not $f) {
+        $f = Invoke-RestMethod "$Url/api/folders" -Method Post -Headers $h -ContentType 'application/json' `
+             -Body (@{ title = $dir.Name } | ConvertTo-Json)
+    }
+    foreach ($file in Get-ChildItem $dir.FullName -Filter *.json -Recurse) {
+        $raw  = Get-Content $file.FullName -Raw -Encoding UTF8
+        $body = '{"dashboard":' + $raw + ',"folderUid":"' + $f.uid + '","overwrite":true}'
+        try {
+            $r = Invoke-RestMethod "$Url/api/dashboards/db" -Method Post -Headers $h `
+                 -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body))
+            '{0,-8} {1,-45} {2}' -f $r.status, $file.Name, $dir.Name
+        } catch {
+            '{0,-8} {1,-45} {2}  {3}' -f 'FAILED', $file.Name, $dir.Name, $_.ErrorDetails.Message
+        }
+    }
+}
+```
+
+The folders are matched by name, so keep the folder names from the release (`windows-server`, `sql-server`, ...). If you used different folder names, the script creates new folders instead of updating the old ones. Only dashboards with the same uid are overwritten. If you see the same dashboard in two folders, delete the old copy. The script needs Windows PowerShell 5.1 or PowerShell 7 and a Grafana **admin** login, and the login is not stored.
+
+</details>
+
+**Option 3: by hand.** Import the newer `.json` over the old one into the **same folder** and choose **Overwrite** (*Dashboards → New → Import*). Do `scom-core` first.
 
 ## Removing
 
