@@ -1,4 +1,10 @@
 {
+  "version": 1,
+  "time": {
+    "to": "now",
+    "from": "now-24h"
+  },
+  "graphTooltip": 1,
   "templating": {
     "list": [
       {
@@ -32,108 +38,80 @@
         "skipUrlSync": false
       },
       {
-        "name": "iishost",
-        "label": "IIS server",
-        "definition": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole'\nORDER BY 1",
-        "current": {},
+        "options": [],
         "refresh": 2,
+        "definition": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole'\nORDER BY 1",
+        "type": "query",
+        "includeAll": true,
+        "label": "IIS server",
         "datasource": {
           "type": "mssql",
           "uid": "${ds_dw}"
         },
+        "name": "iishost",
         "multi": true,
-        "includeAll": true,
-        "options": [],
         "query": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole'\nORDER BY 1",
-        "type": "query",
-        "sort": 1
+        "sort": 1,
+        "current": {}
       },
       {
-        "name": "iiscounter",
-        "label": "Counter",
-        "definition": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\nORDER BY 1",
-        "current": {},
+        "options": [],
         "refresh": 2,
+        "definition": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\nORDER BY 1",
+        "type": "query",
+        "includeAll": false,
+        "label": "Counter",
         "datasource": {
           "type": "mssql",
           "uid": "${ds_dw}"
         },
+        "name": "iiscounter",
         "multi": false,
-        "includeAll": false,
-        "options": [],
         "query": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\nORDER BY 1",
-        "type": "query",
-        "sort": 1
+        "sort": 1,
+        "current": {}
       }
     ]
   },
-  "links": [
-    {
-      "title": "SCOM Platform",
-      "tags": [
-        "scom-core"
-      ],
-      "includeVars": true,
-      "asDropdown": true,
-      "keepTime": true,
-      "type": "dashboards"
-    },
-    {
-      "title": "Technology packs",
-      "tags": [
-        "scom-pack"
-      ],
-      "includeVars": false,
-      "asDropdown": true,
-      "keepTime": true,
-      "type": "dashboards"
-    }
-  ],
-  "editable": true,
-  "version": 1,
-  "time": {
-    "to": "now",
-    "from": "now-24h"
-  },
-  "timezone": "browser",
+  "uid": "scom-iis-overview",
+  "title": "IIS - Overview",
   "tags": [
     "scom",
     "scom-pack",
     "iis",
     "pack:iis"
   ],
-  "graphTooltip": 1,
-  "refresh": "1m",
-  "schemaVersion": 39,
-  "title": "IIS - Overview",
+  "annotations": {
+    "list": []
+  },
   "panels": [
     {
       "options": {
         "textMode": "value",
         "colorMode": "background_solid",
-        "justifyMode": "center",
         "graphMode": "none",
+        "justifyMode": "center",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^IIS servers$/",
-          "values": false
+          "fields": "/^IIS servers$/"
         }
-      },
-      "gridPos": {
-        "w": 4,
-        "y": 0,
-        "x": 0,
-        "h": 4
-      },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
       },
       "id": 1,
+      "type": "stat",
+      "description": "Computers with the IIS Server role monitored by SCOM.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "steps": [
               {
@@ -142,10 +120,6 @@
               }
             ],
             "mode": "absolute"
-          },
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
           }
         },
         "overrides": []
@@ -153,47 +127,51 @@
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
           "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\""
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\"",
+          "format": "table"
         }
       ],
-      "description": "Computers with the IIS Server role monitored by SCOM.",
       "title": "IIS servers",
-      "type": "stat"
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "h": 4,
+        "x": 0
+      }
     },
     {
       "options": {
         "textMode": "value",
         "colorMode": "background_solid",
-        "justifyMode": "center",
         "graphMode": "none",
+        "justifyMode": "center",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Servers not healthy$/",
-          "values": false
+          "fields": "/^Servers not healthy$/"
         }
-      },
-      "gridPos": {
-        "w": 4,
-        "y": 0,
-        "x": 4,
-        "h": 4
-      },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
       },
       "id": 2,
+      "type": "stat",
+      "description": "Servers whose IIS role is Warning or Critical.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "steps": [
               {
@@ -206,10 +184,6 @@
               }
             ],
             "mode": "absolute"
-          },
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
           }
         },
         "overrides": []
@@ -217,47 +191,51 @@
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
           "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\""
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\"",
+          "format": "table"
         }
       ],
-      "description": "Servers whose IIS role is Warning or Critical.",
       "title": "Servers not healthy",
-      "type": "stat"
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "h": 4,
+        "x": 4
+      }
     },
     {
       "options": {
         "textMode": "value",
         "colorMode": "background_solid",
-        "justifyMode": "center",
         "graphMode": "none",
+        "justifyMode": "center",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Sites$/",
-          "values": false
+          "fields": "/^Sites$/"
         }
       },
-      "gridPos": {
-        "w": 4,
-        "y": 0,
-        "x": 8,
-        "h": 4
-      },
+      "id": 3,
+      "type": "stat",
+      "description": "Sites discovered on the selected servers.",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_om}"
       },
-      "id": 3,
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "steps": [
               {
@@ -266,10 +244,6 @@
               }
             ],
             "mode": "absolute"
-          },
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
           }
         },
         "overrides": []
@@ -277,47 +251,51 @@
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
           "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\""
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\"",
+          "format": "table"
         }
       ],
-      "description": "Sites discovered on the selected servers.",
       "title": "Sites",
-      "type": "stat"
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "h": 4,
+        "x": 8
+      }
     },
     {
       "options": {
         "textMode": "value",
         "colorMode": "background_solid",
-        "justifyMode": "center",
         "graphMode": "none",
+        "justifyMode": "center",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Sites not healthy$/",
-          "values": false
+          "fields": "/^Sites not healthy$/"
         }
       },
-      "gridPos": {
-        "w": 4,
-        "y": 0,
-        "x": 12,
-        "h": 4
-      },
+      "id": 4,
+      "type": "stat",
+      "description": "Sites in Warning or Critical state.",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_om}"
       },
-      "id": 4,
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "steps": [
               {
@@ -330,10 +308,6 @@
               }
             ],
             "mode": "absolute"
-          },
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
           }
         },
         "overrides": []
@@ -341,47 +315,51 @@
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
           "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\""
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\"",
+          "format": "table"
         }
       ],
-      "description": "Sites in Warning or Critical state.",
       "title": "Sites not healthy",
-      "type": "stat"
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "h": 4,
+        "x": 12
+      }
     },
     {
       "options": {
         "textMode": "value",
         "colorMode": "background_solid",
-        "justifyMode": "center",
         "graphMode": "none",
+        "justifyMode": "center",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Open IIS alerts$/",
-          "values": false
+          "fields": "/^Open IIS alerts$/"
         }
       },
-      "gridPos": {
-        "w": 8,
-        "y": 0,
-        "x": 16,
-        "h": 4
-      },
+      "id": 5,
+      "type": "stat",
+      "description": "Open alerts raised by IIS objects on the selected servers.",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_om}"
       },
-      "id": 5,
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "steps": [
               {
@@ -394,10 +372,6 @@
               }
             ],
             "mode": "absolute"
-          },
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
           }
         },
         "overrides": []
@@ -405,84 +379,72 @@
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
           "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\""
+          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"IIS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})) AS \"Open IIS alerts\"",
+          "format": "table"
         }
       ],
-      "description": "Open alerts raised by IIS objects on the selected servers.",
       "title": "Open IIS alerts",
-      "type": "stat"
+      "gridPos": {
+        "y": 0,
+        "w": 8,
+        "h": 4,
+        "x": 16
+      }
     },
     {
       "options": {
+        "showHeader": true,
         "footer": {
           "show": false
         },
-        "showHeader": true,
         "cellHeight": "sm"
-      },
-      "gridPos": {
-        "w": 12,
-        "y": 4,
-        "x": 0,
-        "h": 8
-      },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
       },
       "id": 6,
+      "type": "table",
+      "description": "Role health with Site counts.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
       "fieldConfig": {
         "defaults": {
-          "links": [
-            {
-              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}",
-              "title": "Open server detail",
-              "targetBlank": false
-            }
-          ],
-          "noValue": "No data",
           "custom": {
             "align": "auto",
-            "filterable": true,
             "cellOptions": {
               "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open server detail",
+              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}"
             }
-          }
+          ],
+          "noValue": "No data"
         },
         "overrides": [
           {
-            "matcher": {
-              "options": "Health",
-              "id": "byName"
-            },
             "properties": [
               {
+                "id": "mappings",
                 "value": [
                   {
-                    "type": "value",
                     "options": {
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
                       "Healthy": {
                         "index": 3,
                         "color": "#56A64B"
                       },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
                       },
                       "Information": {
                         "index": 2,
@@ -492,106 +454,106 @@
                         "index": 1,
                         "color": "#FF9830"
                       },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
                       "MISSING": {
                         "index": 5,
                         "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
                       }
-                    }
+                    },
+                    "type": "value"
                   }
-                ],
-                "id": "mappings"
+                ]
               },
               {
+                "id": "custom.cellOptions",
                 "value": {
                   "type": "color-text"
-                },
-                "id": "custom.cellOptions"
+                }
               }
-            ]
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
           }
         ]
       },
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
           "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT TOP 200\n  g.Path AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path AND v.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.Path"
+          "rawSql": "SELECT TOP 200\n  g.Path AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path AND v.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')) AS \"Sites not healthy\",\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IN (${iishost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ServerRole')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.Path",
+          "format": "table"
         }
       ],
-      "description": "Role health with Site counts.",
       "title": "IIS servers (click a server for detail)",
-      "type": "table"
+      "gridPos": {
+        "y": 4,
+        "w": 12,
+        "h": 8,
+        "x": 0
+      }
     },
     {
       "options": {
+        "showHeader": true,
         "footer": {
           "show": false
         },
-        "showHeader": true,
         "cellHeight": "sm"
-      },
-      "gridPos": {
-        "w": 12,
-        "y": 4,
-        "x": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
       },
       "id": 7,
+      "type": "table",
+      "description": "Health of each Site, worst first.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
       "fieldConfig": {
         "defaults": {
-          "links": [
-            {
-              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}",
-              "title": "Open server detail",
-              "targetBlank": false
-            }
-          ],
-          "noValue": "No data",
           "custom": {
             "align": "auto",
-            "filterable": true,
             "cellOptions": {
               "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open server detail",
+              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}"
             }
-          }
+          ],
+          "noValue": "No data"
         },
         "overrides": [
           {
-            "matcher": {
-              "options": "Health",
-              "id": "byName"
-            },
             "properties": [
               {
+                "id": "mappings",
                 "value": [
                   {
-                    "type": "value",
                     "options": {
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
                       "Healthy": {
                         "index": 3,
                         "color": "#56A64B"
                       },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
                       },
                       "Information": {
                         "index": 2,
@@ -601,106 +563,106 @@
                         "index": 1,
                         "color": "#FF9830"
                       },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
                       "MISSING": {
                         "index": 5,
                         "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
                       }
-                    }
+                    },
+                    "type": "value"
                   }
-                ],
-                "id": "mappings"
+                ]
               },
               {
+                "id": "custom.cellOptions",
                 "value": {
                   "type": "color-text"
-                },
-                "id": "custom.cellOptions"
+                }
               }
-            ]
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
           }
         ]
       },
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
           "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Site ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Site\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1"
+          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Site ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Site\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1",
+          "format": "table"
         }
       ],
-      "description": "Health of each Site, worst first.",
       "title": "Sites",
-      "type": "table"
+      "gridPos": {
+        "y": 4,
+        "w": 12,
+        "h": 8,
+        "x": 12
+      }
     },
     {
       "options": {
+        "showHeader": true,
         "footer": {
           "show": false
         },
-        "showHeader": true,
         "cellHeight": "sm"
-      },
-      "gridPos": {
-        "w": 12,
-        "y": 12,
-        "x": 0,
-        "h": 8
-      },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
       },
       "id": 8,
+      "type": "table",
+      "description": "Warning / Critical monitors on IIS objects.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
       "fieldConfig": {
         "defaults": {
-          "links": [
-            {
-              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}",
-              "title": "Open server detail",
-              "targetBlank": false
-            }
-          ],
-          "noValue": "No data",
           "custom": {
             "align": "auto",
-            "filterable": true,
             "cellOptions": {
               "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open server detail",
+              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}"
             }
-          }
+          ],
+          "noValue": "No data"
         },
         "overrides": [
           {
-            "matcher": {
-              "options": "Health",
-              "id": "byName"
-            },
             "properties": [
               {
+                "id": "mappings",
                 "value": [
                   {
-                    "type": "value",
                     "options": {
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
                       "Healthy": {
                         "index": 3,
                         "color": "#56A64B"
                       },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
                       },
                       "Information": {
                         "index": 2,
@@ -710,295 +672,100 @@
                         "index": 1,
                         "color": "#FF9830"
                       },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
                       "MISSING": {
                         "index": 5,
                         "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
                       }
-                    }
+                    },
+                    "type": "value"
                   }
-                ],
-                "id": "mappings"
+                ]
               },
               {
+                "id": "custom.cellOptions",
                 "value": {
                   "type": "color-text"
-                },
-                "id": "custom.cellOptions"
+                }
               }
-            ]
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
           }
         ]
       },
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
           "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0 AND e.FullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n  AND LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) IN (${iishost:singlequote})\nORDER BY 1 DESC, 5 DESC"
+          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0 AND e.FullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n  AND LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) IN (${iishost:singlequote})\nORDER BY 1 DESC, 5 DESC",
+          "format": "table"
         }
       ],
-      "description": "Warning / Critical monitors on IIS objects.",
       "title": "Unhealthy IIS monitors",
-      "type": "table"
+      "gridPos": {
+        "y": 12,
+        "w": 12,
+        "h": 8,
+        "x": 0
+      }
     },
     {
       "options": {
+        "showHeader": true,
         "footer": {
           "show": false
         },
-        "showHeader": true,
         "cellHeight": "sm"
-      },
-      "gridPos": {
-        "w": 12,
-        "y": 12,
-        "x": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
       },
       "id": 9,
-      "fieldConfig": {
-        "defaults": {
-          "links": [],
-          "noValue": "No data",
-          "custom": {
-            "align": "auto",
-            "filterable": true,
-            "cellOptions": {
-              "type": "auto"
-            }
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "options": "Severity",
-              "id": "byName"
-            },
-            "properties": [
-              {
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      }
-                    }
-                  }
-                ],
-                "id": "mappings"
-              },
-              {
-                "value": {
-                  "type": "color-text"
-                },
-                "id": "custom.cellOptions"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "options": "Alert",
-              "id": "byName"
-            },
-            "properties": [
-              {
-                "value": [
-                  {
-                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}",
-                    "title": "Open alert details",
-                    "targetBlank": false
-                  }
-                ],
-                "id": "links"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "options": "AlertId",
-              "id": "byName"
-            },
-            "properties": [
-              {
-                "value": true,
-                "id": "custom.hidden"
-              }
-            ]
-          }
-        ]
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n  AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})\nORDER BY a.Severity DESC, a.TimeRaised DESC"
-        }
-      ],
+      "type": "table",
       "description": "Open alerts raised in the selected time range.",
-      "title": "Active IIS alerts",
-      "type": "table"
-    },
-    {
-      "options": {
-        "footer": {
-          "show": false
-        },
-        "showHeader": true,
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "w": 24,
-        "y": 20,
-        "x": 0,
-        "h": 8
-      },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "id": 10,
-      "fieldConfig": {
-        "defaults": {
-          "links": [
-            {
-              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}",
-              "title": "Open server detail",
-              "targetBlank": false
-            }
-          ],
-          "noValue": "No data",
-          "custom": {
-            "align": "auto",
-            "filterable": true,
-            "cellOptions": {
-              "type": "auto"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS host,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite' THEN REPLACE(REPLACE(e.DisplayName, 'Site ', ''), ' on ' + h.DisplayName, '') ELSE '(server)' END AS scope,\n         r.ObjectName AS o, r.CounterName AS c, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.ManagedEntityRowId, r.RuleRowId, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND p.DateTime > DATEADD(hour, -24, GETUTCDATE())\n    AND h.DisplayName IN (${iishost:singlequote})\n)\nSELECT TOP 500 host AS Host, scope AS Scope, o AS Object, c AS Counter, v AS Value, t AS \"Sampled (UTC)\"\nFROM x WHERE rn = 1 ORDER BY host, scope, o, c"
-        }
-      ],
-      "description": "Newest sample of every counter collected for IIS objects (24 h).",
-      "title": "Latest performance samples",
-      "type": "table"
-    },
-    {
-      "options": {
-        "footer": {
-          "show": false
-        },
-        "showHeader": true,
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "w": 24,
-        "y": 28,
-        "x": 0,
-        "h": 8
-      },
       "datasource": {
         "type": "mssql",
         "uid": "${ds_om}"
       },
-      "id": 11,
       "fieldConfig": {
         "defaults": {
-          "links": [
-            {
-              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}",
-              "title": "Open server detail",
-              "targetBlank": false
-            }
-          ],
-          "noValue": "No data",
           "custom": {
             "align": "auto",
-            "filterable": true,
             "cellOptions": {
               "type": "auto"
-            }
-          }
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
         },
         "overrides": [
           {
-            "matcher": {
-              "options": "Health",
-              "id": "byName"
-            },
             "properties": [
               {
+                "id": "mappings",
                 "value": [
                   {
-                    "type": "value",
                     "options": {
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
                       "Healthy": {
                         "index": 3,
                         "color": "#56A64B"
                       },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
                       },
                       "Information": {
                         "index": 2,
@@ -1008,168 +775,379 @@
                         "index": 1,
                         "color": "#FF9830"
                       },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
                       "MISSING": {
                         "index": 5,
                         "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
                       }
-                    }
+                    },
+                    "type": "value"
                   }
-                ],
-                "id": "mappings"
+                ]
               },
               {
+                "id": "custom.cellOptions",
                 "value": {
                   "type": "color-text"
-                },
-                "id": "custom.cellOptions"
+                }
               }
-            ]
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open alert details",
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
+                  }
+                ]
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "AlertId"
+            }
           }
         ]
       },
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
           "rawQuery": true,
-          "format": "table",
-          "refId": "A",
-          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Pool ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Pool\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ApplicationPool')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1"
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n  AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${iishost:singlequote})\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+          "format": "table"
         }
       ],
+      "title": "Active IIS alerts",
+      "gridPos": {
+        "y": 12,
+        "w": 12,
+        "h": 8,
+        "x": 12
+      }
+    },
+    {
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "id": 10,
+      "type": "table",
+      "description": "Newest sample of every counter collected for IIS objects (24 h).",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open server detail",
+              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS host,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite' THEN REPLACE(REPLACE(e.DisplayName, 'Site ', ''), ' on ' + h.DisplayName, '') ELSE '(server)' END AS scope,\n         r.ObjectName AS o, r.CounterName AS c, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.ManagedEntityRowId, r.RuleRowId, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND p.DateTime > DATEADD(hour, -24, GETUTCDATE())\n    AND h.DisplayName IN (${iishost:singlequote})\n)\nSELECT TOP 500 host AS Host, scope AS Scope, o AS Object, c AS Counter, v AS Value, t AS \"Sampled (UTC)\"\nFROM x WHERE rn = 1 ORDER BY host, scope, o, c",
+          "format": "table"
+        }
+      ],
+      "title": "Latest performance samples",
+      "gridPos": {
+        "y": 20,
+        "w": 24,
+        "h": 8,
+        "x": 0
+      }
+    },
+    {
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "id": 11,
+      "type": "table",
       "description": "Health of each IIS application pool, worst first.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [
+            {
+              "targetBlank": false,
+              "title": "Open server detail",
+              "url": "/d/scom-iis-server/iis-server-detail?var-iishost=${__data.fields.Host}&${__url_time_range}"
+            }
+          ],
+          "noValue": "No data"
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Pool ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Pool\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${iishost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.InternetInformationServices.10.0.ApplicationPool')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1",
+          "format": "table"
+        }
+      ],
       "title": "Application pools",
-      "type": "table"
+      "gridPos": {
+        "y": 28,
+        "w": 24,
+        "h": 8,
+        "x": 0
+      }
     },
     {
       "options": {
         "legend": {
+          "placement": "bottom",
           "calcs": [
             "lastNotNull",
             "max"
           ],
-          "placement": "bottom",
           "displayMode": "table"
         },
         "tooltip": {
           "sort": "desc",
           "mode": "multi"
         }
-      },
-      "gridPos": {
-        "w": 12,
-        "y": 36,
-        "x": 0,
-        "h": 8
-      },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
       },
       "id": 12,
+      "type": "timeseries",
+      "description": "Web Service counters Bytes Received/sec and Bytes Sent/sec per server.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
             "spanNulls": 3900000,
-            "fillOpacity": 8,
             "lineWidth": 2,
-            "showPoints": "never"
+            "showPoints": "never",
+            "fillOpacity": 8
           },
-          "noValue": "No data in range",
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "Bps"
+          "unit": "Bps",
+          "noValue": "No data in range"
         },
         "overrides": []
       },
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_dw}"
           },
           "rawQuery": true,
-          "format": "time_series",
-          "refId": "A",
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')' AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName = 'Web Service' AND r.CounterName IN ('Bytes Received/sec', 'Bytes Sent/sec')\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')',\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName = 'Web Service' AND r.CounterName IN ('Bytes Received/sec', 'Bytes Sent/sec')\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time"
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')' AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName = 'Web Service' AND r.CounterName IN ('Bytes Received/sec', 'Bytes Sent/sec')\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')',\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName = 'Web Service' AND r.CounterName IN ('Bytes Received/sec', 'Bytes Sent/sec')\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+          "format": "time_series"
         }
       ],
-      "description": "Web Service counters Bytes Received/sec and Bytes Sent/sec per server.",
       "title": "IIS bytes received and sent per second",
-      "type": "timeseries"
+      "gridPos": {
+        "y": 36,
+        "w": 12,
+        "h": 8,
+        "x": 0
+      }
     },
     {
       "options": {
         "legend": {
+          "placement": "bottom",
           "calcs": [
             "lastNotNull",
             "max"
           ],
-          "placement": "bottom",
           "displayMode": "table"
         },
         "tooltip": {
           "sort": "desc",
           "mode": "multi"
         }
-      },
-      "gridPos": {
-        "w": 12,
-        "y": 36,
-        "x": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
       },
       "id": 13,
+      "type": "timeseries",
+      "description": "Total Method Requests/sec, Connection Attempts/sec and Current Connections per server.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
             "spanNulls": 3900000,
-            "fillOpacity": 8,
             "lineWidth": 2,
-            "showPoints": "never"
+            "showPoints": "never",
+            "fillOpacity": 8
           },
-          "noValue": "No data in range",
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "none"
+          "unit": "none",
+          "noValue": "No data in range"
         },
         "overrides": []
       },
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_dw}"
           },
           "rawQuery": true,
-          "format": "time_series",
-          "refId": "A",
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')' AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName = 'Web Service' AND r.CounterName IN ('Total Method Requests/sec', 'Current Connections', 'Connection Attempts/sec')\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')',\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName = 'Web Service' AND r.CounterName IN ('Total Method Requests/sec', 'Current Connections', 'Connection Attempts/sec')\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time"
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')' AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName = 'Web Service' AND r.CounterName IN ('Total Method Requests/sec', 'Current Connections', 'Connection Attempts/sec')\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         REPLACE(r.CounterName, '/sec', '') + ' (' + h.DisplayName + ')',\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName = 'Web Service' AND r.CounterName IN ('Total Method Requests/sec', 'Current Connections', 'Connection Attempts/sec')\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+          "format": "time_series"
         }
       ],
-      "description": "Total Method Requests/sec, Connection Attempts/sec and Current Connections per server.",
       "title": "IIS requests, connections and connection attempts",
-      "type": "timeseries"
+      "gridPos": {
+        "y": 36,
+        "w": 12,
+        "h": 8,
+        "x": 12
+      }
     },
     {
       "options": {
         "legend": {
+          "placement": "bottom",
           "calcs": [
             "lastNotNull",
             "max"
           ],
-          "placement": "bottom",
           "displayMode": "table"
         },
         "tooltip": {
@@ -1177,54 +1155,76 @@
           "mode": "multi"
         }
       },
-      "gridPos": {
-        "w": 24,
-        "y": 44,
-        "x": 0,
-        "h": 8
-      },
+      "id": 14,
+      "type": "timeseries",
+      "description": "Any counter SCOM collects for IIS objects. Choose it in the Counter drop-down.",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_dw}"
       },
-      "id": 14,
       "fieldConfig": {
         "defaults": {
           "custom": {
             "spanNulls": 3900000,
-            "fillOpacity": 8,
             "lineWidth": 2,
-            "showPoints": "never"
+            "showPoints": "never",
+            "fillOpacity": 8
           },
-          "noValue": "No data in range",
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "none"
+          "unit": "none",
+          "noValue": "No data in range"
         },
         "overrides": []
       },
       "targets": [
         {
           "editorMode": "code",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_dw}"
           },
           "rawQuery": true,
-          "format": "time_series",
-          "refId": "A",
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite' THEN REPLACE(REPLACE(e.DisplayName, 'Site ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName + '|' + r.CounterName = '${iiscounter}'\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite' THEN REPLACE(REPLACE(e.DisplayName, 'Site ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName + '|' + r.CounterName = '${iiscounter}'\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time"
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite' THEN REPLACE(REPLACE(e.DisplayName, 'Site ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName + '|' + r.CounterName = '${iiscounter}'\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.10.0.WebSite' THEN REPLACE(REPLACE(e.DisplayName, 'Site ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.InternetInformationServices.%'\n    AND r.ObjectName + '|' + r.CounterName = '${iiscounter}'\n    AND h.DisplayName IN (${iishost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+          "format": "time_series"
         }
       ],
-      "description": "Any counter SCOM collects for IIS objects. Choose it in the Counter drop-down.",
       "title": "Selected IIS counter (choose in the Counter drop-down)",
-      "type": "timeseries"
+      "gridPos": {
+        "y": 44,
+        "w": 24,
+        "h": 8,
+        "x": 0
+      }
     }
   ],
   "description": "IIS server health, sites, alerts and collected counters from the SCOM IIS management pack.",
-  "uid": "scom-iis-overview",
-  "annotations": {
-    "list": []
-  }
+  "timezone": "browser",
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "editable": true,
+  "links": [
+    {
+      "keepTime": true,
+      "tags": [
+        "scom-core"
+      ],
+      "includeVars": true,
+      "type": "dashboards",
+      "title": "SCOM Platform",
+      "asDropdown": true
+    },
+    {
+      "keepTime": true,
+      "tags": [
+        "scom-pack"
+      ],
+      "includeVars": false,
+      "type": "dashboards",
+      "title": "Technology packs",
+      "asDropdown": true
+    }
+  ]
 }

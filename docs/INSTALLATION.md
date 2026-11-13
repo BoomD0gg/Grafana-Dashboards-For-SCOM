@@ -70,7 +70,7 @@ Prefer configuration files? [`deploy/grafana-provisioning/`](../deploy/grafana-p
 2. Copy [`deploy/dashboards-provisioning/scom-dashboards.yaml.example`](../deploy/dashboards-provisioning/scom-dashboards.yaml.example) into Grafana's `provisioning/dashboards/` folder (`C:\Program Files\GrafanaLabs\grafana\conf\provisioning\dashboards\` on Windows, `/etc/grafana/provisioning/dashboards/` on Linux), rename it to `scom-dashboards.yaml`, and set `path:` to the folder from step 1.
 3. Restart Grafana. Every dashboard appears, with one Grafana folder per technology named after the directories (`windows-server`, `sql-server`, ...). Changes you make to the files are picked up automatically every 30 seconds.
 
-This was tested on Windows with Grafana 13.3: all 28 dashboards appeared in their folders and rendered without errors. Linux paths follow Grafana's documentation but were not tested.
+This was tested on Windows with Grafana 13.3: all 28 dashboards of that version appeared in their folders and rendered without errors. Linux paths follow Grafana's documentation but were not tested.
 
 Each dashboard has a **Technology packs** drop-down at the top left that lists every imported dashboard, so you can switch between them. Server names in tables link to the matching detail dashboard, so import both the overview and the detail dashboard of a technology.
 

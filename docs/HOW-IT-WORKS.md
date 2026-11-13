@@ -29,6 +29,7 @@ The performance charts show the counters SCOM actually collects for your environ
 - **Roll-up.** Counters that belong to child objects (a disk, a database, a site) are rolled up to their host so you can filter by server.
 - **Drill-down.** Overview dashboards list servers; clicking a name opens that server's detail dashboard with the time range kept.
 - **No demo data.** Every number comes from your SCOM.
+- **Availability is real elapsed time.** SCOM writes an hourly state row only for hours in which something changed or was not healthy, so a healthy hour has no row. Availability is therefore the time lost divided by the time that actually passed (from when the object was first monitored, or the start of the time range), not by the number of rows. For an application stack, the downtime of its members is combined hour by hour: with "any component down" the longest single member outage in each hour counts (members failing at different times within one hour are not added together), with "all components down" every member has to be down.
 
 ## What "validated" means
 

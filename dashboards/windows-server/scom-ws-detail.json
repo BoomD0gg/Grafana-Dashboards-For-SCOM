@@ -1,4 +1,10 @@
 {
+  "version": 1,
+  "time": {
+    "to": "now",
+    "from": "now-6h"
+  },
+  "graphTooltip": 1,
   "templating": {
     "list": [
       {
@@ -32,163 +38,130 @@
         "skipUrlSync": false
       },
       {
-        "name": "server",
         "options": [],
-        "label": "Server",
-        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
-        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
-        "sort": 1,
         "refresh": 2,
-        "multi": false,
+        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
+        "type": "query",
+        "includeAll": false,
+        "label": "Server",
         "datasource": {
           "type": "mssql",
           "uid": "${ds_dw}"
         },
-        "current": {},
-        "type": "query",
-        "includeAll": false
+        "name": "server",
+        "multi": false,
+        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
+        "sort": 1,
+        "current": {}
       }
     ]
   },
-  "description": "Health, alerts and performance for one Windows server.",
-  "schemaVersion": 39,
-  "version": 1,
-  "refresh": "1m",
+  "uid": "scom-ws-detail",
   "title": "Windows Server - Detail",
-  "time": {
-    "from": "now-6h",
-    "to": "now"
-  },
-  "annotations": {
-    "list": []
-  },
   "tags": [
     "scom",
     "scom-pack",
     "windows-server",
     "pack:windows-server"
   ],
+  "annotations": {
+    "list": []
+  },
   "panels": [
     {
-      "description": "CPU (last 60 min average).",
-      "targets": [
-        {
-          "refId": "A",
-          "editorMode": "code",
-          "format": "table",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS comp, r.ObjectName AS o, r.CounterName AS c, i.InstanceName AS inst, AVG(p.SampleValue) AS v, MAX(p.DateTime) AS last_t\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n    AND h.DisplayName IN (${server:singlequote})\n    AND ( (r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time' AND i.InstanceName = '_Total')\n       OR (r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed')\n       OR (r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space') )\n  GROUP BY h.DisplayName, r.ObjectName, r.CounterName, i.InstanceName\n)\nSELECT comp AS Computer,\n  MAX(CASE WHEN o = 'Processor Information' THEN v END) AS \"CPU %\",\n  MAX(CASE WHEN o = 'Memory' THEN v END) AS \"Memory %\",\n  MIN(CASE WHEN o = 'LogicalDisk' THEN v END) AS \"Lowest disk free %\",\n  MAX(last_t) AS \"Last sample (UTC)\"\nFROM x GROUP BY comp ORDER BY comp",
-          "rawQuery": true
+      "options": {
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^CPU %$/"
         }
-      ],
+      },
       "id": 1,
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 0,
-        "w": 4
+      "type": "stat",
+      "description": "CPU (last 60 min average).",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
       },
-      "options": {
-        "colorMode": "background_solid",
-        "graphMode": "none",
-        "textMode": "value",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^CPU %$/",
-          "values": false
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 70,
+                "color": "#FF9830"
+              },
+              {
+                "value": 90,
+                "color": "#E02F44"
+              }
+            ],
+            "mode": "absolute"
+          },
+          "noValue": "NO DATA",
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "unit": "percent"
         },
-        "justifyMode": "center"
+        "overrides": []
       },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS comp, r.ObjectName AS o, r.CounterName AS c, i.InstanceName AS inst, AVG(p.SampleValue) AS v, MAX(p.DateTime) AS last_t\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n    AND h.DisplayName IN (${server:singlequote})\n    AND ( (r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time' AND i.InstanceName = '_Total')\n       OR (r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed')\n       OR (r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space') )\n  GROUP BY h.DisplayName, r.ObjectName, r.CounterName, i.InstanceName\n)\nSELECT comp AS Computer,\n  MAX(CASE WHEN o = 'Processor Information' THEN v END) AS \"CPU %\",\n  MAX(CASE WHEN o = 'Memory' THEN v END) AS \"Memory %\",\n  MIN(CASE WHEN o = 'LogicalDisk' THEN v END) AS \"Lowest disk free %\",\n  MAX(last_t) AS \"Last sample (UTC)\"\nFROM x GROUP BY comp ORDER BY comp",
+          "format": "table"
+        }
+      ],
       "title": "CPU",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "type": "stat",
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "value": null,
-                "color": "#56A64B"
-              },
-              {
-                "value": 70,
-                "color": "#FF9830"
-              },
-              {
-                "value": 90,
-                "color": "#E02F44"
-              }
-            ]
-          },
-          "unit": "percent",
-          "noValue": "NO DATA"
-        }
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "h": 4,
+        "x": 0
       }
     },
     {
-      "description": "Memory (last 60 min average).",
-      "targets": [
-        {
-          "refId": "A",
-          "editorMode": "code",
-          "format": "table",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS comp, r.ObjectName AS o, r.CounterName AS c, i.InstanceName AS inst, AVG(p.SampleValue) AS v, MAX(p.DateTime) AS last_t\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n    AND h.DisplayName IN (${server:singlequote})\n    AND ( (r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time' AND i.InstanceName = '_Total')\n       OR (r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed')\n       OR (r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space') )\n  GROUP BY h.DisplayName, r.ObjectName, r.CounterName, i.InstanceName\n)\nSELECT comp AS Computer,\n  MAX(CASE WHEN o = 'Processor Information' THEN v END) AS \"CPU %\",\n  MAX(CASE WHEN o = 'Memory' THEN v END) AS \"Memory %\",\n  MIN(CASE WHEN o = 'LogicalDisk' THEN v END) AS \"Lowest disk free %\",\n  MAX(last_t) AS \"Last sample (UTC)\"\nFROM x GROUP BY comp ORDER BY comp",
-          "rawQuery": true
+      "options": {
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Memory %$/"
         }
-      ],
+      },
       "id": 2,
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 4,
-        "w": 4
-      },
-      "options": {
-        "colorMode": "background_solid",
-        "graphMode": "none",
-        "textMode": "value",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Memory %$/",
-          "values": false
-        },
-        "justifyMode": "center"
-      },
-      "title": "Memory",
+      "type": "stat",
+      "description": "Memory (last 60 min average).",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_dw}"
       },
-      "type": "stat",
       "fieldConfig": {
-        "overrides": [],
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 1,
           "thresholds": {
-            "mode": "absolute",
             "steps": [
               {
                 "value": null,
@@ -202,63 +175,63 @@
                 "value": 90,
                 "color": "#E02F44"
               }
-            ]
+            ],
+            "mode": "absolute"
           },
-          "unit": "percent",
-          "noValue": "NO DATA"
-        }
-      }
-    },
-    {
-      "description": "Lowest disk free (last 60 min average).",
-      "targets": [
-        {
-          "refId": "A",
-          "editorMode": "code",
-          "format": "table",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS comp, r.ObjectName AS o, r.CounterName AS c, i.InstanceName AS inst, AVG(p.SampleValue) AS v, MAX(p.DateTime) AS last_t\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n    AND h.DisplayName IN (${server:singlequote})\n    AND ( (r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time' AND i.InstanceName = '_Total')\n       OR (r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed')\n       OR (r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space') )\n  GROUP BY h.DisplayName, r.ObjectName, r.CounterName, i.InstanceName\n)\nSELECT comp AS Computer,\n  MAX(CASE WHEN o = 'Processor Information' THEN v END) AS \"CPU %\",\n  MAX(CASE WHEN o = 'Memory' THEN v END) AS \"Memory %\",\n  MIN(CASE WHEN o = 'LogicalDisk' THEN v END) AS \"Lowest disk free %\",\n  MAX(last_t) AS \"Last sample (UTC)\"\nFROM x GROUP BY comp ORDER BY comp",
-          "rawQuery": true
-        }
-      ],
-      "id": 3,
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 8,
-        "w": 4
-      },
-      "options": {
-        "colorMode": "background_solid",
-        "graphMode": "none",
-        "textMode": "value",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Lowest disk free %$/",
-          "values": false
-        },
-        "justifyMode": "center"
-      },
-      "title": "Lowest disk free",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "type": "stat",
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
+          "noValue": "NO DATA",
           "color": {
             "mode": "thresholds"
           },
           "decimals": 1,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS comp, r.ObjectName AS o, r.CounterName AS c, i.InstanceName AS inst, AVG(p.SampleValue) AS v, MAX(p.DateTime) AS last_t\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n    AND h.DisplayName IN (${server:singlequote})\n    AND ( (r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time' AND i.InstanceName = '_Total')\n       OR (r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed')\n       OR (r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space') )\n  GROUP BY h.DisplayName, r.ObjectName, r.CounterName, i.InstanceName\n)\nSELECT comp AS Computer,\n  MAX(CASE WHEN o = 'Processor Information' THEN v END) AS \"CPU %\",\n  MAX(CASE WHEN o = 'Memory' THEN v END) AS \"Memory %\",\n  MIN(CASE WHEN o = 'LogicalDisk' THEN v END) AS \"Lowest disk free %\",\n  MAX(last_t) AS \"Last sample (UTC)\"\nFROM x GROUP BY comp ORDER BY comp",
+          "format": "table"
+        }
+      ],
+      "title": "Memory",
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "h": 4,
+        "x": 4
+      }
+    },
+    {
+      "options": {
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Lowest disk free %$/"
+        }
+      },
+      "id": 3,
+      "type": "stat",
+      "description": "Lowest disk free (last 60 min average).",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
           "thresholds": {
-            "mode": "absolute",
             "steps": [
               {
                 "value": null,
@@ -272,156 +245,71 @@
                 "value": 20,
                 "color": "#56A64B"
               }
-            ]
+            ],
+            "mode": "absolute"
           },
-          "unit": "percent",
-          "noValue": "NO DATA"
+          "noValue": "NO DATA",
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS comp, r.ObjectName AS o, r.CounterName AS c, i.InstanceName AS inst, AVG(p.SampleValue) AS v, MAX(p.DateTime) AS last_t\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n    AND h.DisplayName IN (${server:singlequote})\n    AND ( (r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time' AND i.InstanceName = '_Total')\n       OR (r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed')\n       OR (r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space') )\n  GROUP BY h.DisplayName, r.ObjectName, r.CounterName, i.InstanceName\n)\nSELECT comp AS Computer,\n  MAX(CASE WHEN o = 'Processor Information' THEN v END) AS \"CPU %\",\n  MAX(CASE WHEN o = 'Memory' THEN v END) AS \"Memory %\",\n  MIN(CASE WHEN o = 'LogicalDisk' THEN v END) AS \"Lowest disk free %\",\n  MAX(last_t) AS \"Last sample (UTC)\"\nFROM x GROUP BY comp ORDER BY comp",
+          "format": "table"
         }
+      ],
+      "title": "Lowest disk free",
+      "gridPos": {
+        "y": 0,
+        "w": 4,
+        "h": 4,
+        "x": 8
       }
     },
     {
-      "description": "",
-      "targets": [
-        {
-          "refId": "A",
-          "editorMode": "code",
-          "format": "table",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT TOP 500\n  g.DisplayName AS Computer,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange,\n  CASE WHEN g.InMaintenanceMode = 1 THEN 'Yes' ELSE 'No' END AS InMaintenance,\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.TopLevelHostEntityId = g.Id) AS OpenAlerts\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')\n  AND g.IsDeleted = 0\n  AND g.DisplayName IN (${server:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.DisplayName",
-          "rawQuery": true
-        }
-      ],
-      "id": 4,
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 12,
-        "w": 12
-      },
       "options": {
-        "cellHeight": "sm",
+        "showHeader": true,
         "footer": {
           "show": false
         },
-        "showHeader": true
+        "cellHeight": "sm"
       },
-      "title": "Health",
+      "id": 4,
+      "type": "table",
+      "description": "",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_om}"
       },
-      "type": "table",
       "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "value": [
-                  {
-                    "options": {
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      },
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ],
-                "id": "mappings"
-              },
-              {
-                "value": {
-                  "type": "color-text"
-                },
-                "id": "custom.cellOptions"
-              }
-            ],
-            "matcher": {
-              "options": "Health",
-              "id": "byName"
-            }
-          }
-        ],
         "defaults": {
           "custom": {
+            "align": "auto",
             "cellOptions": {
               "type": "auto"
             },
-            "align": "auto",
             "filterable": true
           },
           "links": [],
           "noValue": "No data"
-        }
-      }
-    },
-    {
-      "description": "Open alerts raised in the selected time range.",
-      "targets": [
-        {
-          "refId": "A",
-          "editorMode": "code",
-          "format": "table",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName,''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  (SELECT TOP 1 c.DisplayName FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId) AS Computer,\n  CASE a.ResolutionState WHEN 0 THEN 'New' ELSE 'Acknowledged/Custom' END AS Status,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )\nORDER BY a.Severity DESC, a.TimeRaised DESC",
-          "rawQuery": true
-        }
-      ],
-      "id": 5,
-      "gridPos": {
-        "h": 8,
-        "y": 4,
-        "x": 0,
-        "w": 12
-      },
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
         },
-        "showHeader": true
-      },
-      "title": "Active alerts",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "type": "table",
-      "fieldConfig": {
         "overrides": [
           {
             "properties": [
               {
+                "id": "mappings",
                 "value": [
                   {
                     "options": {
@@ -429,21 +317,9 @@
                         "index": 3,
                         "color": "#56A64B"
                       },
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
                       "Not monitored": {
                         "index": 4,
                         "color": "#8E8E93"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
                       },
                       "Information": {
                         "index": 2,
@@ -452,109 +328,224 @@
                       "Warning": {
                         "index": 1,
                         "color": "#FF9830"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
                       }
                     },
                     "type": "value"
                   }
-                ],
-                "id": "mappings"
+                ]
               },
               {
+                "id": "custom.cellOptions",
                 "value": {
                   "type": "color-text"
-                },
-                "id": "custom.cellOptions"
+                }
               }
             ],
             "matcher": {
-              "options": "Severity",
-              "id": "byName"
+              "id": "byName",
+              "options": "Health"
+            }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 500\n  g.DisplayName AS Computer,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange,\n  CASE WHEN g.InMaintenanceMode = 1 THEN 'Yes' ELSE 'No' END AS InMaintenance,\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.TopLevelHostEntityId = g.Id) AS OpenAlerts\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')\n  AND g.IsDeleted = 0\n  AND g.DisplayName IN (${server:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.DisplayName",
+          "format": "table"
+        }
+      ],
+      "title": "Health",
+      "gridPos": {
+        "y": 0,
+        "w": 12,
+        "h": 4,
+        "x": 12
+      }
+    },
+    {
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "id": 5,
+      "type": "table",
+      "description": "Open alerts raised in the selected time range.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
             }
           },
           {
             "properties": [
               {
+                "id": "links",
                 "value": [
                   {
                     "targetBlank": false,
-                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}",
-                    "title": "Open alert details"
+                    "title": "Open alert details",
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
                   }
-                ],
-                "id": "links"
+                ]
               }
             ],
             "matcher": {
-              "options": "Alert",
-              "id": "byName"
+              "id": "byName",
+              "options": "Alert"
             }
           },
           {
             "properties": [
               {
-                "value": true,
-                "id": "custom.hidden"
+                "id": "custom.hidden",
+                "value": true
               }
             ],
             "matcher": {
-              "options": "AlertId",
-              "id": "byName"
+              "id": "byName",
+              "options": "AlertId"
             }
           }
-        ],
-        "defaults": {
-          "custom": {
-            "cellOptions": {
-              "type": "auto"
-            },
-            "align": "auto",
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      }
-    },
-    {
-      "description": "",
+        ]
+      },
       "targets": [
         {
-          "refId": "A",
           "editorMode": "code",
-          "format": "table",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_om}"
           },
-          "rawSql": "SELECT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  COALESCE(e.Path, e.DisplayName) AS Computer,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0\n  AND (e.DisplayName IN (${server:singlequote}) OR e.Path IN (${server:singlequote}))\nORDER BY s.HealthState DESC, s.LastModified DESC",
-          "rawQuery": true
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName,''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  (SELECT TOP 1 c.DisplayName FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId) AS Computer,\n  CASE a.ResolutionState WHEN 0 THEN 'New' ELSE 'Acknowledged/Custom' END AS Status,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+          "format": "table"
         }
       ],
-      "id": 6,
+      "title": "Active alerts",
       "gridPos": {
-        "h": 8,
         "y": 4,
-        "x": 12,
-        "w": 12
-      },
+        "w": 12,
+        "h": 8,
+        "x": 0
+      }
+    },
+    {
       "options": {
-        "cellHeight": "sm",
+        "showHeader": true,
         "footer": {
           "show": false
         },
-        "showHeader": true
+        "cellHeight": "sm"
       },
-      "title": "Unhealthy monitors",
+      "id": 6,
+      "type": "table",
+      "description": "",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_om}"
       },
-      "type": "table",
       "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        },
         "overrides": [
           {
             "properties": [
               {
+                "id": "mappings",
                 "value": [
                   {
                     "options": {
@@ -562,21 +553,9 @@
                         "index": 3,
                         "color": "#56A64B"
                       },
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
                       "Not monitored": {
                         "index": 4,
                         "color": "#8E8E93"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
                       },
                       "Information": {
                         "index": 2,
@@ -585,292 +564,303 @@
                       "Warning": {
                         "index": 1,
                         "color": "#FF9830"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
                       }
                     },
                     "type": "value"
                   }
-                ],
-                "id": "mappings"
+                ]
               },
               {
+                "id": "custom.cellOptions",
                 "value": {
                   "type": "color-text"
-                },
-                "id": "custom.cellOptions"
+                }
               }
             ],
             "matcher": {
-              "options": "Health",
-              "id": "byName"
+              "id": "byName",
+              "options": "Health"
             }
           }
-        ],
+        ]
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  COALESCE(e.Path, e.DisplayName) AS Computer,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0\n  AND (e.DisplayName IN (${server:singlequote}) OR e.Path IN (${server:singlequote}))\nORDER BY s.HealthState DESC, s.LastModified DESC",
+          "format": "table"
+        }
+      ],
+      "title": "Unhealthy monitors",
+      "gridPos": {
+        "y": 4,
+        "w": 12,
+        "h": 8,
+        "x": 12
+      }
+    },
+    {
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "id": 7,
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "spanNulls": 3900000,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
+          },
+          "min": 0,
+          "unit": "percent",
+          "max": 100,
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+          "format": "time_series"
+        }
+      ],
+      "title": "CPU - % processor time",
+      "gridPos": {
+        "y": 12,
+        "w": 8,
+        "h": 7,
+        "x": 0
+      }
+    },
+    {
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "id": 8,
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "spanNulls": 3900000,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
+          },
+          "min": 0,
+          "unit": "percent",
+          "max": 100,
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+          "format": "time_series"
+        }
+      ],
+      "title": "Memory - % used",
+      "gridPos": {
+        "y": 12,
+        "w": 8,
+        "h": 7,
+        "x": 8
+      }
+    },
+    {
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "id": 9,
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
         "defaults": {
           "custom": {
+            "spanNulls": 3900000,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "unit": "short",
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'System' AND r.CounterName = 'Processor Queue Length'\n    AND (i.InstanceName IN ('_Total', '') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'System' AND r.CounterName = 'Processor Queue Length'\n    AND (i.InstanceName IN ('_Total', '') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
+          "format": "time_series"
+        }
+      ],
+      "title": "Processor queue length",
+      "gridPos": {
+        "y": 12,
+        "w": 8,
+        "h": 7,
+        "x": 16
+      }
+    },
+    {
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "id": 10,
+      "type": "table",
+      "description": "",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
             "cellOptions": {
               "type": "auto"
             },
-            "align": "auto",
             "filterable": true
           },
           "links": [],
           "noValue": "No data"
-        }
-      }
-    },
-    {
-      "description": "",
-      "targets": [
-        {
-          "refId": "A",
-          "editorMode": "code",
-          "format": "time_series",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
-          "rawQuery": true
-        }
-      ],
-      "id": 7,
-      "gridPos": {
-        "h": 7,
-        "y": 12,
-        "x": 0,
-        "w": 8
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
         },
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "placement": "bottom",
-          "displayMode": "table"
-        }
-      },
-      "title": "CPU - % processor time",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "type": "timeseries",
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "max": 100,
-          "custom": {
-            "fillOpacity": 8,
-            "lineWidth": 2,
-            "spanNulls": 3900000,
-            "showPoints": "never"
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "noValue": "No data in range",
-          "unit": "percent",
-          "min": 0
-        }
-      }
-    },
-    {
-      "description": "",
-      "targets": [
-        {
-          "refId": "A",
-          "editorMode": "code",
-          "format": "time_series",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
-          "rawQuery": true
-        }
-      ],
-      "id": 8,
-      "gridPos": {
-        "h": 7,
-        "y": 12,
-        "x": 8,
-        "w": 8
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "placement": "bottom",
-          "displayMode": "table"
-        }
-      },
-      "title": "Memory - % used",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "type": "timeseries",
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "max": 100,
-          "custom": {
-            "fillOpacity": 8,
-            "lineWidth": 2,
-            "spanNulls": 3900000,
-            "showPoints": "never"
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "noValue": "No data in range",
-          "unit": "percent",
-          "min": 0
-        }
-      }
-    },
-    {
-      "description": "",
-      "targets": [
-        {
-          "refId": "A",
-          "editorMode": "code",
-          "format": "time_series",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'System' AND r.CounterName = 'Processor Queue Length'\n    AND (i.InstanceName IN ('_Total', '') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'System' AND r.CounterName = 'Processor Queue Length'\n    AND (i.InstanceName IN ('_Total', '') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
-          "rawQuery": true
-        }
-      ],
-      "id": 9,
-      "gridPos": {
-        "h": 7,
-        "y": 12,
-        "x": 16,
-        "w": 8
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "placement": "bottom",
-          "displayMode": "table"
-        }
-      },
-      "title": "Processor queue length",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "type": "timeseries",
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "custom": {
-            "fillOpacity": 8,
-            "lineWidth": 2,
-            "spanNulls": 3900000,
-            "showPoints": "never"
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "unit": "short",
-          "noValue": "No data in range",
-          "min": 0
-        }
-      }
-    },
-    {
-      "description": "",
-      "targets": [
-        {
-          "refId": "A",
-          "editorMode": "code",
-          "format": "table",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "SELECT TOP 300\n  h.DisplayName AS Computer,\n  i.InstanceName AS Disk,\n  AVG(CASE WHEN r.CounterName = '% Free Space' THEN p.SampleValue END) AS \"Free %\",\n  AVG(CASE WHEN r.CounterName = 'Free Megabytes' THEN p.SampleValue END) / 1024.0 AS \"Free GB\"\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n  AND r.ObjectName = 'LogicalDisk' AND r.CounterName IN ('% Free Space', 'Free Megabytes')\n  AND h.DisplayName IN (${server:singlequote})\nGROUP BY h.DisplayName, i.InstanceName\nHAVING AVG(CASE WHEN r.CounterName = '% Free Space' THEN p.SampleValue END) IS NOT NULL\nORDER BY 3, 1, 2",
-          "rawQuery": true
-        }
-      ],
-      "id": 10,
-      "gridPos": {
-        "h": 7,
-        "y": 19,
-        "x": 0,
-        "w": 8
-      },
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        },
-        "showHeader": true
-      },
-      "title": "Logical disks",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "type": "table",
-      "fieldConfig": {
         "overrides": [
           {
             "properties": [
               {
-                "value": "percent",
-                "id": "unit"
+                "id": "unit",
+                "value": "percent"
               },
               {
-                "value": 1,
-                "id": "decimals"
+                "id": "decimals",
+                "value": 1
               },
               {
-                "value": 0,
-                "id": "min"
+                "id": "min",
+                "value": 0
               },
               {
-                "value": 100,
-                "id": "max"
+                "id": "max",
+                "value": 100
               },
               {
+                "id": "custom.cellOptions",
                 "value": {
-                  "mode": "basic",
-                  "type": "gauge"
-                },
-                "id": "custom.cellOptions"
+                  "type": "gauge",
+                  "mode": "basic"
+                }
               },
               {
+                "id": "color",
                 "value": {
                   "mode": "thresholds"
-                },
-                "id": "color"
+                }
               },
               {
+                "id": "thresholds",
                 "value": {
-                  "mode": "absolute",
                   "steps": [
                     {
                       "value": null,
@@ -884,316 +874,326 @@
                       "value": 20,
                       "color": "#56A64B"
                     }
-                  ]
-                },
-                "id": "thresholds"
+                  ],
+                  "mode": "absolute"
+                }
               },
               {
-                "value": "NO DATA",
-                "id": "noValue"
+                "id": "noValue",
+                "value": "NO DATA"
               }
             ],
             "matcher": {
-              "options": "Free %",
-              "id": "byName"
+              "id": "byName",
+              "options": "Free %"
             }
           },
           {
             "properties": [
               {
-                "value": 1,
-                "id": "decimals"
+                "id": "decimals",
+                "value": 1
               },
               {
-                "value": "none",
-                "id": "unit"
+                "id": "unit",
+                "value": "none"
               }
             ],
             "matcher": {
-              "options": "Free GB",
-              "id": "byName"
+              "id": "byName",
+              "options": "Free GB"
             }
           }
-        ],
-        "defaults": {
-          "custom": {
-            "cellOptions": {
-              "type": "auto"
-            },
-            "align": "auto",
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      }
-    },
-    {
-      "description": "",
+        ]
+      },
       "targets": [
         {
-          "refId": "A",
           "editorMode": "code",
-          "format": "time_series",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_dw}"
           },
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1000 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Avg. Disk sec/Transfer'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1000\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Avg. Disk sec/Transfer'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
-          "rawQuery": true
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 300\n  h.DisplayName AS Computer,\n  i.InstanceName AS Disk,\n  AVG(CASE WHEN r.CounterName = '% Free Space' THEN p.SampleValue END) AS \"Free %\",\n  AVG(CASE WHEN r.CounterName = 'Free Megabytes' THEN p.SampleValue END) / 1024.0 AS \"Free GB\"\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n  AND r.ObjectName = 'LogicalDisk' AND r.CounterName IN ('% Free Space', 'Free Megabytes')\n  AND h.DisplayName IN (${server:singlequote})\nGROUP BY h.DisplayName, i.InstanceName\nHAVING AVG(CASE WHEN r.CounterName = '% Free Space' THEN p.SampleValue END) IS NOT NULL\nORDER BY 3, 1, 2",
+          "format": "table"
         }
       ],
+      "title": "Logical disks",
+      "gridPos": {
+        "y": 19,
+        "w": 8,
+        "h": 7,
+        "x": 0
+      }
+    },
+    {
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
       "id": 11,
-      "gridPos": {
-        "h": 7,
-        "y": 19,
-        "x": 8,
-        "w": 8
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "placement": "bottom",
-          "displayMode": "table"
-        }
-      },
-      "title": "Disk latency - ms per transfer",
+      "type": "timeseries",
+      "description": "",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_dw}"
       },
-      "type": "timeseries",
       "fieldConfig": {
-        "overrides": [],
         "defaults": {
           "custom": {
-            "fillOpacity": 8,
-            "lineWidth": 2,
             "spanNulls": 3900000,
-            "showPoints": "never"
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
           },
           "color": {
             "mode": "palette-classic"
           },
+          "min": 0,
           "unit": "ms",
-          "noValue": "No data in range",
-          "min": 0
-        }
-      }
-    },
-    {
-      "description": "",
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
       "targets": [
         {
-          "refId": "A",
           "editorMode": "code",
-          "format": "time_series",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_dw}"
           },
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Current Disk Queue Length'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Current Disk Queue Length'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
-          "rawQuery": true
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1000 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Avg. Disk sec/Transfer'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1000\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Avg. Disk sec/Transfer'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
+          "format": "time_series"
         }
       ],
-      "id": 12,
+      "title": "Disk latency - ms per transfer",
       "gridPos": {
-        "h": 7,
         "y": 19,
-        "x": 16,
-        "w": 8
-      },
+        "w": 8,
+        "h": 7,
+        "x": 8
+      }
+    },
+    {
       "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
         "legend": {
+          "placement": "bottom",
           "calcs": [
             "lastNotNull",
             "max"
           ],
-          "placement": "bottom",
           "displayMode": "table"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
         }
       },
-      "title": "Disk queue length",
+      "id": 12,
+      "type": "timeseries",
+      "description": "",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_dw}"
       },
-      "type": "timeseries",
       "fieldConfig": {
-        "overrides": [],
         "defaults": {
           "custom": {
-            "fillOpacity": 8,
-            "lineWidth": 2,
             "spanNulls": 3900000,
-            "showPoints": "never"
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
           },
           "color": {
             "mode": "palette-classic"
           },
+          "min": 0,
           "unit": "short",
-          "noValue": "No data in range",
-          "min": 0
-        }
-      }
-    },
-    {
-      "description": "",
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
       "targets": [
         {
-          "refId": "A",
           "editorMode": "code",
-          "format": "time_series",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_dw}"
           },
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
-          "rawQuery": true
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Current Disk Queue Length'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Current Disk Queue Length'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
+          "format": "time_series"
         }
       ],
+      "title": "Disk queue length",
+      "gridPos": {
+        "y": 19,
+        "w": 8,
+        "h": 7,
+        "x": 16
+      }
+    },
+    {
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
       "id": 13,
-      "gridPos": {
-        "h": 7,
-        "y": 26,
-        "x": 0,
-        "w": 12
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "placement": "bottom",
-          "displayMode": "table"
-        }
-      },
-      "title": "Disk free space %",
+      "type": "timeseries",
+      "description": "",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_dw}"
       },
-      "type": "timeseries",
       "fieldConfig": {
-        "overrides": [],
         "defaults": {
-          "max": 100,
-          "custom": {
-            "fillOpacity": 8,
-            "lineWidth": 2,
-            "spanNulls": 3900000,
-            "showPoints": "never"
-          },
           "color": {
             "mode": "palette-classic"
           },
-          "noValue": "No data in range",
+          "custom": {
+            "spanNulls": 3900000,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
+          },
+          "min": 0,
           "unit": "percent",
-          "min": 0
-        }
-      }
-    },
-    {
-      "description": "",
+          "max": 100,
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
       "targets": [
         {
-          "refId": "A",
           "editorMode": "code",
-          "format": "time_series",
+          "refId": "A",
           "datasource": {
             "type": "mssql",
             "uid": "${ds_dw}"
           },
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Network Adapter' AND r.CounterName = 'Bytes Total/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Network Adapter' AND r.CounterName = 'Bytes Total/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
-          "rawQuery": true
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
+          "format": "time_series"
         }
       ],
-      "id": 14,
+      "title": "Disk free space %",
       "gridPos": {
-        "h": 7,
         "y": 26,
-        "x": 12,
-        "w": 12
-      },
+        "w": 12,
+        "h": 7,
+        "x": 0
+      }
+    },
+    {
       "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
         "legend": {
+          "placement": "bottom",
           "calcs": [
             "lastNotNull",
             "max"
           ],
-          "placement": "bottom",
           "displayMode": "table"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
         }
       },
-      "title": "Network - bytes total per second",
+      "id": 14,
+      "type": "timeseries",
+      "description": "",
       "datasource": {
         "type": "mssql",
         "uid": "${ds_dw}"
       },
-      "type": "timeseries",
       "fieldConfig": {
-        "overrides": [],
         "defaults": {
           "custom": {
-            "fillOpacity": 8,
-            "lineWidth": 2,
             "spanNulls": 3900000,
-            "showPoints": "never"
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
           },
           "color": {
             "mode": "palette-classic"
           },
+          "min": 0,
           "unit": "Bps",
-          "noValue": "No data in range",
-          "min": 0
+          "noValue": "No data in range"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Network Adapter' AND r.CounterName = 'Bytes Total/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Network Adapter' AND r.CounterName = 'Bytes Total/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
+          "format": "time_series"
         }
+      ],
+      "title": "Network - bytes total per second",
+      "gridPos": {
+        "y": 26,
+        "w": 12,
+        "h": 7,
+        "x": 12
       }
     }
   ],
+  "description": "Health, alerts and performance for one Windows server.",
+  "timezone": "browser",
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "editable": true,
   "links": [
     {
+      "keepTime": true,
       "tags": [
         "scom-core"
       ],
+      "includeVars": true,
       "type": "dashboards",
       "title": "SCOM Platform",
-      "includeVars": true,
-      "keepTime": true,
       "asDropdown": true
     },
     {
+      "keepTime": true,
       "tags": [
         "scom-pack"
       ],
+      "includeVars": false,
       "type": "dashboards",
       "title": "Technology packs",
-      "includeVars": false,
-      "keepTime": true,
       "asDropdown": true
     }
-  ],
-  "editable": true,
-  "uid": "scom-ws-detail",
-  "timezone": "browser",
-  "graphTooltip": 1
+  ]
 }

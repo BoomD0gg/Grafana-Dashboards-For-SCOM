@@ -1,10 +1,11 @@
 # Dashboards and management packs
 
-All dashboards are version 0.1.4. "Validated" means tested in a lab against real SCOM 2022 data (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)). Each technology needs its Microsoft management pack imported in SCOM.
+All dashboards are version 0.2.0. "Validated" means tested in a lab against real SCOM 2022 data (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)). Each technology needs its Microsoft management pack imported in SCOM.
 
 | Folder | Dashboards | Management packs to import | Status |
 |---|---|---|---|
 | `dashboards/scom-core` | SCOM Enterprise Overview, Server Drill-down, Platform Status, Alerts, Alert Details | none (Windows Server MP recommended) | Validated |
+| `dashboards/availability` | Availability - Overview, Stack Detail, Monthly Report | none (needs a group or distributed application in SCOM) | Validated with groups of Windows computers, including a real outage |
 | `dashboards/windows-server` | Windows Server - Fleet, Detail | Microsoft.Windows.Server.Library, Server.2016.Monitoring | Validated |
 | `dashboards/active-directory` | Active Directory - Overview, DC Detail | Microsoft.Windows.Server.AD.Class.Library, AD.2016.Monitoring | Validated |
 | `dashboards/sql-server` | SQL Server - Overview, Instance Detail | Microsoft.SQLServer.Core.Library, Windows.Discovery, Windows.Monitoring | Validated |
@@ -22,6 +23,7 @@ All dashboards are version 0.1.4. "Validated" means tested in a lab against real
 
 - Every query runs against real SCOM data without error.
 - Object counts and names compared with the servers themselves (zones, scopes, websites, application pools, VMs, databases, health sets and so on), plus service state against role health.
+- **Availability:** a lab server's SCOM agent was stopped for 27 minutes. The dashboards showed exactly 27 minutes of downtime for the stack that contained it (98.125% over 24 hours, which is 27 of 1,440 minutes), the stack turned Critical while the agent was down, and the outage appeared in the by-hour table. The new availability figure was also checked against the old one. Groups of Windows computers were tested; distributed applications and nested groups were not exercised.
 - A fault was introduced (a service or agent stopped on a lab server) and the dashboard shown to raise the matching monitor, role health and alert, then recover. Done for Windows Server (CPU load), Active Directory, SQL Server, SCOM Infrastructure, Hyper-V, DNS, DHCP, IIS and Exchange.
 - Every dashboard renders in a real browser without panel errors.
 

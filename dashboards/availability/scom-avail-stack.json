@@ -1,0 +1,1187 @@
+{
+  "version": 1,
+  "time": {
+    "to": "now",
+    "from": "now-30d"
+  },
+  "graphTooltip": 1,
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "ds_dw",
+        "label": "SCOM Data Warehouse",
+        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/warehouse|dw/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "type": "datasource",
+        "name": "ds_om",
+        "label": "SCOM Operational DB",
+        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+        "query": "mssql",
+        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "options": [],
+        "refresh": 1,
+        "skipUrlSync": false
+      },
+      {
+        "options": [
+          {
+            "selected": true,
+            "value": "My stacks",
+            "text": "My stacks"
+          },
+          {
+            "selected": false,
+            "value": "All groups and applications",
+            "text": "All groups and applications"
+          }
+        ],
+        "type": "custom",
+        "includeAll": false,
+        "label": "Stacks",
+        "query": "My stacks,All groups and applications",
+        "name": "stackscope",
+        "multi": false,
+        "hide": 0,
+        "current": {
+          "text": "My stacks",
+          "value": "My stacks"
+        }
+      },
+      {
+        "options": [],
+        "refresh": 2,
+        "definition": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n)\nSELECT DISTINCT e.DisplayName AS __text, e.DisplayName AS __value\nFROM tree\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\nJOIN dbo.vManagementPack mp ON mp.ManagementPackRowId = t.ManagementPackRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\nWHERE '${stackscope}' = 'All groups and applications' OR mp.SealedInd = 0\nORDER BY e.DisplayName",
+        "type": "query",
+        "includeAll": false,
+        "label": "Stack",
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "name": "stack",
+        "multi": false,
+        "query": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n)\nSELECT DISTINCT e.DisplayName AS __text, e.DisplayName AS __value\nFROM tree\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\nJOIN dbo.vManagementPack mp ON mp.ManagementPackRowId = t.ManagementPackRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\nWHERE '${stackscope}' = 'All groups and applications' OR mp.SealedInd = 0\nORDER BY e.DisplayName",
+        "sort": 1,
+        "current": {}
+      },
+      {
+        "options": [
+          {
+            "selected": true,
+            "value": "Any component down",
+            "text": "Any component down"
+          },
+          {
+            "selected": false,
+            "value": "All components down",
+            "text": "All components down"
+          }
+        ],
+        "type": "custom",
+        "includeAll": false,
+        "label": "Stack is down when",
+        "query": "Any component down,All components down",
+        "name": "rule",
+        "multi": false,
+        "hide": 0,
+        "current": {
+          "text": "Any component down",
+          "value": "Any component down"
+        }
+      },
+      {
+        "options": [
+          {
+            "selected": false,
+            "value": "99",
+            "text": "99"
+          },
+          {
+            "selected": false,
+            "value": "99.5",
+            "text": "99.5"
+          },
+          {
+            "selected": true,
+            "value": "99.9",
+            "text": "99.9"
+          },
+          {
+            "selected": false,
+            "value": "99.95",
+            "text": "99.95"
+          },
+          {
+            "selected": false,
+            "value": "99.99",
+            "text": "99.99"
+          }
+        ],
+        "type": "custom",
+        "includeAll": false,
+        "label": "SLA target %",
+        "query": "99,99.5,99.9,99.95,99.99",
+        "name": "sla",
+        "multi": false,
+        "hide": 0,
+        "current": {
+          "text": "99.9",
+          "value": "99.9"
+        }
+      },
+      {
+        "options": [
+          {
+            "selected": true,
+            "value": "Exclude planned maintenance",
+            "text": "Exclude planned maintenance"
+          },
+          {
+            "selected": false,
+            "value": "Count planned maintenance as downtime",
+            "text": "Count planned maintenance as downtime"
+          }
+        ],
+        "type": "custom",
+        "includeAll": false,
+        "label": "Planned maintenance",
+        "query": "Exclude planned maintenance,Count planned maintenance as downtime",
+        "name": "maint",
+        "multi": false,
+        "hide": 0,
+        "current": {
+          "text": "Exclude planned maintenance",
+          "value": "Exclude planned maintenance"
+        }
+      },
+      {
+        "definition": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\nSELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM mm\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = mm.HostId\nORDER BY h.DisplayName",
+        "type": "query",
+        "name": "stackhosts",
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_dw}"
+        },
+        "label": "Stack servers",
+        "query": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\nSELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM mm\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = mm.HostId\nORDER BY h.DisplayName",
+        "sort": 1,
+        "current": {},
+        "options": [],
+        "refresh": 2,
+        "hide": 2,
+        "multi": true,
+        "includeAll": true
+      }
+    ]
+  },
+  "uid": "scom-avail-stack",
+  "title": "Availability - Stack Detail",
+  "tags": [
+    "scom",
+    "scom-pack",
+    "availability",
+    "pack:availability"
+  ],
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "options": {
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Availability$/"
+        }
+      },
+      "id": 1,
+      "type": "stat",
+      "description": "Availability of the stack over the time range.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#5794F2"
+              }
+            ],
+            "mode": "absolute"
+          },
+          "noValue": "No data",
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 3,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\n,\nmh AS (\n  SELECT mm.StackId, mm.MemberId, h.DateTime,\n         CAST(h.InRedStateMilliseconds AS bigint) AS red, CAST(h.HealthServiceUnavailableMilliseconds AS bigint) AS hsu,\n         CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds AS bad,\n         CAST(h.InYellowStateMilliseconds AS bigint) AS warn,\n         CAST(h.InPlannedMaintenanceMilliseconds AS bigint) AS pl,\n         CAST(h.InDisabledStateMilliseconds AS bigint) AS dis\n  FROM mm\n  JOIN State.vStateHourly h ON h.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId\n  WHERE h.DateTime BETWEEN DATEADD(hour, -1, $__timeFrom()) AND $__timeTo()\n),\nsh AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind, mh.DateTime,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) ELSE 0 END\n              ELSE MAX(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) END AS bad,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.warn) ELSE 0 END ELSE MAX(mh.warn) END AS warn,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.pl) ELSE 0 END AS plmin,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.dis) ELSE 0 END AS dismin\n  FROM mh\n  JOIN stk s ON s.ManagedEntityRowId = mh.StackId\n  JOIN sn ON sn.StackId = mh.StackId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind, mh.DateTime, sn.n\n),\nsx AS (\n  SELECT StackId, DisplayName, Kind, DateTime,\n         CASE WHEN bad > 3600000 THEN CAST(3600000 AS bigint) ELSE bad END AS bad,\n         warn,\n         CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN 0 ELSE plmin END + dismin AS excl\n  FROM sh\n  WHERE DateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\n,\nwin AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind,\n         CASE WHEN MIN(m.Seen) > CAST($__timeFrom() AS datetime2) THEN CAST(MIN(m.Seen) AS datetime2) ELSE CAST($__timeFrom() AS datetime2) END AS A,\n         CASE WHEN CAST($__timeTo() AS datetime2) < GETUTCDATE() THEN CAST($__timeTo() AS datetime2) ELSE CAST(GETUTCDATE() AS datetime2) END AS B\n  FROM stk s JOIN mm m ON m.StackId = s.ManagedEntityRowId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind\n),\ndd AS (\n  SELECT w.StackId, w.DisplayName, w.Kind, d.D,\n         CASE WHEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) > 0\n              THEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) ELSE 0 END AS total,\n         COALESCE(h.bad, 0) AS bad, COALESCE(h.warn, 0) AS warn\n  FROM win w\n  CROSS APPLY (SELECT DATEADD(day, n.number, CAST(CAST(w.A AS date) AS datetime2)) AS D FROM master.dbo.spt_values n WHERE n.type = 'P' AND n.number <= DATEDIFF(day, w.A, w.B)) d\n  LEFT JOIN (SELECT x.StackId, CAST(x.DateTime AS date) AS Dy, SUM(x.bad) AS bad, SUM(x.warn) AS warn, SUM(x.excl) AS excl FROM sx x GROUP BY x.StackId, CAST(x.DateTime AS date)) h\n         ON h.StackId = w.StackId AND h.Dy = CAST(d.D AS date)\n)\n,\nnowm AS (\n  SELECT q.StackId, q.MemberId, q.Member, q.TypeName, q.HostId, q.Seen,\n         CASE WHEN q.wst = 3 THEN 3 ELSE q.own END AS st\n  FROM (\n    SELECT mm.StackId, mm.MemberId, mm.Member, mm.TypeName, mm.HostId, mm.Seen,\n           COALESCE((SELECT TOP 1 r.NewHealthState FROM State.vStateRaw r WHERE r.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY r.DateTime DESC),\n                    (SELECT TOP 1 hh.IntervalEndHealthState FROM State.vStateHourly hh WHERE hh.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY hh.DateTime DESC)) AS own,\n           (SELECT TOP 1 r.NewHealthState\n            FROM dbo.vManagedEntity we\n            JOIN dbo.vManagedEntityType wt ON wt.ManagedEntityTypeRowId = we.ManagedEntityTypeRowId AND wt.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthServiceWatcher'\n            JOIN dbo.vManagedEntityMonitor wem ON wem.ManagedEntityRowId = we.ManagedEntityRowId\n            JOIN dbo.vMonitor wmo ON wmo.MonitorRowId = wem.MonitorRowId AND wmo.MonitorSystemName = 'System.Health.AvailabilityState'\n            JOIN State.vStateRaw r ON r.ManagedEntityMonitorRowId = wem.ManagedEntityMonitorRowId\n            WHERE we.DisplayName = mm.Member ORDER BY r.DateTime DESC) AS wst\n    FROM mm\n  ) q\n),\nnows AS (\n  SELECT n.StackId,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) = COUNT(*) THEN 3 WHEN SUM(CASE WHEN n.st >= 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END\n              ELSE CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) > 0 THEN 3 WHEN SUM(CASE WHEN n.st = 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END END AS st\n  FROM nowm n GROUP BY n.StackId\n),\nagg AS (\n  SELECT d.StackId, SUM(d.bad) AS bad, SUM(d.total) AS total FROM dd d GROUP BY d.StackId\n)\nSELECT CASE WHEN a.total > 0 THEN ROUND(100.0 * (1.0 - CAST(a.bad AS float) / a.total), 3) END AS Availability,\n       ROUND(a.bad / 60000.0, 1) AS Downtime,\n       (SELECT COUNT(*) FROM sx x WHERE x.StackId = a.StackId AND x.bad > 0) AS Hours,\n       CASE w.st WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS State\nFROM agg a\nLEFT JOIN nows w ON w.StackId = a.StackId",
+          "format": "table"
+        }
+      ],
+      "title": "Availability",
+      "gridPos": {
+        "y": 0,
+        "w": 6,
+        "h": 4,
+        "x": 0
+      }
+    },
+    {
+      "options": {
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Downtime$/"
+        }
+      },
+      "id": 2,
+      "type": "stat",
+      "description": "Minutes the stack was unavailable in the time range.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#FF9830"
+              }
+            ],
+            "mode": "absolute"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\n,\nmh AS (\n  SELECT mm.StackId, mm.MemberId, h.DateTime,\n         CAST(h.InRedStateMilliseconds AS bigint) AS red, CAST(h.HealthServiceUnavailableMilliseconds AS bigint) AS hsu,\n         CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds AS bad,\n         CAST(h.InYellowStateMilliseconds AS bigint) AS warn,\n         CAST(h.InPlannedMaintenanceMilliseconds AS bigint) AS pl,\n         CAST(h.InDisabledStateMilliseconds AS bigint) AS dis\n  FROM mm\n  JOIN State.vStateHourly h ON h.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId\n  WHERE h.DateTime BETWEEN DATEADD(hour, -1, $__timeFrom()) AND $__timeTo()\n),\nsh AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind, mh.DateTime,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) ELSE 0 END\n              ELSE MAX(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) END AS bad,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.warn) ELSE 0 END ELSE MAX(mh.warn) END AS warn,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.pl) ELSE 0 END AS plmin,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.dis) ELSE 0 END AS dismin\n  FROM mh\n  JOIN stk s ON s.ManagedEntityRowId = mh.StackId\n  JOIN sn ON sn.StackId = mh.StackId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind, mh.DateTime, sn.n\n),\nsx AS (\n  SELECT StackId, DisplayName, Kind, DateTime,\n         CASE WHEN bad > 3600000 THEN CAST(3600000 AS bigint) ELSE bad END AS bad,\n         warn,\n         CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN 0 ELSE plmin END + dismin AS excl\n  FROM sh\n  WHERE DateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\n,\nwin AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind,\n         CASE WHEN MIN(m.Seen) > CAST($__timeFrom() AS datetime2) THEN CAST(MIN(m.Seen) AS datetime2) ELSE CAST($__timeFrom() AS datetime2) END AS A,\n         CASE WHEN CAST($__timeTo() AS datetime2) < GETUTCDATE() THEN CAST($__timeTo() AS datetime2) ELSE CAST(GETUTCDATE() AS datetime2) END AS B\n  FROM stk s JOIN mm m ON m.StackId = s.ManagedEntityRowId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind\n),\ndd AS (\n  SELECT w.StackId, w.DisplayName, w.Kind, d.D,\n         CASE WHEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) > 0\n              THEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) ELSE 0 END AS total,\n         COALESCE(h.bad, 0) AS bad, COALESCE(h.warn, 0) AS warn\n  FROM win w\n  CROSS APPLY (SELECT DATEADD(day, n.number, CAST(CAST(w.A AS date) AS datetime2)) AS D FROM master.dbo.spt_values n WHERE n.type = 'P' AND n.number <= DATEDIFF(day, w.A, w.B)) d\n  LEFT JOIN (SELECT x.StackId, CAST(x.DateTime AS date) AS Dy, SUM(x.bad) AS bad, SUM(x.warn) AS warn, SUM(x.excl) AS excl FROM sx x GROUP BY x.StackId, CAST(x.DateTime AS date)) h\n         ON h.StackId = w.StackId AND h.Dy = CAST(d.D AS date)\n)\n,\nnowm AS (\n  SELECT q.StackId, q.MemberId, q.Member, q.TypeName, q.HostId, q.Seen,\n         CASE WHEN q.wst = 3 THEN 3 ELSE q.own END AS st\n  FROM (\n    SELECT mm.StackId, mm.MemberId, mm.Member, mm.TypeName, mm.HostId, mm.Seen,\n           COALESCE((SELECT TOP 1 r.NewHealthState FROM State.vStateRaw r WHERE r.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY r.DateTime DESC),\n                    (SELECT TOP 1 hh.IntervalEndHealthState FROM State.vStateHourly hh WHERE hh.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY hh.DateTime DESC)) AS own,\n           (SELECT TOP 1 r.NewHealthState\n            FROM dbo.vManagedEntity we\n            JOIN dbo.vManagedEntityType wt ON wt.ManagedEntityTypeRowId = we.ManagedEntityTypeRowId AND wt.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthServiceWatcher'\n            JOIN dbo.vManagedEntityMonitor wem ON wem.ManagedEntityRowId = we.ManagedEntityRowId\n            JOIN dbo.vMonitor wmo ON wmo.MonitorRowId = wem.MonitorRowId AND wmo.MonitorSystemName = 'System.Health.AvailabilityState'\n            JOIN State.vStateRaw r ON r.ManagedEntityMonitorRowId = wem.ManagedEntityMonitorRowId\n            WHERE we.DisplayName = mm.Member ORDER BY r.DateTime DESC) AS wst\n    FROM mm\n  ) q\n),\nnows AS (\n  SELECT n.StackId,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) = COUNT(*) THEN 3 WHEN SUM(CASE WHEN n.st >= 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END\n              ELSE CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) > 0 THEN 3 WHEN SUM(CASE WHEN n.st = 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END END AS st\n  FROM nowm n GROUP BY n.StackId\n),\nagg AS (\n  SELECT d.StackId, SUM(d.bad) AS bad, SUM(d.total) AS total FROM dd d GROUP BY d.StackId\n)\nSELECT CASE WHEN a.total > 0 THEN ROUND(100.0 * (1.0 - CAST(a.bad AS float) / a.total), 3) END AS Availability,\n       ROUND(a.bad / 60000.0, 1) AS Downtime,\n       (SELECT COUNT(*) FROM sx x WHERE x.StackId = a.StackId AND x.bad > 0) AS Hours,\n       CASE w.st WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS State\nFROM agg a\nLEFT JOIN nows w ON w.StackId = a.StackId",
+          "format": "table"
+        }
+      ],
+      "title": "Downtime (minutes)",
+      "gridPos": {
+        "y": 0,
+        "w": 6,
+        "h": 4,
+        "x": 6
+      }
+    },
+    {
+      "options": {
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Hours$/"
+        }
+      },
+      "id": 3,
+      "type": "stat",
+      "description": "Number of hours that included any downtime.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#FF9830"
+              }
+            ],
+            "mode": "absolute"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\n,\nmh AS (\n  SELECT mm.StackId, mm.MemberId, h.DateTime,\n         CAST(h.InRedStateMilliseconds AS bigint) AS red, CAST(h.HealthServiceUnavailableMilliseconds AS bigint) AS hsu,\n         CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds AS bad,\n         CAST(h.InYellowStateMilliseconds AS bigint) AS warn,\n         CAST(h.InPlannedMaintenanceMilliseconds AS bigint) AS pl,\n         CAST(h.InDisabledStateMilliseconds AS bigint) AS dis\n  FROM mm\n  JOIN State.vStateHourly h ON h.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId\n  WHERE h.DateTime BETWEEN DATEADD(hour, -1, $__timeFrom()) AND $__timeTo()\n),\nsh AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind, mh.DateTime,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) ELSE 0 END\n              ELSE MAX(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) END AS bad,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.warn) ELSE 0 END ELSE MAX(mh.warn) END AS warn,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.pl) ELSE 0 END AS plmin,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.dis) ELSE 0 END AS dismin\n  FROM mh\n  JOIN stk s ON s.ManagedEntityRowId = mh.StackId\n  JOIN sn ON sn.StackId = mh.StackId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind, mh.DateTime, sn.n\n),\nsx AS (\n  SELECT StackId, DisplayName, Kind, DateTime,\n         CASE WHEN bad > 3600000 THEN CAST(3600000 AS bigint) ELSE bad END AS bad,\n         warn,\n         CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN 0 ELSE plmin END + dismin AS excl\n  FROM sh\n  WHERE DateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\n,\nwin AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind,\n         CASE WHEN MIN(m.Seen) > CAST($__timeFrom() AS datetime2) THEN CAST(MIN(m.Seen) AS datetime2) ELSE CAST($__timeFrom() AS datetime2) END AS A,\n         CASE WHEN CAST($__timeTo() AS datetime2) < GETUTCDATE() THEN CAST($__timeTo() AS datetime2) ELSE CAST(GETUTCDATE() AS datetime2) END AS B\n  FROM stk s JOIN mm m ON m.StackId = s.ManagedEntityRowId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind\n),\ndd AS (\n  SELECT w.StackId, w.DisplayName, w.Kind, d.D,\n         CASE WHEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) > 0\n              THEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) ELSE 0 END AS total,\n         COALESCE(h.bad, 0) AS bad, COALESCE(h.warn, 0) AS warn\n  FROM win w\n  CROSS APPLY (SELECT DATEADD(day, n.number, CAST(CAST(w.A AS date) AS datetime2)) AS D FROM master.dbo.spt_values n WHERE n.type = 'P' AND n.number <= DATEDIFF(day, w.A, w.B)) d\n  LEFT JOIN (SELECT x.StackId, CAST(x.DateTime AS date) AS Dy, SUM(x.bad) AS bad, SUM(x.warn) AS warn, SUM(x.excl) AS excl FROM sx x GROUP BY x.StackId, CAST(x.DateTime AS date)) h\n         ON h.StackId = w.StackId AND h.Dy = CAST(d.D AS date)\n)\n,\nnowm AS (\n  SELECT q.StackId, q.MemberId, q.Member, q.TypeName, q.HostId, q.Seen,\n         CASE WHEN q.wst = 3 THEN 3 ELSE q.own END AS st\n  FROM (\n    SELECT mm.StackId, mm.MemberId, mm.Member, mm.TypeName, mm.HostId, mm.Seen,\n           COALESCE((SELECT TOP 1 r.NewHealthState FROM State.vStateRaw r WHERE r.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY r.DateTime DESC),\n                    (SELECT TOP 1 hh.IntervalEndHealthState FROM State.vStateHourly hh WHERE hh.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY hh.DateTime DESC)) AS own,\n           (SELECT TOP 1 r.NewHealthState\n            FROM dbo.vManagedEntity we\n            JOIN dbo.vManagedEntityType wt ON wt.ManagedEntityTypeRowId = we.ManagedEntityTypeRowId AND wt.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthServiceWatcher'\n            JOIN dbo.vManagedEntityMonitor wem ON wem.ManagedEntityRowId = we.ManagedEntityRowId\n            JOIN dbo.vMonitor wmo ON wmo.MonitorRowId = wem.MonitorRowId AND wmo.MonitorSystemName = 'System.Health.AvailabilityState'\n            JOIN State.vStateRaw r ON r.ManagedEntityMonitorRowId = wem.ManagedEntityMonitorRowId\n            WHERE we.DisplayName = mm.Member ORDER BY r.DateTime DESC) AS wst\n    FROM mm\n  ) q\n),\nnows AS (\n  SELECT n.StackId,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) = COUNT(*) THEN 3 WHEN SUM(CASE WHEN n.st >= 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END\n              ELSE CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) > 0 THEN 3 WHEN SUM(CASE WHEN n.st = 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END END AS st\n  FROM nowm n GROUP BY n.StackId\n),\nagg AS (\n  SELECT d.StackId, SUM(d.bad) AS bad, SUM(d.total) AS total FROM dd d GROUP BY d.StackId\n)\nSELECT CASE WHEN a.total > 0 THEN ROUND(100.0 * (1.0 - CAST(a.bad AS float) / a.total), 3) END AS Availability,\n       ROUND(a.bad / 60000.0, 1) AS Downtime,\n       (SELECT COUNT(*) FROM sx x WHERE x.StackId = a.StackId AND x.bad > 0) AS Hours,\n       CASE w.st WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS State\nFROM agg a\nLEFT JOIN nows w ON w.StackId = a.StackId",
+          "format": "table"
+        }
+      ],
+      "title": "Hours with downtime",
+      "gridPos": {
+        "y": 0,
+        "w": 6,
+        "h": 4,
+        "x": 12
+      }
+    },
+    {
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^State$/"
+        },
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "id": 4,
+      "type": "stat",
+      "description": "The state of the stack right now.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No data",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#8E8E93"
+              }
+            ],
+            "mode": "absolute"
+          },
+          "mappings": [
+            {
+              "options": {
+                "Healthy": {
+                  "index": 0,
+                  "color": "#56A64B"
+                },
+                "Critical": {
+                  "index": 2,
+                  "color": "#E02F44"
+                },
+                "Warning": {
+                  "index": 1,
+                  "color": "#FF9830"
+                },
+                "Not monitored": {
+                  "index": 3,
+                  "color": "#8E8E93"
+                }
+              },
+              "type": "value"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\n,\nmh AS (\n  SELECT mm.StackId, mm.MemberId, h.DateTime,\n         CAST(h.InRedStateMilliseconds AS bigint) AS red, CAST(h.HealthServiceUnavailableMilliseconds AS bigint) AS hsu,\n         CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds AS bad,\n         CAST(h.InYellowStateMilliseconds AS bigint) AS warn,\n         CAST(h.InPlannedMaintenanceMilliseconds AS bigint) AS pl,\n         CAST(h.InDisabledStateMilliseconds AS bigint) AS dis\n  FROM mm\n  JOIN State.vStateHourly h ON h.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId\n  WHERE h.DateTime BETWEEN DATEADD(hour, -1, $__timeFrom()) AND $__timeTo()\n),\nsh AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind, mh.DateTime,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) ELSE 0 END\n              ELSE MAX(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) END AS bad,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.warn) ELSE 0 END ELSE MAX(mh.warn) END AS warn,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.pl) ELSE 0 END AS plmin,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.dis) ELSE 0 END AS dismin\n  FROM mh\n  JOIN stk s ON s.ManagedEntityRowId = mh.StackId\n  JOIN sn ON sn.StackId = mh.StackId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind, mh.DateTime, sn.n\n),\nsx AS (\n  SELECT StackId, DisplayName, Kind, DateTime,\n         CASE WHEN bad > 3600000 THEN CAST(3600000 AS bigint) ELSE bad END AS bad,\n         warn,\n         CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN 0 ELSE plmin END + dismin AS excl\n  FROM sh\n  WHERE DateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\n,\nwin AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind,\n         CASE WHEN MIN(m.Seen) > CAST($__timeFrom() AS datetime2) THEN CAST(MIN(m.Seen) AS datetime2) ELSE CAST($__timeFrom() AS datetime2) END AS A,\n         CASE WHEN CAST($__timeTo() AS datetime2) < GETUTCDATE() THEN CAST($__timeTo() AS datetime2) ELSE CAST(GETUTCDATE() AS datetime2) END AS B\n  FROM stk s JOIN mm m ON m.StackId = s.ManagedEntityRowId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind\n),\ndd AS (\n  SELECT w.StackId, w.DisplayName, w.Kind, d.D,\n         CASE WHEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) > 0\n              THEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) ELSE 0 END AS total,\n         COALESCE(h.bad, 0) AS bad, COALESCE(h.warn, 0) AS warn\n  FROM win w\n  CROSS APPLY (SELECT DATEADD(day, n.number, CAST(CAST(w.A AS date) AS datetime2)) AS D FROM master.dbo.spt_values n WHERE n.type = 'P' AND n.number <= DATEDIFF(day, w.A, w.B)) d\n  LEFT JOIN (SELECT x.StackId, CAST(x.DateTime AS date) AS Dy, SUM(x.bad) AS bad, SUM(x.warn) AS warn, SUM(x.excl) AS excl FROM sx x GROUP BY x.StackId, CAST(x.DateTime AS date)) h\n         ON h.StackId = w.StackId AND h.Dy = CAST(d.D AS date)\n)\n,\nnowm AS (\n  SELECT q.StackId, q.MemberId, q.Member, q.TypeName, q.HostId, q.Seen,\n         CASE WHEN q.wst = 3 THEN 3 ELSE q.own END AS st\n  FROM (\n    SELECT mm.StackId, mm.MemberId, mm.Member, mm.TypeName, mm.HostId, mm.Seen,\n           COALESCE((SELECT TOP 1 r.NewHealthState FROM State.vStateRaw r WHERE r.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY r.DateTime DESC),\n                    (SELECT TOP 1 hh.IntervalEndHealthState FROM State.vStateHourly hh WHERE hh.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY hh.DateTime DESC)) AS own,\n           (SELECT TOP 1 r.NewHealthState\n            FROM dbo.vManagedEntity we\n            JOIN dbo.vManagedEntityType wt ON wt.ManagedEntityTypeRowId = we.ManagedEntityTypeRowId AND wt.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthServiceWatcher'\n            JOIN dbo.vManagedEntityMonitor wem ON wem.ManagedEntityRowId = we.ManagedEntityRowId\n            JOIN dbo.vMonitor wmo ON wmo.MonitorRowId = wem.MonitorRowId AND wmo.MonitorSystemName = 'System.Health.AvailabilityState'\n            JOIN State.vStateRaw r ON r.ManagedEntityMonitorRowId = wem.ManagedEntityMonitorRowId\n            WHERE we.DisplayName = mm.Member ORDER BY r.DateTime DESC) AS wst\n    FROM mm\n  ) q\n),\nnows AS (\n  SELECT n.StackId,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) = COUNT(*) THEN 3 WHEN SUM(CASE WHEN n.st >= 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END\n              ELSE CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) > 0 THEN 3 WHEN SUM(CASE WHEN n.st = 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END END AS st\n  FROM nowm n GROUP BY n.StackId\n),\nagg AS (\n  SELECT d.StackId, SUM(d.bad) AS bad, SUM(d.total) AS total FROM dd d GROUP BY d.StackId\n)\nSELECT CASE WHEN a.total > 0 THEN ROUND(100.0 * (1.0 - CAST(a.bad AS float) / a.total), 3) END AS Availability,\n       ROUND(a.bad / 60000.0, 1) AS Downtime,\n       (SELECT COUNT(*) FROM sx x WHERE x.StackId = a.StackId AND x.bad > 0) AS Hours,\n       CASE w.st WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS State\nFROM agg a\nLEFT JOIN nows w ON w.StackId = a.StackId",
+          "format": "table"
+        }
+      ],
+      "title": "Current state",
+      "gridPos": {
+        "y": 0,
+        "w": 6,
+        "h": 4,
+        "x": 18
+      }
+    },
+    {
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table"
+        },
+        "tooltip": {
+          "sort": "desc",
+          "mode": "multi"
+        }
+      },
+      "id": 5,
+      "type": "timeseries",
+      "description": "Availability per day. The dashed line is the SLA target chosen at the top.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "spanNulls": 3900000,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "fillOpacity": 8
+          },
+          "unit": "percent",
+          "max": 100,
+          "noValue": "No data in range"
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#E02F44",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "SLA target %"
+            }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\n,\nmh AS (\n  SELECT mm.StackId, mm.MemberId, h.DateTime,\n         CAST(h.InRedStateMilliseconds AS bigint) AS red, CAST(h.HealthServiceUnavailableMilliseconds AS bigint) AS hsu,\n         CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds AS bad,\n         CAST(h.InYellowStateMilliseconds AS bigint) AS warn,\n         CAST(h.InPlannedMaintenanceMilliseconds AS bigint) AS pl,\n         CAST(h.InDisabledStateMilliseconds AS bigint) AS dis\n  FROM mm\n  JOIN State.vStateHourly h ON h.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId\n  WHERE h.DateTime BETWEEN DATEADD(hour, -1, $__timeFrom()) AND $__timeTo()\n),\nsh AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind, mh.DateTime,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) ELSE 0 END\n              ELSE MAX(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) END AS bad,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.warn) ELSE 0 END ELSE MAX(mh.warn) END AS warn,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.pl) ELSE 0 END AS plmin,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.dis) ELSE 0 END AS dismin\n  FROM mh\n  JOIN stk s ON s.ManagedEntityRowId = mh.StackId\n  JOIN sn ON sn.StackId = mh.StackId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind, mh.DateTime, sn.n\n),\nsx AS (\n  SELECT StackId, DisplayName, Kind, DateTime,\n         CASE WHEN bad > 3600000 THEN CAST(3600000 AS bigint) ELSE bad END AS bad,\n         warn,\n         CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN 0 ELSE plmin END + dismin AS excl\n  FROM sh\n  WHERE DateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\n,\nwin AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind,\n         CASE WHEN MIN(m.Seen) > CAST($__timeFrom() AS datetime2) THEN CAST(MIN(m.Seen) AS datetime2) ELSE CAST($__timeFrom() AS datetime2) END AS A,\n         CASE WHEN CAST($__timeTo() AS datetime2) < GETUTCDATE() THEN CAST($__timeTo() AS datetime2) ELSE CAST(GETUTCDATE() AS datetime2) END AS B\n  FROM stk s JOIN mm m ON m.StackId = s.ManagedEntityRowId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind\n),\ndd AS (\n  SELECT w.StackId, w.DisplayName, w.Kind, d.D,\n         CASE WHEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) > 0\n              THEN CAST(DATEDIFF(second, CASE WHEN d.D > w.A THEN d.D ELSE w.A END, CASE WHEN DATEADD(day, 1, d.D) < w.B THEN DATEADD(day, 1, d.D) ELSE w.B END) AS bigint) * 1000 - COALESCE(h.excl, 0) ELSE 0 END AS total,\n         COALESCE(h.bad, 0) AS bad, COALESCE(h.warn, 0) AS warn\n  FROM win w\n  CROSS APPLY (SELECT DATEADD(day, n.number, CAST(CAST(w.A AS date) AS datetime2)) AS D FROM master.dbo.spt_values n WHERE n.type = 'P' AND n.number <= DATEDIFF(day, w.A, w.B)) d\n  LEFT JOIN (SELECT x.StackId, CAST(x.DateTime AS date) AS Dy, SUM(x.bad) AS bad, SUM(x.warn) AS warn, SUM(x.excl) AS excl FROM sx x GROUP BY x.StackId, CAST(x.DateTime AS date)) h\n         ON h.StackId = w.StackId AND h.Dy = CAST(d.D AS date)\n)\nSELECT y.time, y.metric, y.value FROM (\n  SELECT CAST(d.D AS datetime) AS time, 'Availability %' AS metric, ROUND(100.0 * (1.0 - CAST(d.bad AS float) / d.total), 3) AS value FROM dd d WHERE d.total > 0\n  UNION ALL\n  SELECT CAST(d.D AS datetime), 'SLA target %', COALESCE(TRY_CAST('${sla}' AS float), 99.9) FROM dd d WHERE d.total > 0\n) y\nORDER BY y.time",
+          "format": "time_series"
+        }
+      ],
+      "title": "Daily availability against the SLA target",
+      "gridPos": {
+        "y": 4,
+        "w": 12,
+        "h": 8,
+        "x": 0
+      }
+    },
+    {
+      "options": {
+        "colWidth": 0.95,
+        "tooltip": {
+          "sort": "none",
+          "mode": "single"
+        },
+        "showValue": "never",
+        "rowHeight": 0.9,
+        "legend": {
+          "showLegend": false
+        }
+      },
+      "id": 6,
+      "type": "status-history",
+      "description": "Each member of the stack: hourly for ranges up to 3 days, daily for longer ranges.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 1
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "No data in range",
+          "thresholds": {
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              }
+            ],
+            "mode": "absolute"
+          },
+          "mappings": [
+            {
+              "options": {
+                "2": {
+                  "color": "#E02F44",
+                  "text": "Unavailable",
+                  "index": 2
+                },
+                "1": {
+                  "color": "#FF9830",
+                  "text": "Degraded",
+                  "index": 1
+                },
+                "0": {
+                  "color": "#56A64B",
+                  "text": "Healthy",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\n,\nmh AS (\n  SELECT mm.StackId, mm.MemberId, h.DateTime,\n         CAST(h.InRedStateMilliseconds AS bigint) AS red, CAST(h.HealthServiceUnavailableMilliseconds AS bigint) AS hsu,\n         CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds AS bad,\n         CAST(h.InYellowStateMilliseconds AS bigint) AS warn,\n         CAST(h.InPlannedMaintenanceMilliseconds AS bigint) AS pl,\n         CAST(h.InDisabledStateMilliseconds AS bigint) AS dis\n  FROM mm\n  JOIN State.vStateHourly h ON h.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId\n  WHERE h.DateTime BETWEEN DATEADD(hour, -1, $__timeFrom()) AND $__timeTo()\n),\nsh AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind, mh.DateTime,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) ELSE 0 END\n              ELSE MAX(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) END AS bad,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.warn) ELSE 0 END ELSE MAX(mh.warn) END AS warn,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.pl) ELSE 0 END AS plmin,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.dis) ELSE 0 END AS dismin\n  FROM mh\n  JOIN stk s ON s.ManagedEntityRowId = mh.StackId\n  JOIN sn ON sn.StackId = mh.StackId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind, mh.DateTime, sn.n\n),\nsx AS (\n  SELECT StackId, DisplayName, Kind, DateTime,\n         CASE WHEN bad > 3600000 THEN CAST(3600000 AS bigint) ELSE bad END AS bad,\n         warn,\n         CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN 0 ELSE plmin END + dismin AS excl\n  FROM sh\n  WHERE DateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\nSELECT z.time, z.metric, z.value FROM (\n  SELECT CAST(g.Hr AS datetime) AS time, mm.Member AS metric, CASE WHEN x.bad > 0 THEN 2 WHEN x.warn > 0 THEN 1 ELSE 0 END AS value\n  FROM (SELECT DATEADD(hour, n.number, DATEADD(hour, DATEDIFF(hour, 0, CAST($__timeFrom() AS datetime2)), 0)) AS Hr FROM master.dbo.spt_values n\n        WHERE n.type = 'P' AND DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 4320 AND n.number <= 73) g\n  CROSS JOIN mm\n  LEFT JOIN mh x ON x.StackId = mm.StackId AND x.MemberId = mm.MemberId AND x.DateTime = g.Hr\n  WHERE g.Hr <= CAST($__timeTo() AS datetime2) AND g.Hr <= GETUTCDATE() AND DATEADD(hour, 1, g.Hr) > mm.Seen\n  UNION ALL\n  SELECT CAST(g.D AS datetime), mm.Member, CASE WHEN x.bad > 0 THEN 2 WHEN x.warn > 0 THEN 1 ELSE 0 END\n  FROM (SELECT DATEADD(day, n.number, CAST(CAST($__timeFrom() AS datetime2) AS date)) AS D FROM master.dbo.spt_values n\n        WHERE n.type = 'P' AND DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 4320 AND n.number <= DATEDIFF(day, $__timeFrom(), $__timeTo())) g\n  CROSS JOIN mm\n  LEFT JOIN (SELECT h.StackId, h.MemberId, CAST(h.DateTime AS date) AS Dy, MAX(h.bad) AS bad, MAX(h.warn) AS warn FROM mh h GROUP BY h.StackId, h.MemberId, CAST(h.DateTime AS date)) x\n         ON x.StackId = mm.StackId AND x.MemberId = mm.MemberId AND x.Dy = CAST(g.D AS date)\n  WHERE g.D <= GETUTCDATE() AND DATEADD(day, 1, g.D) > mm.Seen\n) z\nORDER BY z.time",
+          "format": "time_series"
+        }
+      ],
+      "title": "Component status over time",
+      "gridPos": {
+        "y": 4,
+        "w": 12,
+        "h": 8,
+        "x": 12
+      }
+    },
+    {
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "id": 7,
+      "type": "table",
+      "description": "What the stack is made of, worst availability first.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No components found"
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Current state"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 215
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Component"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 105
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Current state"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 115
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Availability %"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 3
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Availability %"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Downtime (min)"
+            }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\n,\nmh AS (\n  SELECT mm.StackId, mm.MemberId, h.DateTime,\n         CAST(h.InRedStateMilliseconds AS bigint) AS red, CAST(h.HealthServiceUnavailableMilliseconds AS bigint) AS hsu,\n         CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds AS bad,\n         CAST(h.InYellowStateMilliseconds AS bigint) AS warn,\n         CAST(h.InPlannedMaintenanceMilliseconds AS bigint) AS pl,\n         CAST(h.InDisabledStateMilliseconds AS bigint) AS dis\n  FROM mm\n  JOIN State.vStateHourly h ON h.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId\n  WHERE h.DateTime BETWEEN DATEADD(hour, -1, $__timeFrom()) AND $__timeTo()\n),\nsh AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind, mh.DateTime,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) ELSE 0 END\n              ELSE MAX(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) END AS bad,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.warn) ELSE 0 END ELSE MAX(mh.warn) END AS warn,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.pl) ELSE 0 END AS plmin,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.dis) ELSE 0 END AS dismin\n  FROM mh\n  JOIN stk s ON s.ManagedEntityRowId = mh.StackId\n  JOIN sn ON sn.StackId = mh.StackId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind, mh.DateTime, sn.n\n),\nsx AS (\n  SELECT StackId, DisplayName, Kind, DateTime,\n         CASE WHEN bad > 3600000 THEN CAST(3600000 AS bigint) ELSE bad END AS bad,\n         warn,\n         CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN 0 ELSE plmin END + dismin AS excl\n  FROM sh\n  WHERE DateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\n,\nnowm AS (\n  SELECT q.StackId, q.MemberId, q.Member, q.TypeName, q.HostId, q.Seen,\n         CASE WHEN q.wst = 3 THEN 3 ELSE q.own END AS st\n  FROM (\n    SELECT mm.StackId, mm.MemberId, mm.Member, mm.TypeName, mm.HostId, mm.Seen,\n           COALESCE((SELECT TOP 1 r.NewHealthState FROM State.vStateRaw r WHERE r.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY r.DateTime DESC),\n                    (SELECT TOP 1 hh.IntervalEndHealthState FROM State.vStateHourly hh WHERE hh.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId ORDER BY hh.DateTime DESC)) AS own,\n           (SELECT TOP 1 r.NewHealthState\n            FROM dbo.vManagedEntity we\n            JOIN dbo.vManagedEntityType wt ON wt.ManagedEntityTypeRowId = we.ManagedEntityTypeRowId AND wt.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthServiceWatcher'\n            JOIN dbo.vManagedEntityMonitor wem ON wem.ManagedEntityRowId = we.ManagedEntityRowId\n            JOIN dbo.vMonitor wmo ON wmo.MonitorRowId = wem.MonitorRowId AND wmo.MonitorSystemName = 'System.Health.AvailabilityState'\n            JOIN State.vStateRaw r ON r.ManagedEntityMonitorRowId = wem.ManagedEntityMonitorRowId\n            WHERE we.DisplayName = mm.Member ORDER BY r.DateTime DESC) AS wst\n    FROM mm\n  ) q\n),\nnows AS (\n  SELECT n.StackId,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) = COUNT(*) THEN 3 WHEN SUM(CASE WHEN n.st >= 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END\n              ELSE CASE WHEN SUM(CASE WHEN n.st = 3 THEN 1 ELSE 0 END) > 0 THEN 3 WHEN SUM(CASE WHEN n.st = 2 THEN 1 ELSE 0 END) > 0 THEN 2 WHEN SUM(CASE WHEN n.st = 1 THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END END AS st\n  FROM nowm n GROUP BY n.StackId\n),\nmrow AS (\n  SELECT mh.MemberId, SUM(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) AS bad, SUM(CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN 0 ELSE mh.pl END + mh.dis) AS excl\n  FROM mh WHERE mh.DateTime BETWEEN $__timeFrom() AND $__timeTo() GROUP BY mh.MemberId\n),\nmag AS (\n  SELECT n.MemberId, COALESCE(r.bad, 0) AS bad,\n         CAST(DATEDIFF(second, CASE WHEN n.Seen > CAST($__timeFrom() AS datetime2) THEN CAST(n.Seen AS datetime2) ELSE CAST($__timeFrom() AS datetime2) END,\n                              CASE WHEN CAST($__timeTo() AS datetime2) < GETUTCDATE() THEN CAST($__timeTo() AS datetime2) ELSE CAST(GETUTCDATE() AS datetime2) END) AS bigint) * 1000 - COALESCE(r.excl, 0) AS total\n  FROM nowm n LEFT JOIN mrow r ON r.MemberId = n.MemberId\n)\nSELECT n.Member AS Component,\n       n.TypeName AS Type,\n       CASE n.st WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS \"Current state\",\n       CASE WHEN g.total > 0 THEN ROUND(100.0 * (1.0 - CAST(g.bad AS float) / g.total), 3) END AS \"Availability %\",\n       ROUND(g.bad / 60000.0, 1) AS \"Downtime (min)\"\nFROM nowm n\nLEFT JOIN mag g ON g.MemberId = n.MemberId\nORDER BY CASE WHEN g.total > 0 THEN 100.0 * (1.0 - CAST(g.bad AS float) / g.total) END, n.Member",
+          "format": "table"
+        }
+      ],
+      "title": "Components",
+      "gridPos": {
+        "y": 12,
+        "w": 12,
+        "h": 9,
+        "x": 0
+      }
+    },
+    {
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "id": 8,
+      "type": "table",
+      "description": "The hours in which a component was unavailable or degraded, newest first. Not reporting is time SCOM could not reach the agent, which SCOM counts as unavailable. SCOM writes an hour shortly after it ends, so an outage still in progress may not be listed yet.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No outages in the time range"
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 215
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Component"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Hour starting"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 115
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Critical (min)"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 155
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Not reporting (min)"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 125
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Degraded (min)"
+            }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH tree AS (\n  SELECT t.ManagedEntityTypeRowId, CAST(CASE t.ManagedEntityTypeSystemName WHEN 'Microsoft.SystemCenter.DistributedApplication' THEN 'Distributed application' ELSE 'Group' END AS nvarchar(30)) AS Kind\n  FROM dbo.vManagedEntityType t\n  WHERE t.ManagedEntityTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroup', 'Microsoft.SystemCenter.DistributedApplication')\n  UNION ALL\n  SELECT v.ManagedEntityTypeRowId, tree.Kind\n  FROM dbo.vManagedEntityTypeManagementPackVersion v\n  JOIN tree ON v.BaseManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n),\nstk AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, tree.Kind\n  FROM tree\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = tree.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityTypeRowId = t.ManagedEntityTypeRowId\n  WHERE e.DisplayName IN (${stack:singlequote})\n),\nrel AS (\n  SELECT r.SourceManagedEntityRowId AS src, r.TargetManagedEntityRowId AS tgt\n  FROM dbo.vRelationship r\n  JOIN dbo.vRelationshipManagementGroup rg ON rg.RelationshipRowId = r.RelationshipRowId AND rg.ToDateTime IS NULL\n  JOIN dbo.vRelationshipType rt ON rt.RelationshipTypeRowId = r.RelationshipTypeRowId\n       AND rt.RelationshipTypeSystemName IN ('Microsoft.SystemCenter.InstanceGroupContainsEntities', 'System.Containment')\n),\nwalk AS (\n  SELECT s.ManagedEntityRowId AS StackId, rel.tgt AS MemberId, 1 AS lvl\n  FROM stk s JOIN rel ON rel.src = s.ManagedEntityRowId\n  UNION ALL\n  SELECT w.StackId, rel.tgt, w.lvl + 1\n  FROM walk w JOIN rel ON rel.src = w.MemberId\n  WHERE w.lvl < 4\n),\nmm AS (\n  SELECT w.StackId, e.ManagedEntityRowId AS MemberId, e.DisplayName AS Member, ty.ManagedEntityTypeDefaultName AS TypeName,\n         e.TopLevelHostManagedEntityRowId AS HostId, em.ManagedEntityMonitorRowId, MIN(em.DWCreatedDateTime) AS Seen\n  FROM walk w\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = w.MemberId\n  JOIN dbo.vManagedEntityType ty ON ty.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = e.ManagedEntityRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId AND mo.MonitorSystemName = 'System.Health.AvailabilityState'\n  WHERE e.ManagedEntityTypeRowId NOT IN (SELECT ManagedEntityTypeRowId FROM tree)\n  GROUP BY w.StackId, e.ManagedEntityRowId, e.DisplayName, ty.ManagedEntityTypeDefaultName, e.TopLevelHostManagedEntityRowId, em.ManagedEntityMonitorRowId\n),\nsn AS (\n  SELECT StackId, COUNT(DISTINCT MemberId) AS n FROM mm GROUP BY StackId\n)\n,\nmh AS (\n  SELECT mm.StackId, mm.MemberId, h.DateTime,\n         CAST(h.InRedStateMilliseconds AS bigint) AS red, CAST(h.HealthServiceUnavailableMilliseconds AS bigint) AS hsu,\n         CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds AS bad,\n         CAST(h.InYellowStateMilliseconds AS bigint) AS warn,\n         CAST(h.InPlannedMaintenanceMilliseconds AS bigint) AS pl,\n         CAST(h.InDisabledStateMilliseconds AS bigint) AS dis\n  FROM mm\n  JOIN State.vStateHourly h ON h.ManagedEntityMonitorRowId = mm.ManagedEntityMonitorRowId\n  WHERE h.DateTime BETWEEN DATEADD(hour, -1, $__timeFrom()) AND $__timeTo()\n),\nsh AS (\n  SELECT s.ManagedEntityRowId AS StackId, s.DisplayName, s.Kind, mh.DateTime,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) ELSE 0 END\n              ELSE MAX(mh.bad + CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN mh.pl ELSE 0 END) END AS bad,\n         CASE WHEN ('${rule}' = 'All components down') THEN CASE WHEN COUNT(*) = sn.n THEN MIN(mh.warn) ELSE 0 END ELSE MAX(mh.warn) END AS warn,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.pl) ELSE 0 END AS plmin,\n         CASE WHEN COUNT(*) = sn.n THEN MIN(mh.dis) ELSE 0 END AS dismin\n  FROM mh\n  JOIN stk s ON s.ManagedEntityRowId = mh.StackId\n  JOIN sn ON sn.StackId = mh.StackId\n  GROUP BY s.ManagedEntityRowId, s.DisplayName, s.Kind, mh.DateTime, sn.n\n),\nsx AS (\n  SELECT StackId, DisplayName, Kind, DateTime,\n         CASE WHEN bad > 3600000 THEN CAST(3600000 AS bigint) ELSE bad END AS bad,\n         warn,\n         CASE WHEN ('${maint}' = 'Count planned maintenance as downtime') THEN 0 ELSE plmin END + dismin AS excl\n  FROM sh\n  WHERE DateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\nSELECT TOP 200\n  mm.Member AS Component,\n  x.DateTime AS \"Hour starting\",\n  ROUND(x.red / 60000.0, 1) AS \"Critical (min)\",\n  ROUND(x.hsu / 60000.0, 1) AS \"Not reporting (min)\",\n  ROUND(x.warn / 60000.0, 1) AS \"Degraded (min)\"\nFROM mh x\nJOIN mm ON mm.StackId = x.StackId AND mm.MemberId = x.MemberId\nWHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND x.red + x.hsu + x.warn > 0\nORDER BY x.DateTime DESC, mm.Member",
+          "format": "table"
+        }
+      ],
+      "title": "Outages and degradations (by hour)",
+      "gridPos": {
+        "y": 12,
+        "w": 12,
+        "h": 9,
+        "x": 12
+      }
+    },
+    {
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "id": 9,
+      "type": "table",
+      "description": "Open alerts on the servers that make up this stack. Select an alert name to see its details.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No open alerts"
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open alert details",
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
+                  }
+                ]
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "AlertId"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 380
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 240
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Source"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 230
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Computer"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Repeats"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 160
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Raised"
+            }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 500\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  (SELECT TOP 1 c.DisplayName FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId) AS Computer,\n  COALESCE(rs.ResolutionStateName, CAST(a.ResolutionState AS varchar(10))) AS Status,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nLEFT JOIN dbo.ResolutionState rs ON rs.ResolutionState = a.ResolutionState\nWHERE a.ResolutionState < 255\n  AND a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${stackhosts:singlequote}))\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+          "format": "table"
+        }
+      ],
+      "title": "Open alerts on the stack servers",
+      "gridPos": {
+        "y": 21,
+        "w": 24,
+        "h": 8,
+        "x": 0
+      }
+    }
+  ],
+  "description": "One application stack in detail: availability against the SLA target, its components, outages and open alerts.",
+  "timezone": "browser",
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "editable": true,
+  "links": [
+    {
+      "keepTime": true,
+      "tags": [
+        "scom-core"
+      ],
+      "includeVars": true,
+      "type": "dashboards",
+      "title": "SCOM Platform",
+      "asDropdown": true
+    },
+    {
+      "keepTime": true,
+      "tags": [
+        "scom-pack"
+      ],
+      "includeVars": false,
+      "type": "dashboards",
+      "title": "Technology packs",
+      "asDropdown": true
+    }
+  ]
+}

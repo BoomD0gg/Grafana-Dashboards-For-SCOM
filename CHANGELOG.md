@@ -1,6 +1,17 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 - Availability dashboards, and a fix to the availability percentage
+
+### Added
+- **Availability** (new folder `availability`, three dashboards): the availability of your **application stacks**, meaning SCOM groups and distributed applications.
+  - **Availability - Overview**: every stack with its current state, availability against an SLA target you choose, downtime, and a daily status strip. Select a stack to open its detail.
+  - **Availability - Stack Detail**: one stack with its availability and daily trend against the SLA line, the state of each component over time, the components table, outages and degradations, and the open alerts on the stack's servers.
+  - **Availability - Monthly Report**: availability and downtime month by month against the SLA target.
+  - Choose whether a stack is down when **any** component is down or only when **all** are (for redundant stacks), and whether planned maintenance is left out or counted as downtime.
+  - A stack's availability is calculated from the hourly availability states SCOM keeps for its members, because SCOM does not store availability for plain groups.
+
+### Fixed
+- **The Availability % on the SCOM Enterprise Overview and the Server Drill-down was wrong, and too low, for any computer that had been unhealthy.** SCOM writes an hourly state row only for hours in which the state changed or was not healthy; healthy hours have no row at all. The old query divided the downtime by the number of rows instead of by the time that had actually passed, so a computer with some downtime could show a very low percentage (in the test lab, 6% where the real figure was 88%). The measured time is now the real elapsed time, from when the computer was first monitored (or the start of the time range) to now. If you used the old figures for reporting, re-check them. The Hours measured column now shows the real hours.
 
 ### Documentation
 - **Updating** in [INSTALLATION.md](docs/INSTALLATION.md) now covers three ways to update: file provisioning (copy the new files), a PowerShell script that overwrites every dashboard in one go, and a manual import.
