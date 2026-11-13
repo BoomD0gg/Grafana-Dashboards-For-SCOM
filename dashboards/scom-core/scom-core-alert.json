@@ -1,6 +1,411 @@
 {
-  "description": "Everything SCOM knows about one alert: summary, description, context, history and product knowledge.",
+  "panels": [
+    {
+      "options": {
+        "mode": "markdown",
+        "content": "**Alert details.** Open this page by selecting an alert name on [SCOM Alerts](/d/scom-core-alerts/scom-alerts) or in any *Active alerts* table. To look at a specific alert, paste its Alert ID into the box at the top."
+      },
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "y": 0,
+        "x": 0,
+        "w": 24,
+        "h": 2
+      }
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "The alert as shown on the SCOM console Alert Details tab.",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "value": {
+                  "type": "auto",
+                  "wrapText": true
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Property"
+            },
+            "properties": [
+              {
+                "value": 150,
+                "id": "custom.width"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "gridPos": {
+        "y": 2,
+        "x": 0,
+        "w": 9,
+        "h": 18
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT v.Property, v.Value\nFROM (SELECT TOP 1 a.* FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) a\nCROSS APPLY (VALUES\n  (1,  'Alert',          CAST(COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS nvarchar(4000))),\n  (2,  'Severity',       CAST(CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS nvarchar(4000))),\n  (3,  'Priority',       CAST(CASE a.Priority WHEN 2 THEN 'High' WHEN 1 THEN 'Medium' ELSE 'Low' END AS nvarchar(4000))),\n  (4,  'Status',         CAST((SELECT TOP 1 rs.ResolutionStateName FROM dbo.ResolutionState rs WHERE rs.ResolutionState = a.ResolutionState) AS nvarchar(4000))),\n  (5,  'Source',         CAST(a.MonitoringObjectDisplayName AS nvarchar(4000))),\n  (6,  'Path',           CAST(a.MonitoringObjectPath AS nvarchar(4000))),\n  (7,  'Computer',       CAST((SELECT TOP 1 c.DisplayName FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId) AS nvarchar(4000))),\n  (8,  'Raised (UTC)',   CONVERT(nvarchar(30), a.TimeRaised, 120)),\n  (9,  'Last modified (UTC)', CONVERT(nvarchar(30), a.LastModified, 120)),\n  (10, 'Resolved (UTC)', CONVERT(nvarchar(30), a.TimeResolved, 120)),\n  (11, 'Repeat count',   CAST(a.RepeatCount AS nvarchar(20))),\n  (12, 'Owner',          CAST(a.Owner AS nvarchar(4000))),\n  (13, 'Resolved by',    CAST(a.ResolvedBy AS nvarchar(4000))),\n  (14, 'Ticket ID',      CAST(a.TicketId AS nvarchar(4000))),\n  (15, 'Category',       CAST(a.Category AS nvarchar(4000))),\n  (16, 'Raised by',      CAST(CASE WHEN a.IsMonitorAlert = 1 THEN 'Monitor' ELSE 'Rule' END AS nvarchar(4000))),\n  (17, 'Monitor or rule', CAST(a.Name AS nvarchar(4000))),\n  (18, 'Custom field 1', CAST(a.CustomField1 AS nvarchar(4000))),\n  (19, 'Custom field 2', CAST(a.CustomField2 AS nvarchar(4000))),\n  (20, 'Custom field 3', CAST(a.CustomField3 AS nvarchar(4000))),\n  (21, 'Alert ID',       CAST(a.Id AS nvarchar(40)))\n) v(ord, Property, Value)\nWHERE v.Value IS NOT NULL AND v.Value <> ''\nORDER BY v.ord"
+        }
+      ],
+      "title": "Alert",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 2,
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "The alert description, with the alert parameters filled in.",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Description"
+            },
+            "properties": [
+              {
+                "value": {
+                  "type": "auto",
+                  "wrapText": true
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "gridPos": {
+        "y": 2,
+        "x": 9,
+        "w": 15,
+        "h": 6
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(\n  COALESCE(NULLIF(a.Description, ''), a.AlertStringDescription),\n  '{0}', COALESCE(p.x.value('(/AlertParameters/AlertParameter1)[1]', 'nvarchar(max)'), '{0}')),\n  '{1}', COALESCE(p.x.value('(/AlertParameters/AlertParameter2)[1]', 'nvarchar(max)'), '{1}')),\n  '{2}', COALESCE(p.x.value('(/AlertParameters/AlertParameter3)[1]', 'nvarchar(max)'), '{2}')),\n  '{3}', COALESCE(p.x.value('(/AlertParameters/AlertParameter4)[1]', 'nvarchar(max)'), '{3}')),\n  '{4}', COALESCE(p.x.value('(/AlertParameters/AlertParameter5)[1]', 'nvarchar(max)'), '{4}')),\n  '{5}', COALESCE(p.x.value('(/AlertParameters/AlertParameter6)[1]', 'nvarchar(max)'), '{5}')),\n  '{6}', COALESCE(p.x.value('(/AlertParameters/AlertParameter7)[1]', 'nvarchar(max)'), '{6}')),\n  '{7}', COALESCE(p.x.value('(/AlertParameters/AlertParameter8)[1]', 'nvarchar(max)'), '{7}')),\n  '{8}', COALESCE(p.x.value('(/AlertParameters/AlertParameter9)[1]', 'nvarchar(max)'), '{8}')),\n  '{9}', COALESCE(p.x.value('(/AlertParameters/AlertParameter10)[1]', 'nvarchar(max)'), '{9}')) AS Description\nFROM (SELECT TOP 1 a.* FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) a\nCROSS APPLY (SELECT TRY_CAST(a.AlertParams AS xml) AS x) p"
+        }
+      ],
+      "title": "Description",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 3,
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "The data that triggered the alert (the console Alert Context tab): one row per field.",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "value": {
+                  "type": "auto",
+                  "wrapText": true
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Field"
+            },
+            "properties": [
+              {
+                "value": 200,
+                "id": "custom.width"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "gridPos": {
+        "y": 8,
+        "x": 9,
+        "w": 15,
+        "h": 12
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT n.value('local-name(.)', 'nvarchar(200)') AS Field, n.value('.', 'nvarchar(max)') AS Value\nFROM (SELECT TOP 1 TRY_CAST(a.Context AS xml) AS x FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) c\nCROSS APPLY c.x.nodes('//*[not(*)]') AS t(n)\nUNION ALL\nSELECT 'Context (raw)', CAST(a.Context AS nvarchar(max))\nFROM (SELECT TOP 1 a.* FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) a\nWHERE a.Context IS NOT NULL AND TRY_CAST(a.Context AS xml) IS NULL"
+        }
+      ],
+      "title": "Alert context",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 4,
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "State changes, owner and comments, newest first.",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Comments"
+            },
+            "properties": [
+              {
+                "value": {
+                  "type": "auto",
+                  "wrapText": true
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time (UTC)"
+            },
+            "properties": [
+              {
+                "value": 160,
+                "id": "custom.width"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "-"
+        }
+      },
+      "gridPos": {
+        "y": 20,
+        "x": 0,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT h.TimeModified AS \"Time (UTC)\",\n       COALESCE(rs.ResolutionStateName, CAST(h.ResolutionState AS varchar(10))) AS Status,\n       h.Owner AS Owner, h.ModifiedBy AS \"Modified by\", h.Comments AS Comments, h.TicketId AS \"Ticket ID\"\nFROM dbo.AlertHistory h\nLEFT JOIN dbo.ResolutionState rs ON rs.ResolutionState = h.ResolutionState\nWHERE h.AlertId = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)\nORDER BY h.TimeModified DESC"
+        }
+      ],
+      "title": "History",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 5,
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Knowledge from the management pack for the monitor or rule that raised this alert (Summary, Causes, Resolutions...).",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Text"
+            },
+            "properties": [
+              {
+                "value": {
+                  "type": "auto",
+                  "wrapText": true
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Section"
+            },
+            "properties": [
+              {
+                "value": 130,
+                "id": "custom.width"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "gridPos": {
+        "y": 20,
+        "x": 12,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT s.value('(*[local-name()=\"title\"])[1]', 'nvarchar(200)') AS Section,\n       s.query('*[local-name()!=\"title\"]').value('.', 'nvarchar(max)') AS Text\nFROM (SELECT TOP 1 TRY_CAST(k.Content AS xml) AS x\n      FROM dbo.KnowledgeView k\n      WHERE k.KnowledgeReferenceId = (SELECT TOP 1 a.MonitoringRuleId FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) AND k.Visible = 1\n      ORDER BY CASE WHEN k.LanguageCode = 'ENU' THEN 0 ELSE 1 END, k.LanguageCode) c\nCROSS APPLY c.x.nodes('//*[local-name()=\"section\"]') AS t(s)"
+        }
+      ],
+      "title": "Product knowledge",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 6,
+      "type": "table"
+    }
+  ],
+  "version": 1,
+  "graphTooltip": 1,
   "title": "SCOM Alert Details",
+  "uid": "scom-core-alert",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "annotations": {
+    "list": []
+  },
   "templating": {
     "list": [
       {
@@ -19,459 +424,54 @@
         "skipUrlSync": false
       },
       {
-        "query": "",
-        "label": "Alert ID",
-        "options": [
-          {
-            "selected": true,
-            "value": "",
-            "text": ""
-          }
-        ],
         "name": "alertid",
         "current": {
-          "text": "",
-          "value": ""
+          "value": "",
+          "text": ""
         },
+        "type": "textbox",
+        "query": "",
+        "label": "Alert ID",
         "hide": 0,
-        "type": "textbox"
+        "options": [
+          {
+            "value": "",
+            "text": "",
+            "selected": true
+          }
+        ]
       }
     ]
   },
-  "annotations": {
-    "list": []
-  },
-  "graphTooltip": 1,
-  "uid": "scom-core-alert",
-  "refresh": "1m",
   "schemaVersion": 39,
-  "links": [
-    {
-      "asDropdown": true,
-      "tags": [
-        "scom-core"
-      ],
-      "keepTime": true,
-      "includeVars": true,
-      "title": "SCOM Platform",
-      "type": "dashboards"
-    },
-    {
-      "asDropdown": true,
-      "tags": [
-        "scom-pack"
-      ],
-      "keepTime": true,
-      "includeVars": false,
-      "title": "Technology packs",
-      "type": "dashboards"
-    }
-  ],
+  "refresh": "1m",
   "editable": true,
-  "timezone": "browser",
-  "time": {
-    "from": "now-24h",
-    "to": "now"
-  },
-  "panels": [
-    {
-      "options": {
-        "content": "**Alert details.** Open this page by selecting an alert name on [SCOM Alerts](/d/scom-core-alerts/scom-alerts) or in any *Active alerts* table. To look at a specific alert, paste its Alert ID into the box at the top.",
-        "mode": "markdown"
-      },
-      "gridPos": {
-        "h": 2,
-        "y": 0,
-        "x": 0,
-        "w": 24
-      },
-      "title": "",
-      "type": "text",
-      "id": 1
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "auto",
-                  "wrapText": true
-                }
-              }
-            ],
-            "matcher": {
-              "options": "Value",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ],
-            "matcher": {
-              "options": "Property",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT v.Property, v.Value\nFROM (SELECT TOP 1 a.* FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) a\nCROSS APPLY (VALUES\n  (1,  'Alert',          CAST(COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS nvarchar(4000))),\n  (2,  'Severity',       CAST(CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS nvarchar(4000))),\n  (3,  'Priority',       CAST(CASE a.Priority WHEN 2 THEN 'High' WHEN 1 THEN 'Medium' ELSE 'Low' END AS nvarchar(4000))),\n  (4,  'Status',         CAST((SELECT TOP 1 rs.ResolutionStateName FROM dbo.ResolutionState rs WHERE rs.ResolutionState = a.ResolutionState) AS nvarchar(4000))),\n  (5,  'Source',         CAST(a.MonitoringObjectDisplayName AS nvarchar(4000))),\n  (6,  'Path',           CAST(a.MonitoringObjectPath AS nvarchar(4000))),\n  (7,  'Computer',       CAST((SELECT TOP 1 c.DisplayName FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId) AS nvarchar(4000))),\n  (8,  'Raised (UTC)',   CONVERT(nvarchar(30), a.TimeRaised, 120)),\n  (9,  'Last modified (UTC)', CONVERT(nvarchar(30), a.LastModified, 120)),\n  (10, 'Resolved (UTC)', CONVERT(nvarchar(30), a.TimeResolved, 120)),\n  (11, 'Repeat count',   CAST(a.RepeatCount AS nvarchar(20))),\n  (12, 'Owner',          CAST(a.Owner AS nvarchar(4000))),\n  (13, 'Resolved by',    CAST(a.ResolvedBy AS nvarchar(4000))),\n  (14, 'Ticket ID',      CAST(a.TicketId AS nvarchar(4000))),\n  (15, 'Category',       CAST(a.Category AS nvarchar(4000))),\n  (16, 'Raised by',      CAST(CASE WHEN a.IsMonitorAlert = 1 THEN 'Monitor' ELSE 'Rule' END AS nvarchar(4000))),\n  (17, 'Monitor or rule', CAST(a.Name AS nvarchar(4000))),\n  (18, 'Custom field 1', CAST(a.CustomField1 AS nvarchar(4000))),\n  (19, 'Custom field 2', CAST(a.CustomField2 AS nvarchar(4000))),\n  (20, 'Custom field 3', CAST(a.CustomField3 AS nvarchar(4000))),\n  (21, 'Alert ID',       CAST(a.Id AS nvarchar(40)))\n) v(ord, Property, Value)\nWHERE v.Value IS NOT NULL AND v.Value <> ''\nORDER BY v.ord",
-          "refId": "A"
-        }
-      ],
-      "id": 2,
-      "title": "Alert",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "The alert as shown on the SCOM console Alert Details tab.",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 18,
-        "y": 2,
-        "x": 0,
-        "w": 9
-      },
-      "type": "table"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "auto",
-                  "wrapText": true
-                }
-              }
-            ],
-            "matcher": {
-              "options": "Description",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(\n  COALESCE(NULLIF(a.Description, ''), a.AlertStringDescription),\n  '{0}', COALESCE(p.x.value('(/AlertParameters/AlertParameter1)[1]', 'nvarchar(max)'), '{0}')),\n  '{1}', COALESCE(p.x.value('(/AlertParameters/AlertParameter2)[1]', 'nvarchar(max)'), '{1}')),\n  '{2}', COALESCE(p.x.value('(/AlertParameters/AlertParameter3)[1]', 'nvarchar(max)'), '{2}')),\n  '{3}', COALESCE(p.x.value('(/AlertParameters/AlertParameter4)[1]', 'nvarchar(max)'), '{3}')),\n  '{4}', COALESCE(p.x.value('(/AlertParameters/AlertParameter5)[1]', 'nvarchar(max)'), '{4}')),\n  '{5}', COALESCE(p.x.value('(/AlertParameters/AlertParameter6)[1]', 'nvarchar(max)'), '{5}')),\n  '{6}', COALESCE(p.x.value('(/AlertParameters/AlertParameter7)[1]', 'nvarchar(max)'), '{6}')),\n  '{7}', COALESCE(p.x.value('(/AlertParameters/AlertParameter8)[1]', 'nvarchar(max)'), '{7}')),\n  '{8}', COALESCE(p.x.value('(/AlertParameters/AlertParameter9)[1]', 'nvarchar(max)'), '{8}')),\n  '{9}', COALESCE(p.x.value('(/AlertParameters/AlertParameter10)[1]', 'nvarchar(max)'), '{9}')) AS Description\nFROM (SELECT TOP 1 a.* FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) a\nCROSS APPLY (SELECT TRY_CAST(a.AlertParams AS xml) AS x) p",
-          "refId": "A"
-        }
-      ],
-      "id": 3,
-      "title": "Description",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "The alert description, with the alert parameters filled in.",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 6,
-        "y": 2,
-        "x": 9,
-        "w": 15
-      },
-      "type": "table"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "auto",
-                  "wrapText": true
-                }
-              }
-            ],
-            "matcher": {
-              "options": "Value",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 200
-              }
-            ],
-            "matcher": {
-              "options": "Field",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT n.value('local-name(.)', 'nvarchar(200)') AS Field, n.value('.', 'nvarchar(max)') AS Value\nFROM (SELECT TOP 1 TRY_CAST(a.Context AS xml) AS x FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) c\nCROSS APPLY c.x.nodes('//*[not(*)]') AS t(n)\nUNION ALL\nSELECT 'Context (raw)', CAST(a.Context AS nvarchar(max))\nFROM (SELECT TOP 1 a.* FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) a\nWHERE a.Context IS NOT NULL AND TRY_CAST(a.Context AS xml) IS NULL",
-          "refId": "A"
-        }
-      ],
-      "id": 4,
-      "title": "Alert context",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "The data that triggered the alert (the console Alert Context tab): one row per field.",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 12,
-        "y": 8,
-        "x": 9,
-        "w": 15
-      },
-      "type": "table"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "auto",
-                  "wrapText": true
-                }
-              }
-            ],
-            "matcher": {
-              "options": "Comments",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 160
-              }
-            ],
-            "matcher": {
-              "options": "Time (UTC)",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "-"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT h.TimeModified AS \"Time (UTC)\",\n       COALESCE(rs.ResolutionStateName, CAST(h.ResolutionState AS varchar(10))) AS Status,\n       h.Owner AS Owner, h.ModifiedBy AS \"Modified by\", h.Comments AS Comments, h.TicketId AS \"Ticket ID\"\nFROM dbo.AlertHistory h\nLEFT JOIN dbo.ResolutionState rs ON rs.ResolutionState = h.ResolutionState\nWHERE h.AlertId = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)\nORDER BY h.TimeModified DESC",
-          "refId": "A"
-        }
-      ],
-      "id": 5,
-      "title": "History",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "State changes, owner and comments, newest first.",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 9,
-        "y": 20,
-        "x": 0,
-        "w": 12
-      },
-      "type": "table"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "auto",
-                  "wrapText": true
-                }
-              }
-            ],
-            "matcher": {
-              "options": "Text",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 130
-              }
-            ],
-            "matcher": {
-              "options": "Section",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT s.value('(*[local-name()=\"title\"])[1]', 'nvarchar(200)') AS Section,\n       s.query('*[local-name()!=\"title\"]').value('.', 'nvarchar(max)') AS Text\nFROM (SELECT TOP 1 TRY_CAST(k.Content AS xml) AS x\n      FROM dbo.KnowledgeView k\n      WHERE k.KnowledgeReferenceId = (SELECT TOP 1 a.MonitoringRuleId FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.Id = TRY_CAST(${alertid:singlequote} AS uniqueidentifier)) AND k.Visible = 1\n      ORDER BY CASE WHEN k.LanguageCode = 'ENU' THEN 0 ELSE 1 END, k.LanguageCode) c\nCROSS APPLY c.x.nodes('//*[local-name()=\"section\"]') AS t(s)",
-          "refId": "A"
-        }
-      ],
-      "id": 6,
-      "title": "Product knowledge",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "Knowledge from the management pack for the monitor or rule that raised this alert (Summary, Causes, Resolutions...).",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 9,
-        "y": 20,
-        "x": 12,
-        "w": 12
-      },
-      "type": "table"
-    }
-  ],
-  "version": 1,
   "tags": [
     "scom",
     "scom-core",
     "pack:scom-core"
+  ],
+  "description": "Everything SCOM knows about one alert: summary, description, context, history and product knowledge.",
+  "links": [
+    {
+      "title": "SCOM Platform",
+      "type": "dashboards",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "scom-core"
+      ],
+      "asDropdown": true
+    },
+    {
+      "title": "Technology packs",
+      "type": "dashboards",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "scom-pack"
+      ],
+      "asDropdown": true
+    }
   ]
 }

@@ -1,6 +1,799 @@
 {
-  "description": "Per-server health, alerts, availability and performance.",
+  "panels": [
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Current rolled-up health.",
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "Healthy": {
+                  "color": "#56A64B",
+                  "index": 3
+                },
+                "Critical": {
+                  "color": "#E02F44",
+                  "index": 0
+                },
+                "Information": {
+                  "color": "#5794F2",
+                  "index": 2
+                },
+                "Not monitored": {
+                  "color": "#8E8E93",
+                  "index": 4
+                },
+                "Warning": {
+                  "color": "#FF9830",
+                  "index": 1
+                },
+                "Present": {
+                  "color": "#56A64B",
+                  "index": 6
+                },
+                "MISSING": {
+                  "color": "#E02F44",
+                  "index": 5
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              }
+            ]
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "y": 0,
+        "x": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT TOP 500\n  g.DisplayName AS Computer,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange,\n  CASE WHEN g.InMaintenanceMode = 1 THEN 'Yes' ELSE 'No' END AS InMaintenance,\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.TopLevelHostEntityId = g.Id) AS OpenAlerts\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')\n  AND g.IsDeleted = 0\n  AND g.DisplayName IN (${server:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.DisplayName"
+        }
+      ],
+      "title": "Health",
+      "options": {
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Health$/",
+          "values": false
+        }
+      },
+      "id": 1,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Alerts not yet closed for this computer.",
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#FF9830"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "y": 0,
+        "x": 6,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT TOP 500\n  g.DisplayName AS Computer,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange,\n  CASE WHEN g.InMaintenanceMode = 1 THEN 'Yes' ELSE 'No' END AS InMaintenance,\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.TopLevelHostEntityId = g.Id) AS OpenAlerts\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')\n  AND g.IsDeleted = 0\n  AND g.DisplayName IN (${server:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.DisplayName"
+        }
+      ],
+      "title": "Open alerts",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^OpenAlerts$/",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "id": 2,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "gridPos": {
+        "y": 0,
+        "x": 12,
+        "w": 12,
+        "h": 4
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT TOP 500\n  g.DisplayName AS Computer,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange,\n  CASE WHEN g.InMaintenanceMode = 1 THEN 'Yes' ELSE 'No' END AS InMaintenance,\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.TopLevelHostEntityId = g.Id) AS OpenAlerts\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')\n  AND g.IsDeleted = 0\n  AND g.DisplayName IN (${server:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.DisplayName"
+        }
+      ],
+      "title": "Computer health detail",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 3,
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Open alerts raised inside the selected time range.",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open alert details",
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
+                  }
+                ],
+                "id": "links"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AlertId"
+            },
+            "properties": [
+              {
+                "value": true,
+                "id": "custom.hidden"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "gridPos": {
+        "y": 4,
+        "x": 0,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName,''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  (SELECT TOP 1 c.DisplayName FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId) AS Computer,\n  CASE a.ResolutionState WHEN 0 THEN 'New' ELSE 'Acknowledged/Custom' END AS Status,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )\nORDER BY a.Severity DESC, a.TimeRaised DESC"
+        }
+      ],
+      "title": "Active alerts for this server",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 4,
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "max": 100,
+          "custom": {
+            "spanNulls": 3900000,
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 8
+          },
+          "min": 0,
+          "noValue": "No data in range"
+        }
+      },
+      "gridPos": {
+        "y": 12,
+        "x": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time"
+        }
+      ],
+      "title": "CPU - % processor time (_Total)",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom",
+          "displayMode": "table"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 5,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "max": 100,
+          "custom": {
+            "spanNulls": 3900000,
+            "showPoints": "never",
+            "lineWidth": 2,
+            "fillOpacity": 8
+          },
+          "min": 0,
+          "noValue": "No data in range"
+        }
+      },
+      "gridPos": {
+        "y": 12,
+        "x": 12,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time"
+        }
+      ],
+      "title": "Memory - % used",
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "placement": "bottom",
+          "displayMode": "table"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 6,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Availability %"
+            },
+            "properties": [
+              {
+                "value": "percent",
+                "id": "unit"
+              },
+              {
+                "value": 3,
+                "id": "decimals"
+              },
+              {
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                },
+                "id": "custom.cellOptions"
+              },
+              {
+                "value": 90,
+                "id": "min"
+              },
+              {
+                "value": 100,
+                "id": "max"
+              },
+              {
+                "value": {
+                  "mode": "thresholds"
+                },
+                "id": "color"
+              },
+              {
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "value": null,
+                      "color": "#E02F44"
+                    },
+                    {
+                      "value": 99,
+                      "color": "#FF9830"
+                    },
+                    {
+                      "value": 99.9,
+                      "color": "#56A64B"
+                    }
+                  ]
+                },
+                "id": "thresholds"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hours measured"
+            },
+            "properties": [
+              {
+                "value": 1,
+                "id": "decimals"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "gridPos": {
+        "y": 20,
+        "x": 0,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawSql": "WITH s AS (\n  SELECT e.DisplayName AS Computer,\n         SUM(CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds) AS bad,\n         SUM(CAST(3600000 AS bigint) - h.InPlannedMaintenanceMilliseconds - h.InDisabledStateMilliseconds) AS total\n  FROM State.vStateHourly h\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = h.ManagedEntityMonitorRowId\n  JOIN dbo.vMonitor m ON m.MonitorRowId = em.MonitorRowId AND m.MonitorSystemName = 'System.Health.AvailabilityState'\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = em.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\n  WHERE h.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND e.DisplayName IN (${server:singlequote})\n  GROUP BY e.DisplayName\n)\nSELECT Computer,\n       CASE WHEN total > 0 THEN ROUND(100.0 * (1.0 - CAST(bad AS float) / total), 3) END AS \"Availability %\",\n       total / 3600000.0 AS \"Hours measured\"\nFROM s ORDER BY 2"
+        }
+      ],
+      "title": "Availability over the selected range",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 7,
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_dw}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Minutes since last perf sample"
+            },
+            "properties": [
+              {
+                "value": "m",
+                "id": "unit"
+              },
+              {
+                "value": {
+                  "type": "color-background"
+                },
+                "id": "custom.cellOptions"
+              },
+              {
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "value": null,
+                      "color": "#56A64B"
+                    },
+                    {
+                      "value": 30,
+                      "color": "#FF9830"
+                    },
+                    {
+                      "value": 120,
+                      "color": "#E02F44"
+                    }
+                  ]
+                },
+                "id": "thresholds"
+              },
+              {
+                "value": {
+                  "mode": "thresholds"
+                },
+                "id": "color"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Minutes since last state change"
+            },
+            "properties": [
+              {
+                "value": "m",
+                "id": "unit"
+              },
+              {
+                "value": {
+                  "type": "color-background"
+                },
+                "id": "custom.cellOptions"
+              },
+              {
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "value": null,
+                      "color": "#56A64B"
+                    },
+                    {
+                      "value": 30,
+                      "color": "#FF9830"
+                    },
+                    {
+                      "value": 120,
+                      "color": "#E02F44"
+                    }
+                  ]
+                },
+                "id": "thresholds"
+              },
+              {
+                "value": {
+                  "mode": "thresholds"
+                },
+                "id": "color"
+              },
+              {
+                "value": "NO DATA",
+                "id": "noValue"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "No data"
+        }
+      },
+      "gridPos": {
+        "y": 20,
+        "x": 12,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_dw}"
+          },
+          "rawSql": "SELECT e.DisplayName AS Computer,\n  (SELECT DATEDIFF(minute, MAX(p.DateTime), GETUTCDATE())\n     FROM dbo.vManagedEntity c\n     JOIN Perf.vPerfRaw p ON p.ManagedEntityRowId = c.ManagedEntityRowId\n     WHERE c.TopLevelHostManagedEntityRowId = e.ManagedEntityRowId AND p.DateTime > DATEADD(day, -7, GETUTCDATE())) AS \"Minutes since last perf sample\",\n  (SELECT DATEDIFF(minute, MAX(s.DateTime), GETUTCDATE())\n     FROM dbo.vManagedEntity c\n     JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = c.ManagedEntityRowId\n     JOIN State.vStateRaw s ON s.ManagedEntityMonitorRowId = em.ManagedEntityMonitorRowId\n     WHERE (c.TopLevelHostManagedEntityRowId = e.ManagedEntityRowId OR c.ManagedEntityRowId = e.ManagedEntityRowId)\n       AND s.DateTime > DATEADD(day, -7, GETUTCDATE())) AS \"Minutes since last state change\"\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nWHERE e.DisplayName IN (${server:singlequote})\nORDER BY 2 DESC"
+        }
+      ],
+      "title": "Data freshness",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 8,
+      "type": "table"
+    }
+  ],
+  "version": 1,
+  "graphTooltip": 1,
   "title": "SCOM Server Drill-down",
+  "uid": "scom-core-server",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "annotations": {
+    "list": []
+  },
   "templating": {
     "list": [
       {
@@ -34,846 +827,53 @@
         "skipUrlSync": false
       },
       {
-        "multi": false,
         "options": [],
+        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
+        "label": "Server",
+        "current": {},
+        "includeAll": false,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "name": "server",
+        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
         "datasource": {
           "type": "mssql",
           "uid": "${ds_dw}"
         },
-        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
-        "label": "Server",
-        "refresh": 2,
-        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
-        "name": "server",
-        "sort": 1,
-        "type": "query",
-        "current": {},
-        "includeAll": false
+        "type": "query"
       }
     ]
   },
-  "annotations": {
-    "list": []
-  },
-  "graphTooltip": 1,
-  "uid": "scom-core-server",
-  "refresh": "1m",
   "schemaVersion": 39,
-  "links": [
-    {
-      "asDropdown": true,
-      "tags": [
-        "scom-core"
-      ],
-      "keepTime": true,
-      "includeVars": true,
-      "title": "SCOM Platform",
-      "type": "dashboards"
-    },
-    {
-      "asDropdown": true,
-      "tags": [
-        "scom-pack"
-      ],
-      "keepTime": true,
-      "includeVars": false,
-      "title": "Technology packs",
-      "type": "dashboards"
-    }
-  ],
+  "refresh": "1m",
   "editable": true,
-  "timezone": "browser",
-  "time": {
-    "from": "now-6h",
-    "to": "now"
-  },
-  "panels": [
-    {
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "Critical": {
-                  "index": 0,
-                  "color": "#E02F44"
-                },
-                "Information": {
-                  "index": 2,
-                  "color": "#5794F2"
-                },
-                "Present": {
-                  "index": 6,
-                  "color": "#56A64B"
-                },
-                "Not monitored": {
-                  "index": 4,
-                  "color": "#8E8E93"
-                },
-                "MISSING": {
-                  "index": 5,
-                  "color": "#E02F44"
-                },
-                "Warning": {
-                  "index": 1,
-                  "color": "#FF9830"
-                },
-                "Healthy": {
-                  "index": 3,
-                  "color": "#56A64B"
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#56A64B"
-              }
-            ],
-            "mode": "absolute"
-          },
-          "color": {
-            "fixedColor": "text",
-            "mode": "fixed"
-          },
-          "noValue": "0"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT TOP 500\n  g.DisplayName AS Computer,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange,\n  CASE WHEN g.InMaintenanceMode = 1 THEN 'Yes' ELSE 'No' END AS InMaintenance,\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.TopLevelHostEntityId = g.Id) AS OpenAlerts\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')\n  AND g.IsDeleted = 0\n  AND g.DisplayName IN (${server:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.DisplayName",
-          "refId": "A"
-        }
-      ],
-      "id": 1,
-      "title": "Health",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "Current rolled-up health.",
-      "options": {
-        "graphMode": "none",
-        "justifyMode": "center",
-        "textMode": "value",
-        "colorMode": "value",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Health$/",
-          "values": false
-        }
-      },
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 0,
-        "w": 6
-      },
-      "type": "stat"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#FF9830"
-              }
-            ],
-            "mode": "absolute"
-          },
-          "color": {
-            "mode": "thresholds"
-          },
-          "noValue": "0"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT TOP 500\n  g.DisplayName AS Computer,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange,\n  CASE WHEN g.InMaintenanceMode = 1 THEN 'Yes' ELSE 'No' END AS InMaintenance,\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.TopLevelHostEntityId = g.Id) AS OpenAlerts\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')\n  AND g.IsDeleted = 0\n  AND g.DisplayName IN (${server:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.DisplayName",
-          "refId": "A"
-        }
-      ],
-      "id": 2,
-      "title": "Open alerts",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "Alerts not yet closed for this computer.",
-      "options": {
-        "graphMode": "none",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^OpenAlerts$/",
-          "values": false
-        },
-        "colorMode": "background_solid",
-        "textMode": "value",
-        "justifyMode": "center"
-      },
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 6,
-        "w": 6
-      },
-      "type": "stat"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      },
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ],
-            "matcher": {
-              "options": "Health",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT TOP 500\n  g.DisplayName AS Computer,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange,\n  CASE WHEN g.InMaintenanceMode = 1 THEN 'Yes' ELSE 'No' END AS InMaintenance,\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.TopLevelHostEntityId = g.Id) AS OpenAlerts\nFROM dbo.ManagedEntityGenericView g\nWHERE EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')\n  AND g.IsDeleted = 0\n  AND g.DisplayName IN (${server:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.DisplayName",
-          "refId": "A"
-        }
-      ],
-      "id": 3,
-      "title": "Computer health detail",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 12,
-        "w": 12
-      },
-      "type": "table"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      },
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ],
-            "matcher": {
-              "options": "Severity",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "targetBlank": false,
-                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}",
-                    "title": "Open alert details"
-                  }
-                ]
-              }
-            ],
-            "matcher": {
-              "options": "Alert",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.hidden",
-                "value": true
-              }
-            ],
-            "matcher": {
-              "options": "AlertId",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName,''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  (SELECT TOP 1 c.DisplayName FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId) AS Computer,\n  CASE a.ResolutionState WHEN 0 THEN 'New' ELSE 'Acknowledged/Custom' END AS Status,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )\nORDER BY a.Severity DESC, a.TimeRaised DESC",
-          "refId": "A"
-        }
-      ],
-      "id": 4,
-      "title": "Active alerts for this server",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "Open alerts raised inside the selected time range.",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 8,
-        "y": 4,
-        "x": 0,
-        "w": 24
-      },
-      "type": "table"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "max": 100,
-          "custom": {
-            "spanNulls": 3900000,
-            "fillOpacity": 8,
-            "lineWidth": 2,
-            "showPoints": "never"
-          },
-          "min": 0,
-          "noValue": "No data in range",
-          "unit": "percent",
-          "color": {
-            "mode": "palette-classic"
-          }
-        }
-      },
-      "targets": [
-        {
-          "format": "time_series",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
-          "refId": "A"
-        }
-      ],
-      "id": 5,
-      "title": "CPU - % processor time (_Total)",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "description": "",
-      "options": {
-        "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
-        },
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "placement": "bottom",
-          "displayMode": "table"
-        }
-      },
-      "gridPos": {
-        "h": 8,
-        "y": 12,
-        "x": 0,
-        "w": 12
-      },
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "max": 100,
-          "custom": {
-            "spanNulls": 3900000,
-            "fillOpacity": 8,
-            "lineWidth": 2,
-            "showPoints": "never"
-          },
-          "min": 0,
-          "noValue": "No data in range",
-          "unit": "percent",
-          "color": {
-            "mode": "palette-classic"
-          }
-        }
-      },
-      "targets": [
-        {
-          "format": "time_series",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
-          "refId": "A"
-        }
-      ],
-      "id": 6,
-      "title": "Memory - % used",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "description": "",
-      "options": {
-        "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
-        },
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "placement": "bottom",
-          "displayMode": "table"
-        }
-      },
-      "gridPos": {
-        "h": 8,
-        "y": 12,
-        "x": 12,
-        "w": 12
-      },
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "decimals",
-                "value": 3
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "gauge",
-                  "mode": "basic"
-                }
-              },
-              {
-                "id": "min",
-                "value": 90
-              },
-              {
-                "id": "max",
-                "value": 100
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "steps": [
-                    {
-                      "value": null,
-                      "color": "#E02F44"
-                    },
-                    {
-                      "value": 99,
-                      "color": "#FF9830"
-                    },
-                    {
-                      "value": 99.9,
-                      "color": "#56A64B"
-                    }
-                  ],
-                  "mode": "absolute"
-                }
-              }
-            ],
-            "matcher": {
-              "options": "Availability %",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "decimals",
-                "value": 1
-              }
-            ],
-            "matcher": {
-              "options": "Hours measured",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "WITH s AS (\n  SELECT e.DisplayName AS Computer,\n         SUM(CAST(h.InRedStateMilliseconds AS bigint) + h.HealthServiceUnavailableMilliseconds) AS bad,\n         SUM(CAST(3600000 AS bigint) - h.InPlannedMaintenanceMilliseconds - h.InDisabledStateMilliseconds) AS total\n  FROM State.vStateHourly h\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = h.ManagedEntityMonitorRowId\n  JOIN dbo.vMonitor m ON m.MonitorRowId = em.MonitorRowId AND m.MonitorSystemName = 'System.Health.AvailabilityState'\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = em.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\n  WHERE h.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND e.DisplayName IN (${server:singlequote})\n  GROUP BY e.DisplayName\n)\nSELECT Computer,\n       CASE WHEN total > 0 THEN ROUND(100.0 * (1.0 - CAST(bad AS float) / total), 3) END AS \"Availability %\",\n       total / 3600000.0 AS \"Hours measured\"\nFROM s ORDER BY 2",
-          "refId": "A"
-        }
-      ],
-      "id": 7,
-      "title": "Availability over the selected range",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "description": "",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 6,
-        "y": 20,
-        "x": 0,
-        "w": 12
-      },
-      "type": "table"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "unit",
-                "value": "m"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "steps": [
-                    {
-                      "value": null,
-                      "color": "#56A64B"
-                    },
-                    {
-                      "value": 30,
-                      "color": "#FF9830"
-                    },
-                    {
-                      "value": 120,
-                      "color": "#E02F44"
-                    }
-                  ],
-                  "mode": "absolute"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "noValue",
-                "value": "NO DATA"
-              }
-            ],
-            "matcher": {
-              "options": "Minutes since last perf sample",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "unit",
-                "value": "m"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "steps": [
-                    {
-                      "value": null,
-                      "color": "#56A64B"
-                    },
-                    {
-                      "value": 30,
-                      "color": "#FF9830"
-                    },
-                    {
-                      "value": 120,
-                      "color": "#E02F44"
-                    }
-                  ],
-                  "mode": "absolute"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "noValue",
-                "value": "NO DATA"
-              }
-            ],
-            "matcher": {
-              "options": "Minutes since last state change",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawSql": "SELECT e.DisplayName AS Computer,\n  (SELECT DATEDIFF(minute, MAX(p.DateTime), GETUTCDATE())\n     FROM dbo.vManagedEntity c\n     JOIN Perf.vPerfRaw p ON p.ManagedEntityRowId = c.ManagedEntityRowId\n     WHERE c.TopLevelHostManagedEntityRowId = e.ManagedEntityRowId AND p.DateTime > DATEADD(day, -7, GETUTCDATE())) AS \"Minutes since last perf sample\",\n  (SELECT DATEDIFF(minute, MAX(s.DateTime), GETUTCDATE())\n     FROM dbo.vManagedEntity c\n     JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityRowId = c.ManagedEntityRowId\n     JOIN State.vStateRaw s ON s.ManagedEntityMonitorRowId = em.ManagedEntityMonitorRowId\n     WHERE (c.TopLevelHostManagedEntityRowId = e.ManagedEntityRowId OR c.ManagedEntityRowId = e.ManagedEntityRowId)\n       AND s.DateTime > DATEADD(day, -7, GETUTCDATE())) AS \"Minutes since last state change\"\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nWHERE e.DisplayName IN (${server:singlequote})\nORDER BY 2 DESC",
-          "refId": "A"
-        }
-      ],
-      "id": 8,
-      "title": "Data freshness",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "description": "",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 6,
-        "y": 20,
-        "x": 12,
-        "w": 12
-      },
-      "type": "table"
-    }
-  ],
-  "version": 1,
   "tags": [
     "scom",
     "scom-core",
     "pack:scom-core"
+  ],
+  "description": "Per-server health, alerts, availability and performance.",
+  "links": [
+    {
+      "title": "SCOM Platform",
+      "type": "dashboards",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "scom-core"
+      ],
+      "asDropdown": true
+    },
+    {
+      "title": "Technology packs",
+      "type": "dashboards",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "scom-pack"
+      ],
+      "asDropdown": true
+    }
   ]
 }

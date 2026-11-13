@@ -1,6 +1,534 @@
 {
-  "description": "Open and closed SCOM alerts with filters; select an alert to see its details, context and history.",
+  "panels": [
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Open alerts of severity Critical (selected servers).",
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#E02F44"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "y": 0,
+        "x": 0,
+        "w": 5,
+        "h": 4
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT\n  COALESCE(SUM(CASE WHEN a.Severity = 2 THEN 1 ELSE 0 END),0) AS Critical,\n  COALESCE(SUM(CASE WHEN a.Severity = 1 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN a.Severity = 0 THEN 1 ELSE 0 END),0) AS Information\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )"
+        }
+      ],
+      "title": "Open critical alerts",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Critical$/",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "id": 1,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Open alerts of severity Warning (selected servers).",
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              },
+              {
+                "value": 1,
+                "color": "#FF9830"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "y": 0,
+        "x": 5,
+        "w": 5,
+        "h": 4
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT\n  COALESCE(SUM(CASE WHEN a.Severity = 2 THEN 1 ELSE 0 END),0) AS Critical,\n  COALESCE(SUM(CASE WHEN a.Severity = 1 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN a.Severity = 0 THEN 1 ELSE 0 END),0) AS Information\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )"
+        }
+      ],
+      "title": "Open warning alerts",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Warning$/",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "id": 2,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Open alerts of severity Information (selected servers).",
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#5794F2"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "y": 0,
+        "x": 10,
+        "w": 5,
+        "h": 4
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT\n  COALESCE(SUM(CASE WHEN a.Severity = 2 THEN 1 ELSE 0 END),0) AS Critical,\n  COALESCE(SUM(CASE WHEN a.Severity = 1 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN a.Severity = 0 THEN 1 ELSE 0 END),0) AS Information\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )"
+        }
+      ],
+      "title": "Open information alerts",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Information$/",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "id": 3,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Alerts resolved inside the dashboard time range. SCOM grooms closed alerts after its retention period (7 days by default), so older ones are not available.",
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "#56A64B"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "noValue": "0"
+        }
+      },
+      "gridPos": {
+        "y": 0,
+        "x": 15,
+        "w": 5,
+        "h": 4
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT COUNT(*) AS Closed\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState = 255 AND a.TimeResolved BETWEEN $__timeFrom() AND $__timeTo()\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )"
+        }
+      ],
+      "title": "Closed in the selected range",
+      "options": {
+        "justifyMode": "center",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Closed$/",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "background_solid"
+      },
+      "id": 4,
+      "type": "stat"
+    },
+    {
+      "options": {
+        "mode": "markdown",
+        "content": "**Select an alert name** in the table to open its details: description, context, history and product knowledge."
+      },
+      "id": 5,
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "y": 0,
+        "x": 20,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "description": "Use the State, Severity, Server and search boxes at the top. Open alerts ignore the time range; closed alerts are those resolved inside it. Capped at 1000 rows. Select an alert name to see its details.",
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
+                      },
+                      "Critical": {
+                        "color": "#E02F44",
+                        "index": 0
+                      },
+                      "Information": {
+                        "color": "#5794F2",
+                        "index": 2
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "Warning": {
+                        "color": "#FF9830",
+                        "index": 1
+                      },
+                      "Present": {
+                        "color": "#56A64B",
+                        "index": 6
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      }
+                    }
+                  }
+                ],
+                "id": "mappings"
+              },
+              {
+                "value": {
+                  "type": "color-text"
+                },
+                "id": "custom.cellOptions"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            },
+            "properties": [
+              {
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Open alert details",
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
+                  }
+                ],
+                "id": "links"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AlertId"
+            },
+            "properties": [
+              {
+                "value": true,
+                "id": "custom.hidden"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "value": 90,
+                "id": "custom.width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alert"
+            },
+            "properties": [
+              {
+                "value": 380,
+                "id": "custom.width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Source"
+            },
+            "properties": [
+              {
+                "value": 220,
+                "id": "custom.width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Computer"
+            },
+            "properties": [
+              {
+                "value": 230,
+                "id": "custom.width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "value": 120,
+                "id": "custom.width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Priority"
+            },
+            "properties": [
+              {
+                "value": 80,
+                "id": "custom.width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Repeats"
+            },
+            "properties": [
+              {
+                "value": 80,
+                "id": "custom.width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Raised"
+            },
+            "properties": [
+              {
+                "value": 160,
+                "id": "custom.width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last modified"
+            },
+            "properties": [
+              {
+                "value": 160,
+                "id": "custom.width"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Resolved"
+            },
+            "properties": [
+              {
+                "value": 160,
+                "id": "custom.width"
+              }
+            ]
+          }
+        ],
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "align": "auto"
+          },
+          "links": [],
+          "noValue": "-"
+        }
+      },
+      "gridPos": {
+        "y": 4,
+        "x": 0,
+        "w": 24,
+        "h": 22
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawSql": "SELECT TOP 1000\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  (SELECT TOP 1 c.DisplayName FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId) AS Computer,\n  COALESCE(rs.ResolutionStateName, CAST(a.ResolutionState AS varchar(10))) AS Status,\n  CASE a.Priority WHEN 2 THEN 'High' WHEN 1 THEN 'Medium' ELSE 'Low' END AS Priority,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised,\n  a.LastModified AS \"Last modified\",\n  a.TimeResolved AS Resolved,\n  a.Owner AS Owner\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nLEFT JOIN dbo.ResolutionState rs ON rs.ResolutionState = a.ResolutionState\nWHERE ( (a.ResolutionState < 255 AND '${astate}' IN ('Open', 'All'))\n     OR (a.ResolutionState = 255 AND '${astate}' IN ('Closed', 'All') AND a.TimeResolved BETWEEN $__timeFrom() AND $__timeTo()) )\n  AND CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END IN (${asev:singlequote})\n  AND COALESCE(NULLIF(a.AlertStringName, ''), a.Name) LIKE '%' + ${asearch:singlequote} + '%'\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )\nORDER BY CASE WHEN a.ResolutionState < 255 THEN 0 ELSE 1 END, a.Severity DESC, a.TimeRaised DESC"
+        }
+      ],
+      "title": "Alerts",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 6,
+      "type": "table"
+    }
+  ],
+  "version": 1,
+  "graphTooltip": 1,
   "title": "SCOM Alerts",
+  "uid": "scom-core-alerts",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "annotations": {
+    "list": []
+  },
   "templating": {
     "list": [
       {
@@ -34,663 +562,135 @@
         "skipUrlSync": false
       },
       {
+        "query": "Open,Closed,All",
+        "label": "State",
+        "current": {
+          "value": "Open",
+          "text": "Open"
+        },
         "includeAll": false,
+        "multi": false,
+        "name": "astate",
         "hide": 0,
         "options": [
           {
-            "selected": true,
             "value": "Open",
-            "text": "Open"
+            "text": "Open",
+            "selected": true
           },
           {
-            "selected": false,
             "value": "Closed",
-            "text": "Closed"
+            "text": "Closed",
+            "selected": false
           },
           {
-            "selected": false,
             "value": "All",
-            "text": "All"
+            "text": "All",
+            "selected": false
           }
         ],
-        "label": "State",
-        "multi": false,
-        "query": "Open,Closed,All",
-        "name": "astate",
-        "type": "custom",
-        "current": {
-          "text": "Open",
-          "value": "Open"
-        }
+        "type": "custom"
       },
       {
-        "includeAll": true,
-        "hide": 0,
-        "options": [
-          {
-            "selected": true,
-            "value": "Critical",
-            "text": "Critical"
-          },
-          {
-            "selected": true,
-            "value": "Warning",
-            "text": "Warning"
-          },
-          {
-            "selected": true,
-            "value": "Information",
-            "text": "Information"
-          }
-        ],
-        "label": "Severity",
-        "multi": true,
         "query": "Critical,Warning,Information",
-        "name": "asev",
-        "type": "custom",
+        "label": "Severity",
         "current": {
-          "text": [
-            "All"
-          ],
           "value": [
             "$__all"
+          ],
+          "text": [
+            "All"
           ]
-        }
+        },
+        "includeAll": true,
+        "multi": true,
+        "name": "asev",
+        "hide": 0,
+        "options": [
+          {
+            "value": "Critical",
+            "text": "Critical",
+            "selected": true
+          },
+          {
+            "value": "Warning",
+            "text": "Warning",
+            "selected": true
+          },
+          {
+            "value": "Information",
+            "text": "Information",
+            "selected": true
+          }
+        ],
+        "type": "custom"
       },
       {
-        "multi": true,
         "options": [],
+        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
+        "label": "Server",
+        "current": {},
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "name": "server",
+        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
         "datasource": {
           "type": "mssql",
           "uid": "${ds_dw}"
         },
-        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
-        "label": "Server",
-        "refresh": 2,
-        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
-        "name": "server",
-        "sort": 1,
-        "type": "query",
-        "current": {},
-        "includeAll": true
+        "type": "query"
       },
       {
-        "query": "",
-        "label": "Alert name contains",
-        "options": [
-          {
-            "selected": true,
-            "value": "",
-            "text": ""
-          }
-        ],
         "name": "asearch",
         "current": {
-          "text": "",
-          "value": ""
+          "value": "",
+          "text": ""
         },
+        "type": "textbox",
+        "query": "",
+        "label": "Alert name contains",
         "hide": 0,
-        "type": "textbox"
+        "options": [
+          {
+            "value": "",
+            "text": "",
+            "selected": true
+          }
+        ]
       }
     ]
   },
-  "annotations": {
-    "list": []
-  },
-  "graphTooltip": 1,
-  "uid": "scom-core-alerts",
-  "refresh": "1m",
   "schemaVersion": 39,
-  "links": [
-    {
-      "asDropdown": true,
-      "tags": [
-        "scom-core"
-      ],
-      "keepTime": true,
-      "includeVars": true,
-      "title": "SCOM Platform",
-      "type": "dashboards"
-    },
-    {
-      "asDropdown": true,
-      "tags": [
-        "scom-pack"
-      ],
-      "keepTime": true,
-      "includeVars": false,
-      "title": "Technology packs",
-      "type": "dashboards"
-    }
-  ],
+  "refresh": "1m",
   "editable": true,
-  "timezone": "browser",
-  "time": {
-    "from": "now-24h",
-    "to": "now"
-  },
-  "panels": [
-    {
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#56A64B"
-              },
-              {
-                "value": 1,
-                "color": "#E02F44"
-              }
-            ],
-            "mode": "absolute"
-          },
-          "color": {
-            "mode": "thresholds"
-          },
-          "noValue": "0"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT\n  COALESCE(SUM(CASE WHEN a.Severity = 2 THEN 1 ELSE 0 END),0) AS Critical,\n  COALESCE(SUM(CASE WHEN a.Severity = 1 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN a.Severity = 0 THEN 1 ELSE 0 END),0) AS Information\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )",
-          "refId": "A"
-        }
-      ],
-      "id": 1,
-      "title": "Open critical alerts",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "Open alerts of severity Critical (selected servers).",
-      "options": {
-        "graphMode": "none",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Critical$/",
-          "values": false
-        },
-        "colorMode": "background_solid",
-        "textMode": "value",
-        "justifyMode": "center"
-      },
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 0,
-        "w": 5
-      },
-      "type": "stat"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#56A64B"
-              },
-              {
-                "value": 1,
-                "color": "#FF9830"
-              }
-            ],
-            "mode": "absolute"
-          },
-          "color": {
-            "mode": "thresholds"
-          },
-          "noValue": "0"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT\n  COALESCE(SUM(CASE WHEN a.Severity = 2 THEN 1 ELSE 0 END),0) AS Critical,\n  COALESCE(SUM(CASE WHEN a.Severity = 1 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN a.Severity = 0 THEN 1 ELSE 0 END),0) AS Information\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )",
-          "refId": "A"
-        }
-      ],
-      "id": 2,
-      "title": "Open warning alerts",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "Open alerts of severity Warning (selected servers).",
-      "options": {
-        "graphMode": "none",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Warning$/",
-          "values": false
-        },
-        "colorMode": "background_solid",
-        "textMode": "value",
-        "justifyMode": "center"
-      },
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 5,
-        "w": 5
-      },
-      "type": "stat"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#5794F2"
-              }
-            ],
-            "mode": "absolute"
-          },
-          "color": {
-            "mode": "thresholds"
-          },
-          "noValue": "0"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT\n  COALESCE(SUM(CASE WHEN a.Severity = 2 THEN 1 ELSE 0 END),0) AS Critical,\n  COALESCE(SUM(CASE WHEN a.Severity = 1 THEN 1 ELSE 0 END),0) AS Warning,\n  COALESCE(SUM(CASE WHEN a.Severity = 0 THEN 1 ELSE 0 END),0) AS Information\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )",
-          "refId": "A"
-        }
-      ],
-      "id": 3,
-      "title": "Open information alerts",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "Open alerts of severity Information (selected servers).",
-      "options": {
-        "graphMode": "none",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Information$/",
-          "values": false
-        },
-        "colorMode": "background_solid",
-        "textMode": "value",
-        "justifyMode": "center"
-      },
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 10,
-        "w": 5
-      },
-      "type": "stat"
-    },
-    {
-      "fieldConfig": {
-        "overrides": [],
-        "defaults": {
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#56A64B"
-              }
-            ],
-            "mode": "absolute"
-          },
-          "color": {
-            "mode": "thresholds"
-          },
-          "noValue": "0"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT COUNT(*) AS Closed\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState = 255 AND a.TimeResolved BETWEEN $__timeFrom() AND $__timeTo()\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )",
-          "refId": "A"
-        }
-      ],
-      "id": 4,
-      "title": "Closed in the selected range",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "Alerts resolved inside the dashboard time range. SCOM grooms closed alerts after its retention period (7 days by default), so older ones are not available.",
-      "options": {
-        "graphMode": "none",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Closed$/",
-          "values": false
-        },
-        "colorMode": "background_solid",
-        "textMode": "value",
-        "justifyMode": "center"
-      },
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 15,
-        "w": 5
-      },
-      "type": "stat"
-    },
-    {
-      "options": {
-        "content": "**Select an alert name** in the table to open its details: description, context, history and product knowledge.",
-        "mode": "markdown"
-      },
-      "gridPos": {
-        "h": 4,
-        "y": 0,
-        "x": 20,
-        "w": 4
-      },
-      "title": "",
-      "type": "text",
-      "id": 5
-    },
-    {
-      "fieldConfig": {
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      },
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ],
-            "matcher": {
-              "options": "Severity",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "targetBlank": false,
-                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}",
-                    "title": "Open alert details"
-                  }
-                ]
-              }
-            ],
-            "matcher": {
-              "options": "Alert",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.hidden",
-                "value": true
-              }
-            ],
-            "matcher": {
-              "options": "AlertId",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 90
-              }
-            ],
-            "matcher": {
-              "options": "Severity",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 380
-              }
-            ],
-            "matcher": {
-              "options": "Alert",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 220
-              }
-            ],
-            "matcher": {
-              "options": "Source",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 230
-              }
-            ],
-            "matcher": {
-              "options": "Computer",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 120
-              }
-            ],
-            "matcher": {
-              "options": "Status",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 80
-              }
-            ],
-            "matcher": {
-              "options": "Priority",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 80
-              }
-            ],
-            "matcher": {
-              "options": "Repeats",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 160
-              }
-            ],
-            "matcher": {
-              "options": "Raised",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 160
-              }
-            ],
-            "matcher": {
-              "options": "Last modified",
-              "id": "byName"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 160
-              }
-            ],
-            "matcher": {
-              "options": "Resolved",
-              "id": "byName"
-            }
-          }
-        ],
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "-"
-        }
-      },
-      "targets": [
-        {
-          "format": "table",
-          "editorMode": "code",
-          "rawQuery": true,
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawSql": "SELECT TOP 1000\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  (SELECT TOP 1 c.DisplayName FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId) AS Computer,\n  COALESCE(rs.ResolutionStateName, CAST(a.ResolutionState AS varchar(10))) AS Status,\n  CASE a.Priority WHEN 2 THEN 'High' WHEN 1 THEN 'Medium' ELSE 'Low' END AS Priority,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised,\n  a.LastModified AS \"Last modified\",\n  a.TimeResolved AS Resolved,\n  a.Owner AS Owner\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nLEFT JOIN dbo.ResolutionState rs ON rs.ResolutionState = a.ResolutionState\nWHERE ( (a.ResolutionState < 255 AND '${astate}' IN ('Open', 'All'))\n     OR (a.ResolutionState = 255 AND '${astate}' IN ('Closed', 'All') AND a.TimeResolved BETWEEN $__timeFrom() AND $__timeTo()) )\n  AND CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END IN (${asev:singlequote})\n  AND COALESCE(NULLIF(a.AlertStringName, ''), a.Name) LIKE '%' + ${asearch:singlequote} + '%'\n  AND ( a.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}))\n        OR NOT EXISTS (SELECT 1 FROM dbo.ManagedEntityGenericView c WHERE c.Id = a.TopLevelHostEntityId AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = c.MonitoringClassId AND t.Name = 'Microsoft.Windows.Computer')) )\nORDER BY CASE WHEN a.ResolutionState < 255 THEN 0 ELSE 1 END, a.Severity DESC, a.TimeRaised DESC",
-          "refId": "A"
-        }
-      ],
-      "id": 6,
-      "title": "Alerts",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "description": "Use the State, Severity, Server and search boxes at the top. Open alerts ignore the time range; closed alerts are those resolved inside it. Capped at 1000 rows. Select an alert name to see its details.",
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "gridPos": {
-        "h": 22,
-        "y": 4,
-        "x": 0,
-        "w": 24
-      },
-      "type": "table"
-    }
-  ],
-  "version": 1,
   "tags": [
     "scom",
     "scom-core",
     "pack:scom-core"
+  ],
+  "description": "Open and closed SCOM alerts with filters; select an alert to see its details, context and history.",
+  "links": [
+    {
+      "title": "SCOM Platform",
+      "type": "dashboards",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "scom-core"
+      ],
+      "asDropdown": true
+    },
+    {
+      "title": "Technology packs",
+      "type": "dashboards",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "scom-pack"
+      ],
+      "asDropdown": true
+    }
   ]
 }

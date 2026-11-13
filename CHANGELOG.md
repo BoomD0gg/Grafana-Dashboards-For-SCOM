@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4 - zooming into older periods
+
+### Fixed
+- **Performance graphs are no longer empty when you zoom into a short period that is older than SCOM keeps raw samples.** Up to now a window of 48 hours or less always read the raw samples, which SCOM deletes after its retention period (a matter of days, set in your data warehouse grooming settings), so zooming from a long range into, say, a 3-hour window three weeks back showed "No data" even though hourly averages still existed. The graphs now fall back to the hourly averages when there are no raw samples in the window. Ranges with raw data behave exactly as before. This affects every performance graph in all technology packs.
+
+### Notes
+- Drag across any graph to zoom the whole dashboard to that period (standard Grafana). The shortest useful window is about 5 minutes, because SCOM stores samples every 5 minutes at best.
 ## 0.1.3 - alerts page, alert details, and alerts repeated in several languages
 
 ### Added

@@ -1,213 +1,204 @@
 {
-  "refresh": "1m",
-  "time": {
-    "to": "now",
-    "from": "now-24h"
-  },
-  "version": 1,
+  "description": "Health of the SCOM management group itself: agents, management servers, version drift, proxy state, alerts and outages.",
   "timezone": "browser",
+  "tags": [
+    "scom",
+    "scom-pack",
+    "scom-infrastructure",
+    "pack:scom-infrastructure"
+  ],
+  "schemaVersion": 39,
   "panels": [
     {
-      "type": "stat",
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "rawSql": "WITH hs0 AS (\n  SELECT m.BaseManagedEntityId, m.DisplayName, m.IsAgent, m.IsManagementServer, m.Version, m.ProxyingEnabled,\n         CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), hs AS (\n  SELECT h.*, g.HealthState FROM hs0 h\n  JOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = h.DisplayName\n  WHERE h.rn = 1 AND h.DisplayName IN (${agent:singlequote})\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM hs0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT\n  SUM(CASE WHEN hs.IsAgent = 1 THEN 1 ELSE 0 END) AS Agents,\n  SUM(CASE WHEN hs.IsManagementServer = 1 THEN 1 ELSE 0 END) AS \"Management servers\",\n  SUM(CASE WHEN hs.HealthState = 1 THEN 1 ELSE 0 END) AS Healthy,\n  SUM(CASE WHEN hs.HealthState = 2 THEN 1 ELSE 0 END) AS Warning,\n  SUM(CASE WHEN hs.HealthState = 3 THEN 1 ELSE 0 END) AS Critical,\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.vnum < topv.v THEN 1 ELSE 0 END) AS \"Older than management server\",\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.ProxyingEnabled = 0 THEN 1 ELSE 0 END) AS \"Proxy disabled\"\nFROM hs CROSS JOIN topv",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "format": "table",
-          "rawQuery": true
-        }
-      ],
       "fieldConfig": {
+        "overrides": [],
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "noValue": "0",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               {
                 "color": "#5794F2",
                 "value": null
               }
-            ],
-            "mode": "absolute"
-          },
-          "noValue": "0"
-        },
-        "overrides": []
+            ]
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Agents",
+      "type": "stat",
       "options": {
-        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Agents$/",
-          "values": false
+          "values": false,
+          "fields": "/^Agents$/"
         },
-        "textMode": "value"
+        "textMode": "value",
+        "colorMode": "background_solid"
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 1,
       "gridPos": {
-        "x": 0,
-        "y": 0,
         "h": 4,
-        "w": 3
+        "w": 3,
+        "x": 0,
+        "y": 0
       },
       "description": "SCOM agents (health services that are not management servers).",
-      "id": 1,
-      "title": "Agents"
-    },
-    {
-      "type": "stat",
       "targets": [
         {
-          "editorMode": "code",
-          "refId": "A",
           "rawSql": "WITH hs0 AS (\n  SELECT m.BaseManagedEntityId, m.DisplayName, m.IsAgent, m.IsManagementServer, m.Version, m.ProxyingEnabled,\n         CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), hs AS (\n  SELECT h.*, g.HealthState FROM hs0 h\n  JOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = h.DisplayName\n  WHERE h.rn = 1 AND h.DisplayName IN (${agent:singlequote})\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM hs0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT\n  SUM(CASE WHEN hs.IsAgent = 1 THEN 1 ELSE 0 END) AS Agents,\n  SUM(CASE WHEN hs.IsManagementServer = 1 THEN 1 ELSE 0 END) AS \"Management servers\",\n  SUM(CASE WHEN hs.HealthState = 1 THEN 1 ELSE 0 END) AS Healthy,\n  SUM(CASE WHEN hs.HealthState = 2 THEN 1 ELSE 0 END) AS Warning,\n  SUM(CASE WHEN hs.HealthState = 3 THEN 1 ELSE 0 END) AS Critical,\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.vnum < topv.v THEN 1 ELSE 0 END) AS \"Older than management server\",\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.ProxyingEnabled = 0 THEN 1 ELSE 0 END) AS \"Proxy disabled\"\nFROM hs CROSS JOIN topv",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
+          "rawQuery": true,
+          "editorMode": "code",
           "format": "table",
-          "rawQuery": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
         }
-      ],
+      ]
+    },
+    {
       "fieldConfig": {
+        "overrides": [],
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "noValue": "0",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               {
                 "color": "#5794F2",
                 "value": null
               }
-            ],
-            "mode": "absolute"
-          },
-          "noValue": "0"
-        },
-        "overrides": []
+            ]
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Management servers",
+      "type": "stat",
       "options": {
-        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Management servers$/",
-          "values": false
+          "values": false,
+          "fields": "/^Management servers$/"
         },
-        "textMode": "value"
+        "textMode": "value",
+        "colorMode": "background_solid"
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 2,
       "gridPos": {
-        "x": 3,
-        "y": 0,
         "h": 4,
-        "w": 3
+        "w": 3,
+        "x": 3,
+        "y": 0
       },
       "description": "Management servers in the management group.",
-      "id": 2,
-      "title": "Management servers"
-    },
-    {
-      "type": "stat",
       "targets": [
         {
-          "editorMode": "code",
-          "refId": "A",
           "rawSql": "WITH hs0 AS (\n  SELECT m.BaseManagedEntityId, m.DisplayName, m.IsAgent, m.IsManagementServer, m.Version, m.ProxyingEnabled,\n         CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), hs AS (\n  SELECT h.*, g.HealthState FROM hs0 h\n  JOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = h.DisplayName\n  WHERE h.rn = 1 AND h.DisplayName IN (${agent:singlequote})\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM hs0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT\n  SUM(CASE WHEN hs.IsAgent = 1 THEN 1 ELSE 0 END) AS Agents,\n  SUM(CASE WHEN hs.IsManagementServer = 1 THEN 1 ELSE 0 END) AS \"Management servers\",\n  SUM(CASE WHEN hs.HealthState = 1 THEN 1 ELSE 0 END) AS Healthy,\n  SUM(CASE WHEN hs.HealthState = 2 THEN 1 ELSE 0 END) AS Warning,\n  SUM(CASE WHEN hs.HealthState = 3 THEN 1 ELSE 0 END) AS Critical,\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.vnum < topv.v THEN 1 ELSE 0 END) AS \"Older than management server\",\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.ProxyingEnabled = 0 THEN 1 ELSE 0 END) AS \"Proxy disabled\"\nFROM hs CROSS JOIN topv",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
+          "rawQuery": true,
+          "editorMode": "code",
           "format": "table",
-          "rawQuery": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
         }
-      ],
+      ]
+    },
+    {
       "fieldConfig": {
+        "overrides": [],
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "noValue": "0",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               {
                 "color": "#56A64B",
                 "value": null
               }
-            ],
-            "mode": "absolute"
-          },
-          "noValue": "0"
-        },
-        "overrides": []
+            ]
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Healthy",
+      "type": "stat",
       "options": {
-        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Healthy$/",
-          "values": false
+          "values": false,
+          "fields": "/^Healthy$/"
         },
-        "textMode": "value"
+        "textMode": "value",
+        "colorMode": "background_solid"
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 3,
       "gridPos": {
-        "x": 6,
-        "y": 0,
         "h": 4,
-        "w": 3
+        "w": 3,
+        "x": 6,
+        "y": 0
       },
       "description": "Health services in Healthy state.",
-      "id": 3,
-      "title": "Healthy"
-    },
-    {
-      "type": "stat",
       "targets": [
         {
-          "editorMode": "code",
-          "refId": "A",
           "rawSql": "WITH hs0 AS (\n  SELECT m.BaseManagedEntityId, m.DisplayName, m.IsAgent, m.IsManagementServer, m.Version, m.ProxyingEnabled,\n         CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), hs AS (\n  SELECT h.*, g.HealthState FROM hs0 h\n  JOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = h.DisplayName\n  WHERE h.rn = 1 AND h.DisplayName IN (${agent:singlequote})\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM hs0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT\n  SUM(CASE WHEN hs.IsAgent = 1 THEN 1 ELSE 0 END) AS Agents,\n  SUM(CASE WHEN hs.IsManagementServer = 1 THEN 1 ELSE 0 END) AS \"Management servers\",\n  SUM(CASE WHEN hs.HealthState = 1 THEN 1 ELSE 0 END) AS Healthy,\n  SUM(CASE WHEN hs.HealthState = 2 THEN 1 ELSE 0 END) AS Warning,\n  SUM(CASE WHEN hs.HealthState = 3 THEN 1 ELSE 0 END) AS Critical,\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.vnum < topv.v THEN 1 ELSE 0 END) AS \"Older than management server\",\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.ProxyingEnabled = 0 THEN 1 ELSE 0 END) AS \"Proxy disabled\"\nFROM hs CROSS JOIN topv",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
+          "rawQuery": true,
+          "editorMode": "code",
           "format": "table",
-          "rawQuery": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
         }
-      ],
+      ]
+    },
+    {
       "fieldConfig": {
+        "overrides": [],
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "noValue": "0",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               {
                 "color": "#56A64B",
@@ -217,61 +208,61 @@
                 "color": "#FF9830",
                 "value": 1
               }
-            ],
-            "mode": "absolute"
-          },
-          "noValue": "0"
-        },
-        "overrides": []
+            ]
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Warning",
+      "type": "stat",
       "options": {
-        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Warning$/",
-          "values": false
+          "values": false,
+          "fields": "/^Warning$/"
         },
-        "textMode": "value"
+        "textMode": "value",
+        "colorMode": "background_solid"
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 4,
       "gridPos": {
-        "x": 9,
-        "y": 0,
         "h": 4,
-        "w": 3
+        "w": 3,
+        "x": 9,
+        "y": 0
       },
       "description": "Health services in Warning state.",
-      "id": 4,
-      "title": "Warning"
-    },
-    {
-      "type": "stat",
       "targets": [
         {
-          "editorMode": "code",
-          "refId": "A",
           "rawSql": "WITH hs0 AS (\n  SELECT m.BaseManagedEntityId, m.DisplayName, m.IsAgent, m.IsManagementServer, m.Version, m.ProxyingEnabled,\n         CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), hs AS (\n  SELECT h.*, g.HealthState FROM hs0 h\n  JOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = h.DisplayName\n  WHERE h.rn = 1 AND h.DisplayName IN (${agent:singlequote})\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM hs0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT\n  SUM(CASE WHEN hs.IsAgent = 1 THEN 1 ELSE 0 END) AS Agents,\n  SUM(CASE WHEN hs.IsManagementServer = 1 THEN 1 ELSE 0 END) AS \"Management servers\",\n  SUM(CASE WHEN hs.HealthState = 1 THEN 1 ELSE 0 END) AS Healthy,\n  SUM(CASE WHEN hs.HealthState = 2 THEN 1 ELSE 0 END) AS Warning,\n  SUM(CASE WHEN hs.HealthState = 3 THEN 1 ELSE 0 END) AS Critical,\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.vnum < topv.v THEN 1 ELSE 0 END) AS \"Older than management server\",\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.ProxyingEnabled = 0 THEN 1 ELSE 0 END) AS \"Proxy disabled\"\nFROM hs CROSS JOIN topv",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
+          "rawQuery": true,
+          "editorMode": "code",
           "format": "table",
-          "rawQuery": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
         }
-      ],
+      ]
+    },
+    {
       "fieldConfig": {
+        "overrides": [],
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "noValue": "0",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               {
                 "color": "#56A64B",
@@ -281,61 +272,61 @@
                 "color": "#E02F44",
                 "value": 1
               }
-            ],
-            "mode": "absolute"
-          },
-          "noValue": "0"
-        },
-        "overrides": []
+            ]
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Critical",
+      "type": "stat",
       "options": {
-        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Critical$/",
-          "values": false
+          "values": false,
+          "fields": "/^Critical$/"
         },
-        "textMode": "value"
+        "textMode": "value",
+        "colorMode": "background_solid"
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 5,
       "gridPos": {
-        "x": 12,
-        "y": 0,
         "h": 4,
-        "w": 3
+        "w": 3,
+        "x": 12,
+        "y": 0
       },
       "description": "Health services in Critical state (e.g. heartbeat failure).",
-      "id": 5,
-      "title": "Critical"
-    },
-    {
-      "type": "stat",
       "targets": [
         {
-          "editorMode": "code",
-          "refId": "A",
           "rawSql": "WITH hs0 AS (\n  SELECT m.BaseManagedEntityId, m.DisplayName, m.IsAgent, m.IsManagementServer, m.Version, m.ProxyingEnabled,\n         CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), hs AS (\n  SELECT h.*, g.HealthState FROM hs0 h\n  JOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = h.DisplayName\n  WHERE h.rn = 1 AND h.DisplayName IN (${agent:singlequote})\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM hs0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT\n  SUM(CASE WHEN hs.IsAgent = 1 THEN 1 ELSE 0 END) AS Agents,\n  SUM(CASE WHEN hs.IsManagementServer = 1 THEN 1 ELSE 0 END) AS \"Management servers\",\n  SUM(CASE WHEN hs.HealthState = 1 THEN 1 ELSE 0 END) AS Healthy,\n  SUM(CASE WHEN hs.HealthState = 2 THEN 1 ELSE 0 END) AS Warning,\n  SUM(CASE WHEN hs.HealthState = 3 THEN 1 ELSE 0 END) AS Critical,\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.vnum < topv.v THEN 1 ELSE 0 END) AS \"Older than management server\",\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.ProxyingEnabled = 0 THEN 1 ELSE 0 END) AS \"Proxy disabled\"\nFROM hs CROSS JOIN topv",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
+          "rawQuery": true,
+          "editorMode": "code",
           "format": "table",
-          "rawQuery": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
         }
-      ],
+      ]
+    },
+    {
       "fieldConfig": {
+        "overrides": [],
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "noValue": "0",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               {
                 "color": "#56A64B",
@@ -345,61 +336,61 @@
                 "color": "#FF9830",
                 "value": 1
               }
-            ],
-            "mode": "absolute"
-          },
-          "noValue": "0"
-        },
-        "overrides": []
+            ]
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Older than server",
+      "type": "stat",
       "options": {
-        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Older than management server$/",
-          "values": false
+          "values": false,
+          "fields": "/^Older than management server$/"
         },
-        "textMode": "value"
+        "textMode": "value",
+        "colorMode": "background_solid"
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 6,
       "gridPos": {
-        "x": 15,
-        "y": 0,
         "h": 4,
-        "w": 3
+        "w": 3,
+        "x": 15,
+        "y": 0
       },
       "description": "Agents whose build is older than the newest management server. Apply the agent update.",
-      "id": 6,
-      "title": "Older than server"
-    },
-    {
-      "type": "stat",
       "targets": [
         {
-          "editorMode": "code",
-          "refId": "A",
           "rawSql": "WITH hs0 AS (\n  SELECT m.BaseManagedEntityId, m.DisplayName, m.IsAgent, m.IsManagementServer, m.Version, m.ProxyingEnabled,\n         CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), hs AS (\n  SELECT h.*, g.HealthState FROM hs0 h\n  JOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = h.DisplayName\n  WHERE h.rn = 1 AND h.DisplayName IN (${agent:singlequote})\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM hs0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT\n  SUM(CASE WHEN hs.IsAgent = 1 THEN 1 ELSE 0 END) AS Agents,\n  SUM(CASE WHEN hs.IsManagementServer = 1 THEN 1 ELSE 0 END) AS \"Management servers\",\n  SUM(CASE WHEN hs.HealthState = 1 THEN 1 ELSE 0 END) AS Healthy,\n  SUM(CASE WHEN hs.HealthState = 2 THEN 1 ELSE 0 END) AS Warning,\n  SUM(CASE WHEN hs.HealthState = 3 THEN 1 ELSE 0 END) AS Critical,\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.vnum < topv.v THEN 1 ELSE 0 END) AS \"Older than management server\",\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.ProxyingEnabled = 0 THEN 1 ELSE 0 END) AS \"Proxy disabled\"\nFROM hs CROSS JOIN topv",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
+          "rawQuery": true,
+          "editorMode": "code",
           "format": "table",
-          "rawQuery": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
         }
-      ],
+      ]
+    },
+    {
       "fieldConfig": {
+        "overrides": [],
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "noValue": "0",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               {
                 "color": "#56A64B",
@@ -409,61 +400,61 @@
                 "color": "#FF9830",
                 "value": 1
               }
-            ],
-            "mode": "absolute"
-          },
-          "noValue": "0"
-        },
-        "overrides": []
+            ]
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Proxy disabled",
+      "type": "stat",
       "options": {
-        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Proxy disabled$/",
-          "values": false
+          "values": false,
+          "fields": "/^Proxy disabled$/"
         },
-        "textMode": "value"
+        "textMode": "value",
+        "colorMode": "background_solid"
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 7,
       "gridPos": {
-        "x": 18,
-        "y": 0,
         "h": 4,
-        "w": 3
+        "w": 3,
+        "x": 18,
+        "y": 0
       },
       "description": "Agents with agent proxy disabled. Required by the AD, SQL Server and clustering management packs.",
-      "id": 7,
-      "title": "Proxy disabled"
-    },
-    {
-      "type": "stat",
       "targets": [
         {
+          "rawSql": "WITH hs0 AS (\n  SELECT m.BaseManagedEntityId, m.DisplayName, m.IsAgent, m.IsManagementServer, m.Version, m.ProxyingEnabled,\n         CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), hs AS (\n  SELECT h.*, g.HealthState FROM hs0 h\n  JOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = h.DisplayName\n  WHERE h.rn = 1 AND h.DisplayName IN (${agent:singlequote})\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM hs0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT\n  SUM(CASE WHEN hs.IsAgent = 1 THEN 1 ELSE 0 END) AS Agents,\n  SUM(CASE WHEN hs.IsManagementServer = 1 THEN 1 ELSE 0 END) AS \"Management servers\",\n  SUM(CASE WHEN hs.HealthState = 1 THEN 1 ELSE 0 END) AS Healthy,\n  SUM(CASE WHEN hs.HealthState = 2 THEN 1 ELSE 0 END) AS Warning,\n  SUM(CASE WHEN hs.HealthState = 3 THEN 1 ELSE 0 END) AS Critical,\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.vnum < topv.v THEN 1 ELSE 0 END) AS \"Older than management server\",\n  SUM(CASE WHEN hs.IsAgent = 1 AND hs.ProxyingEnabled = 0 THEN 1 ELSE 0 END) AS \"Proxy disabled\"\nFROM hs CROSS JOIN topv",
+          "rawQuery": true,
           "editorMode": "code",
-          "refId": "A",
-          "rawSql": "SELECT mg.ManagementGroupName AS \"Management group\",\n       mg.DBVersion AS \"Database version\",\n       (SELECT MAX(m.Version) FROM dbo.MTV_HealthService m WHERE m.IsManagementServer = 1) AS \"Management server build\",\n       (SELECT COUNT(*) FROM dbo.MTV_HealthService m WHERE m.IsManagementServer = 1) AS \"Management servers\",\n       (SELECT COUNT(*) FROM dbo.MTV_HealthService m WHERE m.IsAgent = 1) AS Agents,\n       (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255) AS \"Open alerts\",\n       (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.SystemCenter.%') AS \"Open SCOM-infrastructure alerts\"\nFROM dbo.__MOMManagementGroupInfo__ mg",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
           "format": "table",
-          "rawQuery": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
         }
-      ],
+      ]
+    },
+    {
       "fieldConfig": {
+        "overrides": [],
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "noValue": "0",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               {
                 "color": "#56A64B",
@@ -473,73 +464,68 @@
                 "color": "#FF9830",
                 "value": 1
               }
-            ],
-            "mode": "absolute"
-          },
-          "noValue": "0"
-        },
-        "overrides": []
+            ]
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Open infra alerts",
+      "type": "stat",
       "options": {
-        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Open SCOM-infrastructure alerts$/",
-          "values": false
+          "values": false,
+          "fields": "/^Open SCOM-infrastructure alerts$/"
         },
-        "textMode": "value"
-      },
-      "gridPos": {
-        "x": 21,
-        "y": 0,
-        "h": 4,
-        "w": 3
-      },
-      "description": "Open alerts raised by SCOM infrastructure objects.",
-      "id": 8,
-      "title": "Open infra alerts"
-    },
-    {
-      "type": "table",
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "rawSql": "SELECT mg.ManagementGroupName AS \"Management group\",\n       mg.DBVersion AS \"Database version\",\n       (SELECT MAX(m.Version) FROM dbo.MTV_HealthService m WHERE m.IsManagementServer = 1) AS \"Management server build\",\n       (SELECT COUNT(*) FROM dbo.MTV_HealthService m WHERE m.IsManagementServer = 1) AS \"Management servers\",\n       (SELECT COUNT(*) FROM dbo.MTV_HealthService m WHERE m.IsAgent = 1) AS Agents,\n       (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255) AS \"Open alerts\",\n       (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.SystemCenter.%') AS \"Open SCOM-infrastructure alerts\"\nFROM dbo.__MOMManagementGroupInfo__ mg",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "format": "table",
-          "rawQuery": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "cellOptions": {
-              "type": "auto"
-            },
-            "align": "auto",
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        },
-        "overrides": []
+        "textMode": "value",
+        "colorMode": "background_solid"
       },
       "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
+        "uid": "${ds_om}",
+        "type": "mssql"
       },
+      "id": 8,
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 0
+      },
+      "description": "Open alerts raised by SCOM infrastructure objects.",
+      "targets": [
+        {
+          "rawSql": "SELECT mg.ManagementGroupName AS \"Management group\",\n       mg.DBVersion AS \"Database version\",\n       (SELECT MAX(m.Version) FROM dbo.MTV_HealthService m WHERE m.IsManagementServer = 1) AS \"Management server build\",\n       (SELECT COUNT(*) FROM dbo.MTV_HealthService m WHERE m.IsManagementServer = 1) AS \"Management servers\",\n       (SELECT COUNT(*) FROM dbo.MTV_HealthService m WHERE m.IsAgent = 1) AS Agents,\n       (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255) AS \"Open alerts\",\n       (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.SystemCenter.%') AS \"Open SCOM-infrastructure alerts\"\nFROM dbo.__MOMManagementGroupInfo__ mg",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "table",
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
+          "links": [],
+          "noValue": "No data",
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        }
+      },
+      "title": "Management group",
+      "type": "table",
       "options": {
         "footer": {
           "show": false
@@ -547,48 +533,39 @@
         "cellHeight": "sm",
         "showHeader": true
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 9,
       "gridPos": {
-        "x": 0,
-        "y": 4,
         "h": 3,
-        "w": 24
+        "w": 24,
+        "x": 0,
+        "y": 4
       },
       "description": "Names the management group, database version and management server build.",
-      "id": 9,
-      "title": "Management group"
-    },
-    {
-      "type": "table",
       "targets": [
         {
+          "rawSql": "SELECT mg.ManagementGroupName AS \"Management group\",\n       mg.DBVersion AS \"Database version\",\n       (SELECT MAX(m.Version) FROM dbo.MTV_HealthService m WHERE m.IsManagementServer = 1) AS \"Management server build\",\n       (SELECT COUNT(*) FROM dbo.MTV_HealthService m WHERE m.IsManagementServer = 1) AS \"Management servers\",\n       (SELECT COUNT(*) FROM dbo.MTV_HealthService m WHERE m.IsAgent = 1) AS Agents,\n       (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255) AS \"Open alerts\",\n       (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.SystemCenter.%') AS \"Open SCOM-infrastructure alerts\"\nFROM dbo.__MOMManagementGroupInfo__ mg",
+          "rawQuery": true,
           "editorMode": "code",
-          "refId": "A",
-          "rawSql": "WITH m0 AS (\n  SELECT m.*, CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM m0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT TOP 1000\n  m.DisplayName AS Agent,\n  CASE WHEN m.IsManagementServer = 1 THEN 'Management server' ELSE 'Agent' END AS Role,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  m.Version AS Version,\n  CASE WHEN m.IsManagementServer = 1 OR m.vnum >= topv.v THEN 'Current' ELSE 'Older than management server' END AS \"Version status\",\n  CASE WHEN m.IsManagementServer = 1 THEN 'n/a' WHEN m.ProxyingEnabled = 1 THEN 'Enabled' ELSE 'Disabled' END AS Proxy,\n  CASE WHEN m.IsManagementServer = 1 THEN 'n/a' WHEN m.IsManuallyInstalled = 1 THEN 'Manual' ELSE 'Console push' END AS \"Install method\",\n  m.InstallTime AS Installed\nFROM m0 m CROSS JOIN topv\nJOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = m.DisplayName\nWHERE m.rn = 1 AND m.DisplayName IN (${agent:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, m.DisplayName",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
           "format": "table",
-          "rawQuery": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "cellOptions": {
-              "type": "auto"
-            },
-            "align": "auto",
-            "filterable": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
           },
-          "links": [],
-          "noValue": "No data"
-        },
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
         "overrides": [
           {
             "matcher": {
-              "options": "Health",
-              "id": "byName"
+              "id": "byName",
+              "options": "Health"
             },
             "properties": [
               {
@@ -596,17 +573,9 @@
                 "value": [
                   {
                     "options": {
-                      "Healthy": {
+                      "Present": {
                         "color": "#56A64B",
-                        "index": 3
-                      },
-                      "Not monitored": {
-                        "color": "#8E8E93",
-                        "index": 4
-                      },
-                      "MISSING": {
-                        "color": "#E02F44",
-                        "index": 5
+                        "index": 6
                       },
                       "Warning": {
                         "color": "#FF9830",
@@ -616,13 +585,21 @@
                         "color": "#E02F44",
                         "index": 0
                       },
-                      "Present": {
-                        "color": "#56A64B",
-                        "index": 6
-                      },
                       "Information": {
                         "color": "#5794F2",
                         "index": 2
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
                       }
                     },
                     "type": "value"
@@ -639,8 +616,8 @@
           },
           {
             "matcher": {
-              "options": "Version status",
-              "id": "byName"
+              "id": "byName",
+              "options": "Version status"
             },
             "properties": [
               {
@@ -671,8 +648,8 @@
           },
           {
             "matcher": {
-              "options": "Proxy",
-              "id": "byName"
+              "id": "byName",
+              "options": "Proxy"
             },
             "properties": [
               {
@@ -684,13 +661,13 @@
                         "color": "#FF9830",
                         "index": 0
                       },
-                      "Enabled": {
-                        "color": "#56A64B",
-                        "index": 1
-                      },
                       "n/a": {
                         "color": "#8E8E93",
                         "index": 2
+                      },
+                      "Enabled": {
+                        "color": "#56A64B",
+                        "index": 1
                       }
                     },
                     "type": "value"
@@ -705,12 +682,21 @@
               }
             ]
           }
-        ]
+        ],
+        "defaults": {
+          "links": [],
+          "noValue": "No data",
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Agents and management servers",
+      "type": "table",
       "options": {
         "footer": {
           "show": false
@@ -718,48 +704,39 @@
         "cellHeight": "sm",
         "showHeader": true
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 10,
       "gridPos": {
-        "x": 0,
-        "y": 7,
         "h": 10,
-        "w": 14
+        "w": 14,
+        "x": 0,
+        "y": 7
       },
       "description": "Health, build, proxy state and install method for every health service.",
-      "id": 10,
-      "title": "Agents and management servers"
-    },
-    {
-      "type": "table",
       "targets": [
         {
+          "rawSql": "WITH m0 AS (\n  SELECT m.*, CAST(PARSENAME(m.Version, 2) AS int) * 100000 + CAST(PARSENAME(m.Version, 1) AS int) AS vnum,\n         ROW_NUMBER() OVER (PARTITION BY m.BaseManagedEntityId ORDER BY m.Version DESC) AS rn\n  FROM dbo.MTV_HealthService m\n), topv AS (SELECT COALESCE(MAX(vnum), 0) AS v FROM m0 WHERE rn = 1 AND IsManagementServer = 1)\nSELECT TOP 1000\n  m.DisplayName AS Agent,\n  CASE WHEN m.IsManagementServer = 1 THEN 'Management server' ELSE 'Agent' END AS Role,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  m.Version AS Version,\n  CASE WHEN m.IsManagementServer = 1 OR m.vnum >= topv.v THEN 'Current' ELSE 'Older than management server' END AS \"Version status\",\n  CASE WHEN m.IsManagementServer = 1 THEN 'n/a' WHEN m.ProxyingEnabled = 1 THEN 'Enabled' ELSE 'Disabled' END AS Proxy,\n  CASE WHEN m.IsManagementServer = 1 THEN 'n/a' WHEN m.IsManuallyInstalled = 1 THEN 'Manual' ELSE 'Console push' END AS \"Install method\",\n  m.InstallTime AS Installed\nFROM m0 m CROSS JOIN topv\nJOIN (SELECT g.DisplayName, MAX(g.HealthState) AS HealthState FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')) GROUP BY g.DisplayName) g ON g.DisplayName = m.DisplayName\nWHERE m.rn = 1 AND m.DisplayName IN (${agent:singlequote})\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, m.DisplayName",
+          "rawQuery": true,
           "editorMode": "code",
-          "refId": "A",
-          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0\n  AND e.FullName LIKE 'Microsoft.SystemCenter.%'\nORDER BY 1 DESC, 4 DESC",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
           "format": "table",
-          "rawQuery": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "cellOptions": {
-              "type": "auto"
-            },
-            "align": "auto",
-            "filterable": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
           },
-          "links": [],
-          "noValue": "No data"
-        },
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
         "overrides": [
           {
             "matcher": {
-              "options": "Health",
-              "id": "byName"
+              "id": "byName",
+              "options": "Health"
             },
             "properties": [
               {
@@ -767,17 +744,9 @@
                 "value": [
                   {
                     "options": {
-                      "Healthy": {
+                      "Present": {
                         "color": "#56A64B",
-                        "index": 3
-                      },
-                      "Not monitored": {
-                        "color": "#8E8E93",
-                        "index": 4
-                      },
-                      "MISSING": {
-                        "color": "#E02F44",
-                        "index": 5
+                        "index": 6
                       },
                       "Warning": {
                         "color": "#FF9830",
@@ -787,13 +756,21 @@
                         "color": "#E02F44",
                         "index": 0
                       },
-                      "Present": {
-                        "color": "#56A64B",
-                        "index": 6
-                      },
                       "Information": {
                         "color": "#5794F2",
                         "index": 2
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
                       }
                     },
                     "type": "value"
@@ -808,12 +785,21 @@
               }
             ]
           }
-        ]
+        ],
+        "defaults": {
+          "links": [],
+          "noValue": "No data",
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Unhealthy SCOM infrastructure monitors",
+      "type": "table",
       "options": {
         "footer": {
           "show": false
@@ -821,48 +807,39 @@
         "cellHeight": "sm",
         "showHeader": true
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 11,
       "gridPos": {
-        "x": 14,
-        "y": 7,
         "h": 10,
-        "w": 10
+        "w": 10,
+        "x": 14,
+        "y": 7
       },
       "description": "Warning / Critical unit monitors on SCOM infrastructure objects.",
-      "id": 11,
-      "title": "Unhealthy SCOM infrastructure monitors"
-    },
-    {
-      "type": "table",
       "targets": [
         {
+          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0\n  AND e.FullName LIKE 'Microsoft.SystemCenter.%'\nORDER BY 1 DESC, 4 DESC",
+          "rawQuery": true,
           "editorMode": "code",
-          "refId": "A",
-          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.SystemCenter.%'\nORDER BY a.Severity DESC, a.TimeRaised DESC",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
           "format": "table",
-          "rawQuery": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "cellOptions": {
-              "type": "auto"
-            },
-            "align": "auto",
-            "filterable": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
           },
-          "links": [],
-          "noValue": "No data"
-        },
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
         "overrides": [
           {
             "matcher": {
-              "options": "Severity",
-              "id": "byName"
+              "id": "byName",
+              "options": "Severity"
             },
             "properties": [
               {
@@ -870,17 +847,9 @@
                 "value": [
                   {
                     "options": {
-                      "Healthy": {
+                      "Present": {
                         "color": "#56A64B",
-                        "index": 3
-                      },
-                      "Not monitored": {
-                        "color": "#8E8E93",
-                        "index": 4
-                      },
-                      "MISSING": {
-                        "color": "#E02F44",
-                        "index": 5
+                        "index": 6
                       },
                       "Warning": {
                         "color": "#FF9830",
@@ -890,13 +859,21 @@
                         "color": "#E02F44",
                         "index": 0
                       },
-                      "Present": {
-                        "color": "#56A64B",
-                        "index": 6
-                      },
                       "Information": {
                         "color": "#5794F2",
                         "index": 2
+                      },
+                      "Not monitored": {
+                        "color": "#8E8E93",
+                        "index": 4
+                      },
+                      "MISSING": {
+                        "color": "#E02F44",
+                        "index": 5
+                      },
+                      "Healthy": {
+                        "color": "#56A64B",
+                        "index": 3
                       }
                     },
                     "type": "value"
@@ -913,17 +890,17 @@
           },
           {
             "matcher": {
-              "options": "Alert",
-              "id": "byName"
+              "id": "byName",
+              "options": "Alert"
             },
             "properties": [
               {
                 "id": "links",
                 "value": [
                   {
+                    "targetBlank": false,
                     "title": "Open alert details",
-                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}",
-                    "targetBlank": false
+                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
                   }
                 ]
               }
@@ -931,8 +908,8 @@
           },
           {
             "matcher": {
-              "options": "AlertId",
-              "id": "byName"
+              "id": "byName",
+              "options": "AlertId"
             },
             "properties": [
               {
@@ -941,12 +918,21 @@
               }
             ]
           }
-        ]
+        ],
+        "defaults": {
+          "links": [],
+          "noValue": "No data",
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
+      "title": "Open SCOM infrastructure alerts",
+      "type": "table",
       "options": {
         "footer": {
           "show": false
@@ -954,48 +940,39 @@
         "cellHeight": "sm",
         "showHeader": true
       },
+      "datasource": {
+        "uid": "${ds_om}",
+        "type": "mssql"
+      },
+      "id": 12,
       "gridPos": {
-        "x": 0,
-        "y": 17,
         "h": 8,
-        "w": 14
+        "w": 14,
+        "x": 0,
+        "y": 17
       },
       "description": "Open alerts raised in the selected time range.",
-      "id": 12,
-      "title": "Open SCOM infrastructure alerts"
-    },
-    {
-      "type": "table",
       "targets": [
         {
+          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.SystemCenter.%'\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+          "rawQuery": true,
           "editorMode": "code",
-          "refId": "A",
-          "rawSql": "SELECT TOP 500\n  e.DisplayName AS Agent,\n  o.StartDateTime AS \"Start (UTC)\",\n  o.EndDateTime AS \"End (UTC)\",\n  DATEDIFF(minute, o.StartDateTime, COALESCE(o.EndDateTime, GETUTCDATE())) AS \"Minutes\",\n  o.ReasonCode AS \"Reason code\"\nFROM dbo.vHealthServiceOutage o\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = o.ManagedEntityRowId\nWHERE o.StartDateTime <= $__timeTo() AND COALESCE(o.EndDateTime, GETUTCDATE()) >= $__timeFrom()\n  AND e.DisplayName IN (${agent:singlequote})\nORDER BY o.StartDateTime DESC",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
           "format": "table",
-          "rawQuery": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "cellOptions": {
-              "type": "auto"
-            },
-            "align": "auto",
-            "filterable": true
+          "datasource": {
+            "uid": "${ds_om}",
+            "type": "mssql"
           },
-          "links": [],
-          "noValue": "No data"
-        },
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
         "overrides": [
           {
             "matcher": {
-              "options": "Minutes",
-              "id": "byName"
+              "id": "byName",
+              "options": "Minutes"
             },
             "properties": [
               {
@@ -1021,6 +998,7 @@
               {
                 "id": "thresholds",
                 "value": {
+                  "mode": "absolute",
                   "steps": [
                     {
                       "color": "#56A64B",
@@ -1034,18 +1012,26 @@
                       "color": "#E02F44",
                       "value": 30
                     }
-                  ],
-                  "mode": "absolute"
+                  ]
                 }
               }
             ]
           }
-        ]
+        ],
+        "defaults": {
+          "links": [],
+          "noValue": "No data",
+          "custom": {
+            "filterable": true,
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
+      "title": "Agent outages in range",
+      "type": "table",
       "options": {
         "footer": {
           "show": false
@@ -1053,137 +1039,154 @@
         "cellHeight": "sm",
         "showHeader": true
       },
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "id": 13,
       "gridPos": {
-        "x": 14,
-        "y": 17,
         "h": 8,
-        "w": 10
+        "w": 10,
+        "x": 14,
+        "y": 17
       },
       "description": "Heartbeat / health-service outages recorded by SCOM. Open outages have no end time.",
-      "id": 13,
-      "title": "Agent outages in range"
-    },
-    {
-      "type": "timeseries",
       "targets": [
         {
+          "rawSql": "SELECT TOP 500\n  e.DisplayName AS Agent,\n  o.StartDateTime AS \"Start (UTC)\",\n  o.EndDateTime AS \"End (UTC)\",\n  DATEDIFF(minute, o.StartDateTime, COALESCE(o.EndDateTime, GETUTCDATE())) AS \"Minutes\",\n  o.ReasonCode AS \"Reason code\"\nFROM dbo.vHealthServiceOutage o\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = o.ManagedEntityRowId\nWHERE o.StartDateTime <= $__timeTo() AND COALESCE(o.EndDateTime, GETUTCDATE()) >= $__timeFrom()\n  AND e.DisplayName IN (${agent:singlequote})\nORDER BY o.StartDateTime DESC",
+          "rawQuery": true,
           "editorMode": "code",
-          "refId": "A",
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'AgentStateRollup' AND r.CounterName = 'NumberAgents'\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n  UNION ALL\n  SELECT p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'AgentStateRollup' AND r.CounterName = 'NumberAgents'\n  GROUP BY p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n) x ORDER BY time",
+          "format": "table",
           "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
+            "uid": "${ds_dw}",
+            "type": "mssql"
           },
-          "format": "time_series",
-          "rawQuery": true
+          "refId": "A"
         }
-      ],
+      ]
+    },
+    {
       "fieldConfig": {
+        "overrides": [],
         "defaults": {
-          "custom": {
-            "fillOpacity": 8,
-            "lineWidth": 2,
-            "showPoints": "never",
-            "spanNulls": 3900000
-          },
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "none",
           "min": 0,
-          "noValue": "No data in range"
-        },
-        "overrides": []
+          "unit": "none",
+          "noValue": "No data in range",
+          "custom": {
+            "showPoints": "never",
+            "spanNulls": 3900000,
+            "fillOpacity": 8,
+            "lineWidth": 2
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
+      "title": "Agents by health state",
+      "type": "timeseries",
       "options": {
         "legend": {
-          "displayMode": "table",
+          "placement": "bottom",
           "calcs": [
             "lastNotNull",
             "max"
           ],
-          "placement": "bottom"
+          "displayMode": "table"
         },
         "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
-      "gridPos": {
-        "x": 0,
-        "y": 25,
-        "h": 7,
-        "w": 12
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
       },
-      "description": "",
       "id": 14,
-      "title": "Agents by health state"
-    },
-    {
-      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
+      "description": "",
       "targets": [
         {
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'AgentStateRollup' AND r.CounterName = 'NumberAgents'\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n  UNION ALL\n  SELECT p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'AgentStateRollup' AND r.CounterName = 'NumberAgents'\n  GROUP BY p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n) x ORDER BY time",
+          "rawQuery": true,
           "editorMode": "code",
-          "refId": "A",
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'ManagementGroupAlerts' AND r.CounterName = 'AlertsCount'\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n  UNION ALL\n  SELECT p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'ManagementGroupAlerts' AND r.CounterName = 'AlertsCount'\n  GROUP BY p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n) x ORDER BY time",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
           "format": "time_series",
-          "rawQuery": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "fillOpacity": 8,
-            "lineWidth": 2,
-            "showPoints": "never",
-            "spanNulls": 3900000
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
           },
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "overrides": [],
+        "defaults": {
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "none",
           "min": 0,
-          "noValue": "No data in range"
-        },
-        "overrides": []
+          "unit": "none",
+          "noValue": "No data in range",
+          "custom": {
+            "showPoints": "never",
+            "spanNulls": 3900000,
+            "fillOpacity": 8,
+            "lineWidth": 2
+          }
+        }
       },
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
+      "title": "Open alerts in the management group",
+      "type": "timeseries",
       "options": {
         "legend": {
-          "displayMode": "table",
+          "placement": "bottom",
           "calcs": [
             "lastNotNull",
             "max"
           ],
-          "placement": "bottom"
+          "displayMode": "table"
         },
         "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
+      "datasource": {
+        "uid": "${ds_dw}",
+        "type": "mssql"
+      },
+      "id": 15,
       "gridPos": {
-        "x": 12,
-        "y": 25,
         "h": 7,
-        "w": 12
+        "w": 12,
+        "x": 12,
+        "y": 25
       },
       "description": "",
-      "id": 15,
-      "title": "Open alerts in the management group"
+      "targets": [
+        {
+          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'ManagementGroupAlerts' AND r.CounterName = 'AlertsCount'\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n  UNION ALL\n  SELECT p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'ManagementGroupAlerts' AND r.CounterName = 'AlertsCount'\n  GROUP BY p.DateTime, CASE WHEN i.InstanceName = '' THEN r.CounterName ELSE i.InstanceName END\n) x ORDER BY time",
+          "rawQuery": true,
+          "editorMode": "code",
+          "format": "time_series",
+          "datasource": {
+            "uid": "${ds_dw}",
+            "type": "mssql"
+          },
+          "refId": "A"
+        }
+      ]
     }
   ],
+  "editable": true,
   "templating": {
     "list": [
       {
@@ -1218,58 +1221,55 @@
       },
       {
         "multi": true,
-        "type": "query",
-        "current": {},
-        "datasource": {
-          "type": "mssql",
-          "uid": "${ds_dw}"
-        },
-        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthService'\nORDER BY 1",
+        "includeAll": true,
+        "refresh": 2,
         "options": [],
-        "name": "agent",
         "label": "Agent / management server",
         "sort": 1,
-        "refresh": 2,
-        "includeAll": true,
-        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthService'\nORDER BY 1"
+        "datasource": {
+          "uid": "${ds_dw}",
+          "type": "mssql"
+        },
+        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthService'\nORDER BY 1",
+        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthService'\nORDER BY 1",
+        "current": {},
+        "name": "agent",
+        "type": "query"
       }
     ]
   },
-  "editable": true,
-  "uid": "scom-infra-overview",
-  "description": "Health of the SCOM management group itself: agents, management servers, version drift, proxy state, alerts and outages.",
-  "graphTooltip": 1,
-  "tags": [
-    "scom",
-    "scom-pack",
-    "scom-infrastructure",
-    "pack:scom-infrastructure"
-  ],
   "title": "SCOM Infrastructure - Overview",
+  "version": 1,
+  "refresh": "1m",
+  "annotations": {
+    "list": []
+  },
   "links": [
     {
-      "keepTime": true,
       "tags": [
         "scom-core"
       ],
-      "type": "dashboards",
+      "keepTime": true,
       "title": "SCOM Platform",
+      "type": "dashboards",
       "asDropdown": true,
       "includeVars": true
     },
     {
-      "keepTime": true,
       "tags": [
         "scom-pack"
       ],
-      "type": "dashboards",
+      "keepTime": true,
       "title": "Technology packs",
+      "type": "dashboards",
       "asDropdown": true,
       "includeVars": false
     }
   ],
-  "schemaVersion": 39,
-  "annotations": {
-    "list": []
+  "uid": "scom-infra-overview",
+  "graphTooltip": 1,
+  "time": {
+    "to": "now",
+    "from": "now-24h"
   }
 }

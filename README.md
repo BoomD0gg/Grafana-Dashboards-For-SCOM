@@ -4,7 +4,7 @@
 
 # SCOM Grafana Dashboards
 
-![Version](https://img.shields.io/badge/version-0.1.3-blue)
+![Version](https://img.shields.io/badge/version-0.1.4-blue)
 ![Grafana](https://img.shields.io/badge/Grafana-11%2B%20(tested%2013.3)-F46800)
 ![SCOM](https://img.shields.io/badge/SCOM-2022%20validated-0078D4)
 ![Dashboards](https://img.shields.io/badge/dashboards-26%20validated%20%2B%204%20untested-brightgreen)
@@ -20,7 +20,7 @@ The goal is simple: **give everyone who needs to see SCOM data a modern dashboar
 
 ## 📥 Get the dashboards
 
-**Latest release: v0.1.3**
+**Latest release: v0.1.4**
 
 [**Browse the dashboards**](dashboards/) • [**Download everything (ZIP)**](../../archive/refs/heads/main.zip) • [**Installation guide**](docs/INSTALLATION.md)
 
