@@ -1,0 +1,1760 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-6h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_dw",
+                                        "label":  "SCOM Data Warehouse",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/warehouse|dw/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT DisplayName FROM (\n  SELECT DISTINCT h.DisplayName\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE r.ObjectName = \u0027Community Hyper-V Host CPU\u0027 AND p.DateTime \u003e= DATEADD(day, -30, GETUTCDATE())\n  UNION ALL SELECT \u0027(no hosts found)\u0027 WHERE NOT EXISTS (\n    SELECT 1 FROM Perf.vPerfHourly p\n    JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n    JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n    WHERE r.ObjectName = \u0027Community Hyper-V Host CPU\u0027 AND p.DateTime \u003e= DATEADD(day, -30, GETUTCDATE()))\n) x ORDER BY DisplayName",
+                                        "type":  "query",
+                                        "includeAll":  true,
+                                        "label":  "Hyper-V host",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_dw}"
+                                                       },
+                                        "name":  "hvhost",
+                                        "multi":  true,
+                                        "query":  "SELECT DisplayName FROM (\n  SELECT DISTINCT h.DisplayName\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE r.ObjectName = \u0027Community Hyper-V Host CPU\u0027 AND p.DateTime \u003e= DATEADD(day, -30, GETUTCDATE())\n  UNION ALL SELECT \u0027(no hosts found)\u0027 WHERE NOT EXISTS (\n    SELECT 1 FROM Perf.vPerfHourly p\n    JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n    JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n    WHERE r.ObjectName = \u0027Community Hyper-V Host CPU\u0027 AND p.DateTime \u003e= DATEADD(day, -30, GETUTCDATE()))\n) x ORDER BY DisplayName",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    },
+                                    {
+                                        "definition":  "SELECT vm FROM (\n  SELECT DISTINCT LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) AS vm\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n    AND p.DateTime \u003e= DATEADD(day, -30, GETUTCDATE()) AND h.DisplayName IN (${hvhost:singlequote})\n  UNION ALL SELECT \u0027(none)\u0027 WHERE NOT EXISTS (\n    SELECT 1 FROM Perf.vPerfHourly p\n    JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n    JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n    JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n    JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n    WHERE r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND p.DateTime \u003e= DATEADD(day, -30, GETUTCDATE()) AND h.DisplayName IN (${hvhost:singlequote}))\n) x ORDER BY vm",
+                                        "type":  "query",
+                                        "name":  "hvvm",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_dw}"
+                                                       },
+                                        "label":  "Graph these VMs",
+                                        "query":  "SELECT vm FROM (\n  SELECT DISTINCT LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) AS vm\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n    AND p.DateTime \u003e= DATEADD(day, -30, GETUTCDATE()) AND h.DisplayName IN (${hvhost:singlequote})\n  UNION ALL SELECT \u0027(none)\u0027 WHERE NOT EXISTS (\n    SELECT 1 FROM Perf.vPerfHourly p\n    JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n    JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n    JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n    JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n    WHERE r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND p.DateTime \u003e= DATEADD(day, -30, GETUTCDATE()) AND h.DisplayName IN (${hvhost:singlequote}))\n) x ORDER BY vm",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    },
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "multi":  true,
+                                        "includeAll":  false
+                                    }
+                                ]
+                   },
+    "uid":  "scom-hvp-vm",
+    "title":  "Hyper-V Performance - Virtual Machines",
+    "tags":  [
+                 "scom",
+                 "scom-pack",
+                 "hyper-v",
+                 "pack:hyper-v"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^VMs reporting$/"
+                                                         }
+                                   },
+                       "id":  1,
+                       "type":  "stat",
+                       "description":  "Virtual machines on the selected hosts with performance data in the time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "noValue":  "-",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "decimals":  0,
+                                                            "unit":  "none"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH s AS (\n  SELECT i.InstanceName AS inst, r.CounterName AS ctr, p.SampleValue AS v\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880 AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n  UNION ALL\n  SELECT i.InstanceName, r.CounterName, p.AverageValue\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n),\na AS (\n  SELECT inst, ctr, AVG(v) AS av, MAX(v) AS mx FROM s\n  GROUP BY inst, ctr\n)\nSELECT COUNT(DISTINCT CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN inst END) AS \"VMs reporting\",\n       ROUND(AVG(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN av END), 1) AS \"Average VM CPU %\",\n       ROUND(MAX(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN mx END), 1) AS \"Busiest VM CPU %\",\n       ROUND(SUM(CASE WHEN ctr = \u0027Assigned Memory MB\u0027 THEN av END), 0) AS \"Memory assigned MB\",\n       ROUND(SUM(CASE WHEN ctr IN (\u0027Read IOPS\u0027, \u0027Write IOPS\u0027) THEN av END), 1) AS \"Disk IOPS\"\nFROM a",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "VMs reporting",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Average VM CPU %$/"
+                                                         }
+                                   },
+                       "id":  2,
+                       "type":  "stat",
+                       "description":  "Average CPU use of the VMs on the selected hosts, as a percentage of the CPU each one has been given.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  70,
+                                                                                                 "color":  "#FF9830"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  90,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "noValue":  "-",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "decimals":  1,
+                                                            "unit":  "percent"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH s AS (\n  SELECT i.InstanceName AS inst, r.CounterName AS ctr, p.SampleValue AS v\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880 AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n  UNION ALL\n  SELECT i.InstanceName, r.CounterName, p.AverageValue\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n),\na AS (\n  SELECT inst, ctr, AVG(v) AS av, MAX(v) AS mx FROM s\n  GROUP BY inst, ctr\n)\nSELECT COUNT(DISTINCT CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN inst END) AS \"VMs reporting\",\n       ROUND(AVG(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN av END), 1) AS \"Average VM CPU %\",\n       ROUND(MAX(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN mx END), 1) AS \"Busiest VM CPU %\",\n       ROUND(SUM(CASE WHEN ctr = \u0027Assigned Memory MB\u0027 THEN av END), 0) AS \"Memory assigned MB\",\n       ROUND(SUM(CASE WHEN ctr IN (\u0027Read IOPS\u0027, \u0027Write IOPS\u0027) THEN av END), 1) AS \"Disk IOPS\"\nFROM a",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Average VM CPU",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  5,
+                                       "h":  4,
+                                       "x":  4
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Busiest VM CPU %$/"
+                                                         }
+                                   },
+                       "id":  3,
+                       "type":  "stat",
+                       "description":  "The highest CPU use of any VM on the selected hosts in the time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  80,
+                                                                                                 "color":  "#FF9830"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  95,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "noValue":  "-",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "decimals":  1,
+                                                            "unit":  "percent"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH s AS (\n  SELECT i.InstanceName AS inst, r.CounterName AS ctr, p.SampleValue AS v\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880 AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n  UNION ALL\n  SELECT i.InstanceName, r.CounterName, p.AverageValue\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n),\na AS (\n  SELECT inst, ctr, AVG(v) AS av, MAX(v) AS mx FROM s\n  GROUP BY inst, ctr\n)\nSELECT COUNT(DISTINCT CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN inst END) AS \"VMs reporting\",\n       ROUND(AVG(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN av END), 1) AS \"Average VM CPU %\",\n       ROUND(MAX(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN mx END), 1) AS \"Busiest VM CPU %\",\n       ROUND(SUM(CASE WHEN ctr = \u0027Assigned Memory MB\u0027 THEN av END), 0) AS \"Memory assigned MB\",\n       ROUND(SUM(CASE WHEN ctr IN (\u0027Read IOPS\u0027, \u0027Write IOPS\u0027) THEN av END), 1) AS \"Disk IOPS\"\nFROM a",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Busiest VM CPU",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  5,
+                                       "h":  4,
+                                       "x":  9
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Memory assigned MB$/"
+                                                         }
+                                   },
+                       "id":  4,
+                       "type":  "stat",
+                       "description":  "Memory assigned to the VMs on the selected hosts.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "noValue":  "-",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "decimals":  0,
+                                                            "unit":  "decmbytes"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH s AS (\n  SELECT i.InstanceName AS inst, r.CounterName AS ctr, p.SampleValue AS v\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880 AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n  UNION ALL\n  SELECT i.InstanceName, r.CounterName, p.AverageValue\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n),\na AS (\n  SELECT inst, ctr, AVG(v) AS av, MAX(v) AS mx FROM s\n  GROUP BY inst, ctr\n)\nSELECT COUNT(DISTINCT CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN inst END) AS \"VMs reporting\",\n       ROUND(AVG(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN av END), 1) AS \"Average VM CPU %\",\n       ROUND(MAX(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN mx END), 1) AS \"Busiest VM CPU %\",\n       ROUND(SUM(CASE WHEN ctr = \u0027Assigned Memory MB\u0027 THEN av END), 0) AS \"Memory assigned MB\",\n       ROUND(SUM(CASE WHEN ctr IN (\u0027Read IOPS\u0027, \u0027Write IOPS\u0027) THEN av END), 1) AS \"Disk IOPS\"\nFROM a",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Memory assigned",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  5,
+                                       "h":  4,
+                                       "x":  14
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Disk IOPS$/"
+                                                         }
+                                   },
+                       "id":  5,
+                       "type":  "stat",
+                       "description":  "Reads plus writes per second across the virtual disks of the VMs on the selected hosts (average).",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "noValue":  "-",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "decimals":  1,
+                                                            "unit":  "iops"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH s AS (\n  SELECT i.InstanceName AS inst, r.CounterName AS ctr, p.SampleValue AS v\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880 AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n  UNION ALL\n  SELECT i.InstanceName, r.CounterName, p.AverageValue\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n),\na AS (\n  SELECT inst, ctr, AVG(v) AS av, MAX(v) AS mx FROM s\n  GROUP BY inst, ctr\n)\nSELECT COUNT(DISTINCT CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN inst END) AS \"VMs reporting\",\n       ROUND(AVG(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN av END), 1) AS \"Average VM CPU %\",\n       ROUND(MAX(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN mx END), 1) AS \"Busiest VM CPU %\",\n       ROUND(SUM(CASE WHEN ctr = \u0027Assigned Memory MB\u0027 THEN av END), 0) AS \"Memory assigned MB\",\n       ROUND(SUM(CASE WHEN ctr IN (\u0027Read IOPS\u0027, \u0027Write IOPS\u0027) THEN av END), 1) AS \"Disk IOPS\"\nFROM a",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Disk operations",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  5,
+                                       "h":  4,
+                                       "x":  19
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  6,
+                       "type":  "table",
+                       "description":  "One row per VM on the selected hosts for the time range. Click a VM name to show only that VM in the graphs below (the Virtual machine drop-down at the top does the same, and takes several). CPU is a percentage of the CPU the VM has been given. CPU max is the highest 5-minute (or hourly) average, not an instantaneous peak. Disk latency is in the counter\u0027s own unit, which is not independently verified. Memory demand is empty for VMs without Dynamic Memory or when the installed management pack does not collect it.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  false
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "links",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "targetBlank":  false,
+                                                                                                          "title":  "Graph this VM",
+                                                                                                          "url":  "/d/scom-hvp-vm/hyper-v-performance-virtual-machines?var-hvhost=`${hvhost:queryparam}\u0026var-hvvm=`${__data.fields[\"Virtual machine\"]}\u0026`${__url_time_range}"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Virtual machine"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-background"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  70,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  90,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPU avg %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-background"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  80,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  95,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPU max %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-background"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  80,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  95,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "vCPU max %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-background"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  85,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  100,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Mem demand %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  150
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Virtual machine"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  165
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Host"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  60
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "vCPUs"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  92
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Dyn. memory"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPU avg %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPU max %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  95
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "vCPU max %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  80
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Mem MB"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  112
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Mem demand %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  85
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Read IOPS"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  85
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Write IOPS"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  85
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Disk MB/s"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  100
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Disk latency"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  70
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Queue"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  75
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Pkts/s"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  80
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Drops/s"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH s AS (\n  SELECT h.DisplayName AS host, i.InstanceName AS inst, r.CounterName AS ctr, p.SampleValue AS v\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880 AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027, \u0027Community Hyper-V VM Network\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n  UNION ALL\n  SELECT h.DisplayName, i.InstanceName, r.CounterName, p.AverageValue\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName IN (\u0027Community Hyper-V VM CPU\u0027, \u0027Community Hyper-V VM Memory\u0027, \u0027Community Hyper-V VM Storage\u0027, \u0027Community Hyper-V VM Network\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n),\na AS (\n  SELECT host, LEFT(inst, CHARINDEX(\u0027 (\u0027, inst + \u0027 (\u0027) - 1) AS vm, SUBSTRING(inst, CHARINDEX(\u0027 (\u0027, inst) + 2, 36) AS guid, inst, ctr, AVG(v) AS av, MAX(v) AS mx\n  FROM s\n  GROUP BY host, LEFT(inst, CHARINDEX(\u0027 (\u0027, inst + \u0027 (\u0027) - 1), SUBSTRING(inst, CHARINDEX(\u0027 (\u0027, inst) + 2, 36), inst, ctr\n),\nf AS (\n  SELECT host, vm, guid,\n         MAX(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN av END) AS cpu_avg,\n         MAX(CASE WHEN ctr = \u0027Total Run Time % (average of virtual processors)\u0027 THEN mx END) AS cpu_max,\n         MAX(CASE WHEN ctr = \u0027Total Run Time % (busiest virtual processor)\u0027 THEN mx END) AS vp_max,\n         MAX(CASE WHEN ctr = \u0027Assigned Memory MB\u0027 THEN av END) AS mem_assigned,\n         MAX(CASE WHEN ctr = \u0027Memory Demand % of Assigned\u0027 THEN av END) AS mem_demand_pct,\n         SUM(CASE WHEN ctr = \u0027Read IOPS\u0027 THEN av END) AS r_iops,\n         SUM(CASE WHEN ctr = \u0027Write IOPS\u0027 THEN av END) AS w_iops,\n         SUM(CASE WHEN ctr IN (\u0027Read Throughput Bytes per sec\u0027, \u0027Write Throughput Bytes per sec\u0027) THEN av END) AS thr,\n         MAX(CASE WHEN ctr LIKE \u0027Latency%\u0027 THEN mx END) AS lat_max,\n         MAX(CASE WHEN ctr = \u0027Queue Length\u0027 THEN mx END) AS q_max,\n         SUM(CASE WHEN ctr IN (\u0027Packets Received per sec\u0027, \u0027Packets Sent per sec\u0027) THEN av END) AS pps,\n         SUM(CASE WHEN ctr IN (\u0027Dropped Packets Incoming per sec\u0027, \u0027Dropped Packets Outgoing per sec\u0027) THEN av END) AS drops\n  FROM a GROUP BY host, vm, guid\n),\nc AS (\n  SELECT host, vm, guid,\n         MAX(CASE WHEN ctr = \u0027Virtual Processor Count\u0027 THEN v END) AS vcpu,\n         MAX(CASE WHEN ctr = \u0027Dynamic Memory Enabled\u0027 THEN v END) AS dyn,\n         MAX(CASE WHEN ctr = \u0027Startup Memory MB\u0027 THEN v END) AS startup\n  FROM (\n    SELECT h.DisplayName AS host, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) AS vm, SUBSTRING(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName) + 2, 36) AS guid,\n           r.CounterName AS ctr, p.AverageValue AS v,\n           ROW_NUMBER() OVER (PARTITION BY h.DisplayName, i.InstanceName, r.CounterName ORDER BY p.DateTime DESC) AS rn\n    FROM Perf.vPerfHourly p\n    JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n    JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n    JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n    JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n    WHERE r.ObjectName = \u0027Community Hyper-V VM Configuration\u0027 AND p.DateTime \u003e= DATEADD(day, -30, GETUTCDATE())\n      AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0\n  ) q WHERE rn = 1 GROUP BY host, vm, guid\n)\nSELECT f.vm AS \"Virtual machine\", f.host AS Host, c.vcpu AS vCPUs,\n       CASE WHEN c.dyn IS NULL THEN NULL WHEN c.dyn \u003e= 0.5 THEN \u0027Yes\u0027 ELSE \u0027No\u0027 END AS \"Dyn. memory\",\n       ROUND(f.cpu_avg, 1) AS \"CPU avg %\", ROUND(f.cpu_max, 1) AS \"CPU max %\", ROUND(f.vp_max, 1) AS \"vCPU max %\",\n       ROUND(f.mem_assigned, 0) AS \"Mem MB\", ROUND(f.mem_demand_pct, 1) AS \"Mem demand %\",\n       ROUND(f.r_iops, 1) AS \"Read IOPS\", ROUND(f.w_iops, 1) AS \"Write IOPS\", ROUND(f.thr / 1048576.0, 3) AS \"Disk MB/s\",\n       ROUND(f.lat_max, 2) AS \"Disk latency\", ROUND(f.q_max, 1) AS \"Queue\",\n       ROUND(f.pps, 1) AS \"Pkts/s\", ROUND(f.drops, 2) AS \"Drops/s\"\nFROM f LEFT JOIN c ON c.host = f.host AND c.guid = f.guid\nORDER BY f.cpu_avg DESC, f.vm",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "All virtual machines on the selected hosts (busiest CPU first, click a name to graph it)",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  24,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  7,
+                       "type":  "timeseries",
+                       "description":  "Average across each VM\u0027s virtual processors, as a percentage of the CPU the VM has been given.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND r.CounterName IN (\u0027Total Run Time % (average of virtual processors)\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND r.CounterName IN (\u0027Total Run Time % (average of virtual processors)\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "CPU per VM",
+                       "gridPos":  {
+                                       "y":  13,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  8,
+                       "type":  "timeseries",
+                       "description":  "A VM can be short of CPU while its average looks fine, if one virtual processor is saturated. This line shows the busiest one.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND r.CounterName IN (\u0027Total Run Time % (busiest virtual processor)\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND r.CounterName IN (\u0027Total Run Time % (busiest virtual processor)\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Busiest virtual processor per VM",
+                       "gridPos":  {
+                                       "y":  13,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  9,
+                       "type":  "timeseries",
+                       "description":  "How long each VM\u0027s virtual processors wait to be scheduled onto a real processor. Rising values mean the VM is queueing for CPU. Shown in nanoseconds as Microsoft documents the counter; not independently verified.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "ns",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND r.CounterName IN (\u0027CPU Wait Time Per Dispatch (average of virtual processors)\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM CPU\u0027 AND r.CounterName IN (\u0027CPU Wait Time Per Dispatch (average of virtual processors)\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Waiting for a processor",
+                       "gridPos":  {
+                                       "y":  21,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  10,
+                       "type":  "timeseries",
+                       "description":  "Memory the host has given each VM now. With Dynamic Memory this moves between the VM\u0027s minimum and maximum.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "decmbytes",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Memory\u0027 AND r.CounterName IN (\u0027Assigned Memory MB\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Memory\u0027 AND r.CounterName IN (\u0027Assigned Memory MB\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Memory assigned",
+                       "gridPos":  {
+                                       "y":  21,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  11,
+                       "type":  "timeseries",
+                       "description":  "How much of its assigned memory each Dynamic Memory VM is asking for. Above 100 percent means the VM wants more than it has.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "noValue":  "Not collected: the installed Hyper-V Performance management pack may not include this counter, or no VM uses it"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Memory\u0027 AND r.CounterName IN (\u0027Memory Demand % of Assigned\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Memory\u0027 AND r.CounterName IN (\u0027Memory Demand % of Assigned\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Memory demand against assigned",
+                       "gridPos":  {
+                                       "y":  29,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  12,
+                       "type":  "timeseries",
+                       "description":  "Dynamic Memory pressure reported for each VM. Sustained values over 100 percent mean the VM is short of memory.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "noValue":  "Not collected: the installed Hyper-V Performance management pack may not include this counter, or no VM uses it"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Memory\u0027 AND r.CounterName IN (\u0027Memory Pressure %\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Memory\u0027 AND r.CounterName IN (\u0027Memory Pressure %\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Memory pressure",
+                       "gridPos":  {
+                                       "y":  29,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  13,
+                       "type":  "timeseries",
+                       "description":  "Per virtual disk, reads and writes.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "iops",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Read IOPS\u0027 THEN \u0027read\u0027 WHEN \u0027Write IOPS\u0027 THEN \u0027write\u0027 ELSE r.CounterName END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Read IOPS\u0027, \u0027Write IOPS\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Read IOPS\u0027 THEN \u0027read\u0027 WHEN \u0027Write IOPS\u0027 THEN \u0027write\u0027 ELSE r.CounterName END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Read IOPS\u0027 THEN \u0027read\u0027 WHEN \u0027Write IOPS\u0027 THEN \u0027write\u0027 ELSE r.CounterName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Read IOPS\u0027, \u0027Write IOPS\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Read IOPS\u0027 THEN \u0027read\u0027 WHEN \u0027Write IOPS\u0027 THEN \u0027write\u0027 ELSE r.CounterName END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Disk operations per second",
+                       "gridPos":  {
+                                       "y":  37,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  14,
+                       "type":  "timeseries",
+                       "description":  "Per virtual disk, reads and writes.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "Bps",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Read Throughput Bytes per sec\u0027 THEN \u0027read\u0027 WHEN \u0027Write Throughput Bytes per sec\u0027 THEN \u0027write\u0027 ELSE r.CounterName END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Read Throughput Bytes per sec\u0027, \u0027Write Throughput Bytes per sec\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Read Throughput Bytes per sec\u0027 THEN \u0027read\u0027 WHEN \u0027Write Throughput Bytes per sec\u0027 THEN \u0027write\u0027 ELSE r.CounterName END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Read Throughput Bytes per sec\u0027 THEN \u0027read\u0027 WHEN \u0027Write Throughput Bytes per sec\u0027 THEN \u0027write\u0027 ELSE r.CounterName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Read Throughput Bytes per sec\u0027, \u0027Write Throughput Bytes per sec\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Read Throughput Bytes per sec\u0027 THEN \u0027read\u0027 WHEN \u0027Write Throughput Bytes per sec\u0027 THEN \u0027write\u0027 ELSE r.CounterName END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Disk throughput",
+                       "gridPos":  {
+                                       "y":  37,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  15,
+                       "type":  "timeseries",
+                       "description":  "Per virtual disk, in the counter\u0027s own unit (not independently verified). Compare disks and VMs with each other, and watch for steps up over time.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "none",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Latency (counter native unit)\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Latency (counter native unit)\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Disk latency",
+                       "gridPos":  {
+                                       "y":  45,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  16,
+                       "type":  "timeseries",
+                       "description":  "Requests waiting for each virtual disk.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "none",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Queue Length\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Queue Length\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Disk queue length",
+                       "gridPos":  {
+                                       "y":  45,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  17,
+                       "type":  "timeseries",
+                       "description":  "Per virtual network adapter.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "pps",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Packets Received per sec\u0027 THEN \u0027in\u0027 WHEN \u0027Packets Sent per sec\u0027 THEN \u0027out\u0027 ELSE r.CounterName END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Network\u0027 AND r.CounterName IN (\u0027Packets Received per sec\u0027, \u0027Packets Sent per sec\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Packets Received per sec\u0027 THEN \u0027in\u0027 WHEN \u0027Packets Sent per sec\u0027 THEN \u0027out\u0027 ELSE r.CounterName END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Packets Received per sec\u0027 THEN \u0027in\u0027 WHEN \u0027Packets Sent per sec\u0027 THEN \u0027out\u0027 ELSE r.CounterName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Network\u0027 AND r.CounterName IN (\u0027Packets Received per sec\u0027, \u0027Packets Sent per sec\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Packets Received per sec\u0027 THEN \u0027in\u0027 WHEN \u0027Packets Sent per sec\u0027 THEN \u0027out\u0027 ELSE r.CounterName END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Network packets per second",
+                       "gridPos":  {
+                                       "y":  53,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  18,
+                       "type":  "timeseries",
+                       "description":  "Packets the virtual switch dropped for each VM adapter. Anything above zero for long is worth a look.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "pps",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Dropped Packets Incoming per sec\u0027 THEN \u0027dropped in\u0027 WHEN \u0027Dropped Packets Outgoing per sec\u0027 THEN \u0027dropped out\u0027 ELSE r.CounterName END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Network\u0027 AND r.CounterName IN (\u0027Dropped Packets Incoming per sec\u0027, \u0027Dropped Packets Outgoing per sec\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Dropped Packets Incoming per sec\u0027 THEN \u0027dropped in\u0027 WHEN \u0027Dropped Packets Outgoing per sec\u0027 THEN \u0027dropped out\u0027 ELSE r.CounterName END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Dropped Packets Incoming per sec\u0027 THEN \u0027dropped in\u0027 WHEN \u0027Dropped Packets Outgoing per sec\u0027 THEN \u0027dropped out\u0027 ELSE r.CounterName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Network\u0027 AND r.CounterName IN (\u0027Dropped Packets Incoming per sec\u0027, \u0027Dropped Packets Outgoing per sec\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Dropped Packets Incoming per sec\u0027 THEN \u0027dropped in\u0027 WHEN \u0027Dropped Packets Outgoing per sec\u0027 THEN \u0027dropped out\u0027 ELSE r.CounterName END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Network dropped packets",
+                       "gridPos":  {
+                                       "y":  53,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  19,
+                       "type":  "timeseries",
+                       "description":  "Per virtual network adapter, in bytes. Needs the detailed counters in the management pack.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "Bps",
+                                                            "noValue":  "Not collected: the installed Hyper-V Performance management pack may not include this counter, or no VM uses it"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Bytes Received per sec\u0027 THEN \u0027in\u0027 WHEN \u0027Bytes Sent per sec\u0027 THEN \u0027out\u0027 ELSE r.CounterName END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Network Detail\u0027 AND r.CounterName IN (\u0027Bytes Received per sec\u0027, \u0027Bytes Sent per sec\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Bytes Received per sec\u0027 THEN \u0027in\u0027 WHEN \u0027Bytes Sent per sec\u0027 THEN \u0027out\u0027 ELSE r.CounterName END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Bytes Received per sec\u0027 THEN \u0027in\u0027 WHEN \u0027Bytes Sent per sec\u0027 THEN \u0027out\u0027 ELSE r.CounterName END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Network Detail\u0027 AND r.CounterName IN (\u0027Bytes Received per sec\u0027, \u0027Bytes Sent per sec\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END + \u0027 \u0027 + CASE r.CounterName WHEN \u0027Bytes Received per sec\u0027 THEN \u0027in\u0027 WHEN \u0027Bytes Sent per sec\u0027 THEN \u0027out\u0027 ELSE r.CounterName END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Network throughput",
+                       "gridPos":  {
+                                       "y":  61,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  20,
+                       "type":  "timeseries",
+                       "description":  "Cumulative error count of each virtual disk. A rising line is a fault to investigate.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "none",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Error Count Total\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n  UNION ALL\n  SELECT p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Community Hyper-V VM Storage\u0027 AND r.CounterName IN (\u0027Error Count Total\u0027)\n    AND h.DisplayName IN (${hvhost:singlequote}) AND CHARINDEX(\u0027 (\u0027, i.InstanceName) \u003e 0 AND LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) IN (${hvvm:singlequote})\n  GROUP BY p.DateTime, LEFT(i.InstanceName, CHARINDEX(\u0027 (\u0027, i.InstanceName + \u0027 (\u0027) - 1) + CASE WHEN CHARINDEX(\u0027 :: \u0027, i.InstanceName) \u003e 0 THEN \u0027 :: \u0027 + SUBSTRING(i.InstanceName, CHARINDEX(\u0027 :: \u0027, i.InstanceName) + 4, 200) ELSE \u0027\u0027 END\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Virtual disk errors",
+                       "gridPos":  {
+                                       "y":  61,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   }
+               ],
+    "description":  "How the virtual machines on your Hyper-V hosts are performing: a table of every VM, then CPU, memory, disk and network graphs for the VMs you choose, from the Hyper-V Performance (Community) management pack.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

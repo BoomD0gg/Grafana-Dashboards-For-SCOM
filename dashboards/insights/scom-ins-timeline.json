@@ -1,0 +1,1203 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-12h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_dw",
+                                        "label":  "SCOM Data Warehouse",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/warehouse|dw/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_om",
+                                        "label":  "SCOM Operational DB",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "definition":  "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\nORDER BY e.DisplayName",
+                                        "type":  "query",
+                                        "name":  "server",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_dw}"
+                                                       },
+                                        "label":  "Server",
+                                        "query":  "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\nORDER BY e.DisplayName",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    },
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "multi":  true,
+                                        "includeAll":  false
+                                    },
+                                    {
+                                        "options":  [
+                                                        {
+                                                            "selected":  true,
+                                                            "value":  "Errors only",
+                                                            "text":  "Errors only"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "Errors and warnings",
+                                                            "text":  "Errors and warnings"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "None",
+                                                            "text":  "None"
+                                                        }
+                                                    ],
+                                        "type":  "custom",
+                                        "includeAll":  false,
+                                        "label":  "Windows events",
+                                        "query":  "Errors only,Errors and warnings,None",
+                                        "name":  "events",
+                                        "multi":  false,
+                                        "hide":  0,
+                                        "current":  {
+                                                        "text":  "Errors only",
+                                                        "value":  "Errors only"
+                                                    }
+                                    }
+                                ]
+                   },
+    "uid":  "scom-ins-timeline",
+    "title":  "Insights - Server Timeline",
+    "tags":  [
+                 "scom",
+                 "scom-pack",
+                 "insights",
+                 "pack:insights"
+             ],
+    "annotations":  {
+                        "list":  [
+                                     {
+                                         "name":  "Alerts",
+                                         "iconColor":  "red",
+                                         "hide":  false,
+                                         "datasource":  {
+                                                            "type":  "mssql",
+                                                            "uid":  "${ds_dw}"
+                                                        },
+                                         "enable":  true,
+                                         "target":  {
+                                                        "editorMode":  "code",
+                                                        "refId":  "Anno",
+                                                        "datasource":  {
+                                                                           "type":  "mssql",
+                                                                           "uid":  "${ds_dw}"
+                                                                       },
+                                                        "rawQuery":  true,
+                                                        "rawSql":  "SELECT a.RaisedDateTime AS time, CASE a.Severity WHEN 2 THEN \u0027Critical alert: \u0027 WHEN 1 THEN \u0027Warning alert: \u0027 ELSE \u0027Alert: \u0027 END + a.AlertName + \u0027 (\u0027 + e.DisplayName + \u0027)\u0027 AS text, \u0027alert\u0027 AS tags\nFROM Alert.vAlert a\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = a.ManagedEntityRowId\nWHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()\n  AND (e.TopLevelHostManagedEntityRowId IN (SELECT s.ManagedEntityRowId FROM dbo.vManagedEntity s WHERE s.DisplayName IN (${server:singlequote}))\n       OR e.DisplayName IN (${server:singlequote}))",
+                                                        "format":  "table"
+                                                    }
+                                     },
+                                     {
+                                         "name":  "Monitors that went Critical",
+                                         "iconColor":  "orange",
+                                         "hide":  false,
+                                         "datasource":  {
+                                                            "type":  "mssql",
+                                                            "uid":  "${ds_dw}"
+                                                        },
+                                         "enable":  true,
+                                         "target":  {
+                                                        "editorMode":  "code",
+                                                        "refId":  "Anno",
+                                                        "datasource":  {
+                                                                           "type":  "mssql",
+                                                                           "uid":  "${ds_dw}"
+                                                                       },
+                                                        "rawQuery":  true,
+                                                        "rawSql":  "SELECT TOP 300 r.DateTime AS time, mo.MonitorDefaultName + \u0027 went Critical on \u0027 + en.DisplayName AS text, \u0027critical\u0027 AS tags\nFROM State.vStateRaw r\nJOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = r.ManagedEntityMonitorRowId\nJOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId\nJOIN dbo.vManagedEntity en ON en.ManagedEntityRowId = em.ManagedEntityRowId\nWHERE r.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND r.NewHealthState = 3 AND r.OldHealthState \u003c\u003e 3\n  AND (en.TopLevelHostManagedEntityRowId IN (SELECT s.ManagedEntityRowId FROM dbo.vManagedEntity s WHERE s.DisplayName IN (${server:singlequote})) OR en.DisplayName IN (${server:singlequote}))\nORDER BY r.DateTime DESC",
+                                                        "format":  "table"
+                                                    }
+                                     }
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Alerts$/"
+                                                         }
+                                   },
+                       "id":  1,
+                       "type":  "stat",
+                       "description":  "Alerts raised on the selected servers, or on SCOM objects with their names, in the time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, s.name AS Srv\n  FROM dbo.vManagedEntity e\n  JOIN srv s ON e.ManagedEntityRowId = s.id OR e.TopLevelHostManagedEntityRowId = s.id OR e.DisplayName = s.name\n),\ncrit AS (\n  SELECT r.DateTime, mo.MonitorDefaultName AS monitor, en.DisplayName AS obj, en.Srv AS srv\n  FROM State.vStateRaw r\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = r.ManagedEntityMonitorRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId\n  JOIN ent en ON en.ManagedEntityRowId = em.ManagedEntityRowId\n  WHERE r.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND r.NewHealthState = 3 AND r.OldHealthState \u003c\u003e 3\n)\nSELECT\n  (SELECT COUNT(*) FROM Alert.vAlert a JOIN ent en ON en.ManagedEntityRowId = a.ManagedEntityRowId WHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()) AS Alerts,\n  (SELECT COUNT(*) FROM crit) AS \"Critical changes\",\n  (SELECT COUNT(*) FROM Event.vEvent ev JOIN dbo.vEventLoggingComputer lc ON lc.EventLoggingComputerRowId = ev.LoggingComputerRowId JOIN srv s ON s.name = lc.ComputerName WHERE ev.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND ev.EventLevelId = 1) AS \"Windows errors\",\n  (SELECT TOP 1 CONVERT(varchar(19), c.DateTime, 120) + \u0027 UTC\u0027 FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical change\",\n  (SELECT TOP 1 c.monitor + \u0027 on \u0027 + c.obj + CASE WHEN c.obj = c.srv THEN \u0027\u0027 ELSE \u0027 (\u0027 + c.srv + \u0027)\u0027 END FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical monitor\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Alerts raised",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Critical changes$/"
+                                                         }
+                                   },
+                       "id":  2,
+                       "type":  "stat",
+                       "description":  "Monitors (including roll-ups) that changed to Critical in the time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, s.name AS Srv\n  FROM dbo.vManagedEntity e\n  JOIN srv s ON e.ManagedEntityRowId = s.id OR e.TopLevelHostManagedEntityRowId = s.id OR e.DisplayName = s.name\n),\ncrit AS (\n  SELECT r.DateTime, mo.MonitorDefaultName AS monitor, en.DisplayName AS obj, en.Srv AS srv\n  FROM State.vStateRaw r\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = r.ManagedEntityMonitorRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId\n  JOIN ent en ON en.ManagedEntityRowId = em.ManagedEntityRowId\n  WHERE r.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND r.NewHealthState = 3 AND r.OldHealthState \u003c\u003e 3\n)\nSELECT\n  (SELECT COUNT(*) FROM Alert.vAlert a JOIN ent en ON en.ManagedEntityRowId = a.ManagedEntityRowId WHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()) AS Alerts,\n  (SELECT COUNT(*) FROM crit) AS \"Critical changes\",\n  (SELECT COUNT(*) FROM Event.vEvent ev JOIN dbo.vEventLoggingComputer lc ON lc.EventLoggingComputerRowId = ev.LoggingComputerRowId JOIN srv s ON s.name = lc.ComputerName WHERE ev.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND ev.EventLevelId = 1) AS \"Windows errors\",\n  (SELECT TOP 1 CONVERT(varchar(19), c.DateTime, 120) + \u0027 UTC\u0027 FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical change\",\n  (SELECT TOP 1 c.monitor + \u0027 on \u0027 + c.obj + CASE WHEN c.obj = c.srv THEN \u0027\u0027 ELSE \u0027 (\u0027 + c.srv + \u0027)\u0027 END FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical monitor\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Went Critical",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  4
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Windows errors$/"
+                                                         }
+                                   },
+                       "id":  3,
+                       "type":  "stat",
+                       "description":  "Error events collected from the server by SCOM rules (only events a management pack collects appear here).",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, s.name AS Srv\n  FROM dbo.vManagedEntity e\n  JOIN srv s ON e.ManagedEntityRowId = s.id OR e.TopLevelHostManagedEntityRowId = s.id OR e.DisplayName = s.name\n),\ncrit AS (\n  SELECT r.DateTime, mo.MonitorDefaultName AS monitor, en.DisplayName AS obj, en.Srv AS srv\n  FROM State.vStateRaw r\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = r.ManagedEntityMonitorRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId\n  JOIN ent en ON en.ManagedEntityRowId = em.ManagedEntityRowId\n  WHERE r.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND r.NewHealthState = 3 AND r.OldHealthState \u003c\u003e 3\n)\nSELECT\n  (SELECT COUNT(*) FROM Alert.vAlert a JOIN ent en ON en.ManagedEntityRowId = a.ManagedEntityRowId WHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()) AS Alerts,\n  (SELECT COUNT(*) FROM crit) AS \"Critical changes\",\n  (SELECT COUNT(*) FROM Event.vEvent ev JOIN dbo.vEventLoggingComputer lc ON lc.EventLoggingComputerRowId = ev.LoggingComputerRowId JOIN srv s ON s.name = lc.ComputerName WHERE ev.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND ev.EventLevelId = 1) AS \"Windows errors\",\n  (SELECT TOP 1 CONVERT(varchar(19), c.DateTime, 120) + \u0027 UTC\u0027 FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical change\",\n  (SELECT TOP 1 c.monitor + \u0027 on \u0027 + c.obj + CASE WHEN c.obj = c.srv THEN \u0027\u0027 ELSE \u0027 (\u0027 + c.srv + \u0027)\u0027 END FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical monitor\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Windows error events",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  8
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^First critical change$/"
+                                                         }
+                                   },
+                       "id":  4,
+                       "type":  "stat",
+                       "description":  "The earliest time in the range that a monitor went Critical. The best starting point when looking for a cause.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "None in range",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, s.name AS Srv\n  FROM dbo.vManagedEntity e\n  JOIN srv s ON e.ManagedEntityRowId = s.id OR e.TopLevelHostManagedEntityRowId = s.id OR e.DisplayName = s.name\n),\ncrit AS (\n  SELECT r.DateTime, mo.MonitorDefaultName AS monitor, en.DisplayName AS obj, en.Srv AS srv\n  FROM State.vStateRaw r\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = r.ManagedEntityMonitorRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId\n  JOIN ent en ON en.ManagedEntityRowId = em.ManagedEntityRowId\n  WHERE r.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND r.NewHealthState = 3 AND r.OldHealthState \u003c\u003e 3\n)\nSELECT\n  (SELECT COUNT(*) FROM Alert.vAlert a JOIN ent en ON en.ManagedEntityRowId = a.ManagedEntityRowId WHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()) AS Alerts,\n  (SELECT COUNT(*) FROM crit) AS \"Critical changes\",\n  (SELECT COUNT(*) FROM Event.vEvent ev JOIN dbo.vEventLoggingComputer lc ON lc.EventLoggingComputerRowId = ev.LoggingComputerRowId JOIN srv s ON s.name = lc.ComputerName WHERE ev.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND ev.EventLevelId = 1) AS \"Windows errors\",\n  (SELECT TOP 1 CONVERT(varchar(19), c.DateTime, 120) + \u0027 UTC\u0027 FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical change\",\n  (SELECT TOP 1 c.monitor + \u0027 on \u0027 + c.obj + CASE WHEN c.obj = c.srv THEN \u0027\u0027 ELSE \u0027 (\u0027 + c.srv + \u0027)\u0027 END FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical monitor\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "First critical change",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^First critical monitor$/"
+                                                         }
+                                   },
+                       "id":  5,
+                       "type":  "stat",
+                       "description":  "The monitor that went Critical first. Roll-up monitors follow the monitor underneath them, so the earliest one is usually closest to the cause. It shows order, not proof.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "None in range",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, s.name AS Srv\n  FROM dbo.vManagedEntity e\n  JOIN srv s ON e.ManagedEntityRowId = s.id OR e.TopLevelHostManagedEntityRowId = s.id OR e.DisplayName = s.name\n),\ncrit AS (\n  SELECT r.DateTime, mo.MonitorDefaultName AS monitor, en.DisplayName AS obj, en.Srv AS srv\n  FROM State.vStateRaw r\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = r.ManagedEntityMonitorRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId\n  JOIN ent en ON en.ManagedEntityRowId = em.ManagedEntityRowId\n  WHERE r.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND r.NewHealthState = 3 AND r.OldHealthState \u003c\u003e 3\n)\nSELECT\n  (SELECT COUNT(*) FROM Alert.vAlert a JOIN ent en ON en.ManagedEntityRowId = a.ManagedEntityRowId WHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()) AS Alerts,\n  (SELECT COUNT(*) FROM crit) AS \"Critical changes\",\n  (SELECT COUNT(*) FROM Event.vEvent ev JOIN dbo.vEventLoggingComputer lc ON lc.EventLoggingComputerRowId = ev.LoggingComputerRowId JOIN srv s ON s.name = lc.ComputerName WHERE ev.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND ev.EventLevelId = 1) AS \"Windows errors\",\n  (SELECT TOP 1 CONVERT(varchar(19), c.DateTime, 120) + \u0027 UTC\u0027 FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical change\",\n  (SELECT TOP 1 c.monitor + \u0027 on \u0027 + c.obj + CASE WHEN c.obj = c.srv THEN \u0027\u0027 ELSE \u0027 (\u0027 + c.srv + \u0027)\u0027 END FROM crit c ORDER BY c.DateTime, c.monitor) AS \"First critical monitor\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "First critical monitor",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  18
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  6,
+                       "type":  "timeseries",
+                       "description":  "Markers: red = an alert was raised, orange = a monitor went Critical.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName = \u0027% Processor Time\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027,\u0027\u0027) OR \u0027_Total\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName = \u0027% Processor Time\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027,\u0027\u0027) OR \u0027_Total\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "CPU % processor time",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  7,
+                       "type":  "timeseries",
+                       "description":  "Markers: red = an alert was raised, orange = a monitor went Critical.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Memory\u0027 AND r.CounterName = \u0027PercentMemoryUsed\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027,\u0027\u0027) OR \u0027_Total\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Memory\u0027 AND r.CounterName = \u0027PercentMemoryUsed\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027,\u0027\u0027) OR \u0027_Total\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Memory % used",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  11,
+                       "type":  "table",
+                       "description":  "One row per selected server, earliest first. When several servers are involved in one incident, the server at the top is the best place to start. It shows the order things happened in, not proof of cause.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "Nothing recorded in this time range"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  260
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Server"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  190
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "First critical change"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  140
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Critical changes"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Alerts"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "auto",
+                                                                                                      "wrapText":  true
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "First critical monitor"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, s.name AS Srv\n  FROM dbo.vManagedEntity e\n  JOIN srv s ON e.ManagedEntityRowId = s.id OR e.TopLevelHostManagedEntityRowId = s.id OR e.DisplayName = s.name\n),\ncrit AS (\n  SELECT en.Srv, r.DateTime, mo.MonitorDefaultName AS monitor, en.DisplayName AS obj,\n         ROW_NUMBER() OVER (PARTITION BY en.Srv ORDER BY r.DateTime, mo.MonitorDefaultName) AS rn,\n         COUNT(*) OVER (PARTITION BY en.Srv) AS n\n  FROM State.vStateRaw r\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = r.ManagedEntityMonitorRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId\n  JOIN ent en ON en.ManagedEntityRowId = em.ManagedEntityRowId\n  WHERE r.DateTime BETWEEN $__timeFrom() AND $__timeTo() AND r.NewHealthState = 3 AND r.OldHealthState \u003c\u003e 3\n),\nal AS (\n  SELECT en.Srv, COUNT(*) AS n\n  FROM Alert.vAlert a JOIN ent en ON en.ManagedEntityRowId = a.ManagedEntityRowId\n  WHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()\n  GROUP BY en.Srv\n)\nSELECT s.name AS Server,\n       c.DateTime AS \"First critical change\",\n       c.monitor + CASE WHEN c.obj = s.name THEN \u0027\u0027 ELSE \u0027 on \u0027 + c.obj END AS \"First critical monitor\",\n       COALESCE(c.n, 0) AS \"Critical changes\",\n       COALESCE(a.n, 0) AS Alerts\nFROM srv s\nLEFT JOIN crit c ON c.Srv = s.name AND c.rn = 1\nLEFT JOIN al a ON a.Srv = s.name\nORDER BY CASE WHEN c.DateTime IS NULL THEN 1 ELSE 0 END, c.DateTime, s.name",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Which server went Critical first",
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  24,
+                                       "h":  6,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  8,
+                       "type":  "timeseries",
+                       "description":  "A burst of alerts at one moment usually has one cause.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "showPoints":  "never",
+                                                                           "stacking":  {
+                                                                                            "group":  "A",
+                                                                                            "mode":  "normal"
+                                                                                        },
+                                                                           "drawStyle":  "bars",
+                                                                           "spanNulls":  false,
+                                                                           "fillOpacity":  75,
+                                                                           "lineWidth":  1
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "none",
+                                                            "noValue":  "No alerts in range"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "fixedColor":  "#E02F44",
+                                                                                                      "mode":  "fixed"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Critical"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "fixedColor":  "#FF9830",
+                                                                                                      "mode":  "fixed"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Warning"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "fixedColor":  "#5794F2",
+                                                                                                      "mode":  "fixed"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Information"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT DISTINCT e.ManagedEntityRowId\n  FROM dbo.vManagedEntity e\n  JOIN srv s ON e.ManagedEntityRowId = s.id OR e.TopLevelHostManagedEntityRowId = s.id OR e.DisplayName = s.name\n)\nSELECT DATEADD(minute, (DATEDIFF(minute, 0, a.RaisedDateTime) / 5) * 5, 0) AS time,\n       CASE a.Severity WHEN 2 THEN \u0027Critical\u0027 WHEN 1 THEN \u0027Warning\u0027 ELSE \u0027Information\u0027 END AS metric,\n       COUNT(*) AS value\nFROM Alert.vAlert a\nJOIN ent en ON en.ManagedEntityRowId = a.ManagedEntityRowId\nWHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()\nGROUP BY DATEADD(minute, (DATEDIFF(minute, 0, a.RaisedDateTime) / 5) * 5, 0), CASE a.Severity WHEN 2 THEN \u0027Critical\u0027 WHEN 1 THEN \u0027Warning\u0027 ELSE \u0027Information\u0027 END\nORDER BY 1",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Alerts raised (5-minute buckets)",
+                       "gridPos":  {
+                                       "y":  18,
+                                       "w":  12,
+                                       "h":  7,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  9,
+                       "type":  "table",
+                       "description":  "Monitors that are Warning or Critical right now on this server and what runs on it. The oldest is the best starting point: the later ones often follow from it.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "Nothing is unhealthy right now"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  160
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Unhealthy since"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  260
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Monitor"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  200
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Server"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "auto",
+                                                                                                      "wrapText":  true
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Object"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 300\n  s.LastModified AS \"Unhealthy since\",\n  CASE s.HealthState WHEN 3 THEN \u0027Critical\u0027 ELSE \u0027Warning\u0027 END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  COALESCE(h.DisplayName, b.DisplayName) AS Server,\n  b.DisplayName AS Object\nFROM dbo.StateView s\nJOIN dbo.BaseManagedEntity b ON b.BaseManagedEntityId = s.BaseManagedEntityId\nLEFT JOIN dbo.BaseManagedEntity h ON h.BaseManagedEntityId = b.TopLevelHostEntityId\nWHERE s.HealthState IN (2, 3) AND b.IsDeleted = 0\n  AND (b.BaseManagedEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}) AND c.IsDeleted = 0)\n       OR b.TopLevelHostEntityId IN (SELECT c.Id FROM dbo.ManagedEntityGenericView c WHERE c.DisplayName IN (${server:singlequote}) AND c.IsDeleted = 0)\n       OR b.DisplayName IN (${server:singlequote}))\n  AND (EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n       OR s.MonitorName = \u0027Microsoft.SystemCenter.HealthService.Heartbeat\u0027)\n  AND s.MonitorName NOT IN (\u0027System.Health.EntityState\u0027, \u0027System.Health.AvailabilityState\u0027, \u0027System.Health.ConfigurationState\u0027, \u0027System.Health.PerformanceState\u0027, \u0027System.Health.SecurityState\u0027)\nORDER BY s.LastModified ASC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Unhealthy now, oldest first",
+                       "gridPos":  {
+                                       "y":  18,
+                                       "w":  12,
+                                       "h":  7,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  10,
+                       "type":  "table",
+                       "description":  "Alerts raised and closed, monitor health changes, maintenance mode and Windows events on the selected servers, newest first (sort by Time to read it in order). The 500 most recent rows in the time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "Nothing recorded in this time range"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Severity"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  175
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Time"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  130
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Type"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  110
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Severity"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  220
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Server"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  240
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Source"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "auto",
+                                                                                                      "wrapText":  true
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "What"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT DISTINCT e.ManagedEntityRowId, e.DisplayName, s.name AS Srv\n  FROM dbo.vManagedEntity e\n  JOIN srv s ON e.ManagedEntityRowId = s.id OR e.TopLevelHostManagedEntityRowId = s.id OR e.DisplayName = s.name\n),\nal AS (\n  SELECT TOP 500 a.RaisedDateTime AS Time, CAST(\u0027Alert raised\u0027 AS varchar(20)) AS Type,\n         CAST(CASE a.Severity WHEN 2 THEN \u0027Critical\u0027 WHEN 1 THEN \u0027Warning\u0027 ELSE \u0027Information\u0027 END AS varchar(20)) AS Severity,\n         CAST(a.AlertName AS nvarchar(400)) AS What, CAST(en.DisplayName AS nvarchar(400)) AS Source, CAST(en.Srv AS nvarchar(400)) AS Server\n  FROM Alert.vAlert a JOIN ent en ON en.ManagedEntityRowId = a.ManagedEntityRowId\n  WHERE a.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()\n  ORDER BY a.RaisedDateTime DESC\n),\ncl AS (\n  SELECT TOP 500 rs.StateSetDateTime AS Time, CAST(\u0027Alert closed\u0027 AS varchar(20)) AS Type, CAST(\u0027Information\u0027 AS varchar(20)) AS Severity,\n         CAST(a.AlertName AS nvarchar(400)) AS What, CAST(en.DisplayName AS nvarchar(400)) AS Source, CAST(en.Srv AS nvarchar(400)) AS Server\n  FROM Alert.vAlertResolutionState rs\n  JOIN Alert.vAlert a ON a.AlertGuid = rs.AlertGuid\n  JOIN ent en ON en.ManagedEntityRowId = a.ManagedEntityRowId\n  WHERE rs.ResolutionState = 255 AND rs.StateSetDateTime BETWEEN $__timeFrom() AND $__timeTo()\n  ORDER BY rs.StateSetDateTime DESC\n),\nhc AS (\n  SELECT TOP 500 r.DateTime AS Time, CAST(\u0027Health change\u0027 AS varchar(20)) AS Type,\n         CAST(CASE r.NewHealthState WHEN 3 THEN \u0027Critical\u0027 WHEN 2 THEN \u0027Warning\u0027 WHEN 1 THEN \u0027Healthy\u0027 ELSE \u0027Not monitored\u0027 END AS varchar(20)) AS Severity,\n         CAST(mo.MonitorDefaultName + \u0027: \u0027 + CASE r.OldHealthState WHEN 3 THEN \u0027Critical\u0027 WHEN 2 THEN \u0027Warning\u0027 WHEN 1 THEN \u0027Healthy\u0027 ELSE \u0027Not monitored\u0027 END + \u0027 to \u0027 + CASE r.NewHealthState WHEN 3 THEN \u0027Critical\u0027 WHEN 2 THEN \u0027Warning\u0027 WHEN 1 THEN \u0027Healthy\u0027 ELSE \u0027Not monitored\u0027 END AS nvarchar(400)) AS What,\n         CAST(en.DisplayName AS nvarchar(400)) AS Source, CAST(en.Srv AS nvarchar(400)) AS Server\n  FROM State.vStateRaw r\n  JOIN dbo.vManagedEntityMonitor em ON em.ManagedEntityMonitorRowId = r.ManagedEntityMonitorRowId\n  JOIN dbo.vMonitor mo ON mo.MonitorRowId = em.MonitorRowId\n  JOIN ent en ON en.ManagedEntityRowId = em.ManagedEntityRowId\n  WHERE r.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n  ORDER BY r.DateTime DESC\n),\nmt AS (\n  SELECT TOP 200 mm.StartDateTime AS Time, CAST(\u0027Maintenance mode\u0027 AS varchar(20)) AS Type, CAST(\u0027Information\u0027 AS varchar(20)) AS Severity,\n         CAST(\u0027Entered maintenance mode\u0027 AS nvarchar(400)) AS What, CAST(en.DisplayName AS nvarchar(400)) AS Source, CAST(en.Srv AS nvarchar(400)) AS Server\n  FROM dbo.vMaintenanceMode mm JOIN ent en ON en.ManagedEntityRowId = mm.ManagedEntityRowId\n  WHERE mm.StartDateTime BETWEEN $__timeFrom() AND $__timeTo()\n  ORDER BY mm.StartDateTime DESC\n),\nmt2 AS (\n  SELECT TOP 200 mm.EndDateTime AS Time, CAST(\u0027Maintenance mode\u0027 AS varchar(20)) AS Type, CAST(\u0027Information\u0027 AS varchar(20)) AS Severity,\n         CAST(\u0027Left maintenance mode\u0027 AS nvarchar(400)) AS What, CAST(en.DisplayName AS nvarchar(400)) AS Source, CAST(en.Srv AS nvarchar(400)) AS Server\n  FROM dbo.vMaintenanceMode mm JOIN ent en ON en.ManagedEntityRowId = mm.ManagedEntityRowId\n  WHERE mm.EndDateTime BETWEEN $__timeFrom() AND $__timeTo()\n  ORDER BY mm.EndDateTime DESC\n),\nevs AS (\n  SELECT TOP 300 ev.DateTime AS Time, CAST(\u0027Windows event\u0027 AS varchar(20)) AS Type, CAST(CASE ev.EventLevelId WHEN 1 THEN \u0027Critical\u0027 ELSE \u0027Warning\u0027 END AS varchar(20)) AS Severity,\n         CAST(COALESCE(p.EventPublisherName, \u0027\u0027) + \u0027 \u0027 + CAST(ev.EventNumber \u0026 65535 AS varchar(10)) + \u0027: \u0027 + LEFT(REPLACE(REPLACE(COALESCE(d.RenderedDescription, d.RawDescription, \u0027\u0027), CHAR(13), \u0027 \u0027), CHAR(10), \u0027 \u0027), 250) AS nvarchar(400)) AS What,\n         CAST(lc.ComputerName AS nvarchar(400)) AS Source, CAST(s.name AS nvarchar(400)) AS Server\n  FROM Event.vEvent ev\n  JOIN dbo.vEventLoggingComputer lc ON lc.EventLoggingComputerRowId = ev.LoggingComputerRowId\n  JOIN srv s ON s.name = lc.ComputerName\n  LEFT JOIN dbo.vEventPublisher p ON p.EventPublisherRowId = ev.EventPublisherRowId\n  LEFT JOIN Event.vEventDetail d ON d.EventOriginId = ev.EventOriginId\n  WHERE ev.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND (ev.EventLevelId = 1 OR (ev.EventLevelId = 2 AND \u0027${events}\u0027 = \u0027Errors and warnings\u0027))\n    AND \u0027${events}\u0027 \u003c\u003e \u0027None\u0027\n  ORDER BY ev.DateTime DESC\n)\nSELECT TOP 500 x.Time, x.Type, x.Severity, x.Server, x.What, x.Source\nFROM (SELECT * FROM al UNION ALL SELECT * FROM cl UNION ALL SELECT * FROM hc UNION ALL SELECT * FROM mt UNION ALL SELECT * FROM mt2 UNION ALL SELECT * FROM evs) x\nORDER BY x.Time DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Timeline",
+                       "gridPos":  {
+                                       "y":  25,
+                                       "w":  24,
+                                       "h":  14,
+                                       "x":  0
+                                   }
+                   }
+               ],
+    "description":  "What happened on one or more servers and when: alerts, health changes, maintenance and events in order, with the earliest critical change and the monitors that are unhealthy now.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

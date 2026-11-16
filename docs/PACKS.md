@@ -1,16 +1,17 @@
 # Dashboards and management packs
 
-All dashboards are version 0.3.0. "Validated" means tested in a lab against real SCOM 2022 data (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)). Each technology needs its Microsoft management pack imported in SCOM.
+All dashboards are version 0.4.0. "Validated" means tested in a lab against real SCOM 2022 data (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)). Each technology needs its Microsoft management pack imported in SCOM.
 
 | Folder | Dashboards | Management packs to import | Status |
 |---|---|---|---|
 | `dashboards/scom-core` | SCOM Enterprise Overview, Server Drill-down, Platform Status, Alerts, Alert Details | none (Windows Server MP recommended) | Validated |
+| `dashboards/insights` | Insights - Server Timeline, Capacity Planning, Trends | none (see [INSIGHTS.md](INSIGHTS.md)) | Validated on a young lab, see the guide for what was and was not tested |
 | `dashboards/availability` | Availability - Overview, Stack Detail, Monthly Report | none (needs a group or distributed application in SCOM, see [AVAILABILITY.md](AVAILABILITY.md)) | Validated with groups of Windows computers, including a real outage |
 | `dashboards/windows-server` | Windows Server - Fleet, Detail | Microsoft.Windows.Server.Library, Server.2016.Monitoring | Validated |
 | `dashboards/active-directory` | Active Directory - Overview, DC Detail | Microsoft.Windows.Server.AD.Class.Library, AD.2016.Monitoring | Validated |
 | `dashboards/sql-server` | SQL Server - Overview, Instance Detail | Microsoft.SQLServer.Core.Library, Windows.Discovery, Windows.Monitoring | Validated |
 | `dashboards/scom-infrastructure` | SCOM Infrastructure - Overview (with the architecture diagram), Agents, Alert Noise | Microsoft.SystemCenter.Library, OperationsManager.Library (built in) | Validated |
-| `dashboards/hyper-v` | Hyper-V - Overview, Host Detail | Microsoft.Windows.HyperV.Library, Discovery, Monitoring | Validated (counter panels untested, see below) |
+| `dashboards/hyper-v` | Hyper-V - Overview, Host Detail, Performance - Host, Performance - Virtual Machines | Microsoft.Windows.HyperV.Library, Discovery, Monitoring; the two Performance dashboards also need the Hyper-V Performance (Community) management pack (see [HYPERV-PERFORMANCE.md](HYPERV-PERFORMANCE.md)) | Validated (performance dashboards tested on an idle lab, see the guide) |
 | `dashboards/dns-server` | DNS - Overview, Server Detail | Microsoft.Windows.DNSServer.2016 | Validated |
 | `dashboards/dhcp-server` | DHCP - Overview, Server Detail | Microsoft.Windows.DHCPServer.Library, DHCPServer.2016 | Validated |
 | `dashboards/iis` | IIS - Overview, Server Detail | Microsoft.Windows.InternetInformationServices.2016 | Validated |

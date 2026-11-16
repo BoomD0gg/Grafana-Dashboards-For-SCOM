@@ -1,1121 +1,1159 @@
 {
-  "version": 1,
-  "time": {
-    "to": "now",
-    "from": "now-24h"
-  },
-  "graphTooltip": 1,
-  "templating": {
-    "list": [
-      {
-        "type": "datasource",
-        "name": "ds_dw",
-        "label": "SCOM Data Warehouse",
-        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
-        "query": "mssql",
-        "regex": "/warehouse|dw/i",
-        "current": {},
-        "hide": 0,
-        "includeAll": false,
-        "multi": false,
-        "options": [],
-        "refresh": 1,
-        "skipUrlSync": false
-      },
-      {
-        "type": "datasource",
-        "name": "ds_om",
-        "label": "SCOM Operational DB",
-        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
-        "query": "mssql",
-        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
-        "current": {},
-        "hide": 0,
-        "includeAll": false,
-        "multi": false,
-        "options": [],
-        "refresh": 1,
-        "skipUrlSync": false
-      },
-      {
-        "options": [],
-        "refresh": 2,
-        "definition": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%.Server'\nORDER BY 1",
-        "type": "query",
-        "includeAll": true,
-        "label": "DNS server",
-        "datasource": {
-          "type": "mssql",
-          "uid": "${ds_dw}"
-        },
-        "name": "dnshost",
-        "multi": true,
-        "query": "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%.Server'\nORDER BY 1",
-        "sort": 1,
-        "current": {}
-      },
-      {
-        "options": [],
-        "refresh": 2,
-        "definition": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%'\nORDER BY 1",
-        "type": "query",
-        "includeAll": false,
-        "label": "Counter",
-        "datasource": {
-          "type": "mssql",
-          "uid": "${ds_dw}"
-        },
-        "name": "dnscounter",
-        "multi": false,
-        "query": "SELECT DISTINCT r.ObjectName + ' | ' + r.CounterName AS __text, r.ObjectName + '|' + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%'\nORDER BY 1",
-        "sort": 1,
-        "current": {}
-      }
-    ]
-  },
-  "uid": "scom-dns-overview",
-  "title": "DNS - Overview",
-  "tags": [
-    "scom",
-    "scom-pack",
-    "dns-server",
-    "pack:dns-server"
-  ],
-  "annotations": {
-    "list": []
-  },
-  "panels": [
-    {
-      "options": {
-        "textMode": "value",
-        "colorMode": "background_solid",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^DNS servers$/"
-        }
-      },
-      "id": 1,
-      "type": "stat",
-      "description": "Computers with the DNS Server role monitored by SCOM.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#5794F2"
-              }
-            ],
-            "mode": "absolute"
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DNSServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
-          "format": "table"
-        }
-      ],
-      "title": "DNS servers",
-      "gridPos": {
-        "y": 0,
-        "w": 4,
-        "h": 4,
-        "x": 0
-      }
-    },
-    {
-      "options": {
-        "textMode": "value",
-        "colorMode": "background_solid",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Servers not healthy$/"
-        }
-      },
-      "id": 2,
-      "type": "stat",
-      "description": "Servers whose DNS role is Warning or Critical.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#56A64B"
-              },
-              {
-                "value": 1,
-                "color": "#E02F44"
-              }
-            ],
-            "mode": "absolute"
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DNSServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
-          "format": "table"
-        }
-      ],
-      "title": "Servers not healthy",
-      "gridPos": {
-        "y": 0,
-        "w": 4,
-        "h": 4,
-        "x": 4
-      }
-    },
-    {
-      "options": {
-        "textMode": "value",
-        "colorMode": "background_solid",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Zones$/"
-        }
-      },
-      "id": 3,
-      "type": "stat",
-      "description": "Zones discovered on the selected servers.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#5794F2"
-              }
-            ],
-            "mode": "absolute"
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DNSServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
-          "format": "table"
-        }
-      ],
-      "title": "Zones",
-      "gridPos": {
-        "y": 0,
-        "w": 4,
-        "h": 4,
-        "x": 8
-      }
-    },
-    {
-      "options": {
-        "textMode": "value",
-        "colorMode": "background_solid",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Zones not healthy$/"
-        }
-      },
-      "id": 4,
-      "type": "stat",
-      "description": "Zones in Warning or Critical state.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#56A64B"
-              },
-              {
-                "value": 1,
-                "color": "#E02F44"
-              }
-            ],
-            "mode": "absolute"
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DNSServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
-          "format": "table"
-        }
-      ],
-      "title": "Zones not healthy",
-      "gridPos": {
-        "y": 0,
-        "w": 4,
-        "h": 4,
-        "x": 12
-      }
-    },
-    {
-      "options": {
-        "textMode": "value",
-        "colorMode": "background_solid",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Open DNS alerts$/"
-        }
-      },
-      "id": 5,
-      "type": "stat",
-      "description": "Open alerts raised by DNS objects on the selected servers.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "steps": [
-              {
-                "value": null,
-                "color": "#56A64B"
-              },
-              {
-                "value": 1,
-                "color": "#FF9830"
-              }
-            ],
-            "mode": "absolute"
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState < 255 AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DNSServer.%'\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
-          "format": "table"
-        }
-      ],
-      "title": "Open DNS alerts",
-      "gridPos": {
-        "y": 0,
-        "w": 8,
-        "h": 4,
-        "x": 16
-      }
-    },
-    {
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "id": 6,
-      "type": "table",
-      "description": "Role health with Zone counts.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [
-            {
-              "targetBlank": false,
-              "title": "Open server detail",
-              "url": "/d/scom-dns-server/dns-server-server-detail?var-dnshost=${__data.fields.Host}&${__url_time_range}"
-            }
-          ],
-          "noValue": "No data"
-        },
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      },
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      }
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-24h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_dw",
+                                        "label":  "SCOM Data Warehouse",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/warehouse|dw/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_om",
+                                        "label":  "SCOM Operational DB",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027\nORDER BY 1",
+                                        "type":  "query",
+                                        "includeAll":  true,
+                                        "label":  "DNS server",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_dw}"
+                                                       },
+                                        "name":  "dnshost",
+                                        "multi":  true,
+                                        "query":  "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027\nORDER BY 1",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT DISTINCT r.ObjectName + \u0027 | \u0027 + r.CounterName AS __text, r.ObjectName + \u0027|\u0027 + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\nORDER BY 1",
+                                        "type":  "query",
+                                        "includeAll":  false,
+                                        "label":  "Counter",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_dw}"
+                                                       },
+                                        "name":  "dnscounter",
+                                        "multi":  false,
+                                        "query":  "SELECT DISTINCT r.ObjectName + \u0027 | \u0027 + r.CounterName AS __text, r.ObjectName + \u0027|\u0027 + r.CounterName AS __value\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\nORDER BY 1",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    }
+                                ]
+                   },
+    "uid":  "scom-dns-overview",
+    "title":  "DNS - Overview",
+    "tags":  [
+                 "scom",
+                 "scom-pack",
+                 "dns-server",
+                 "pack:dns-server"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
                     },
-                    "type": "value"
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Health"
-            }
-          }
-        ]
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT TOP 200\n  g.Path AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(';', v.Path + ';') - 1) = g.Path AND v.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')) AS \"Zones not healthy\",\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Server')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.Path",
-          "format": "table"
-        }
-      ],
-      "title": "DNS servers (click a server for detail)",
-      "gridPos": {
-        "y": 4,
-        "w": 12,
-        "h": 8,
-        "x": 0
-      }
-    },
-    {
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "id": 7,
-      "type": "table",
-      "description": "Health of each Zone, worst first.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [
-            {
-              "targetBlank": false,
-              "title": "Open server detail",
-              "url": "/d/scom-dns-server/dns-server-server-detail?var-dnshost=${__data.fields.Host}&${__url_time_range}"
-            }
-          ],
-          "noValue": "No data"
-        },
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
+    "panels":  [
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^DNS servers$/"
+                                                         }
+                                   },
+                       "id":  1,
+                       "type":  "stat",
+                       "description":  "Computers with the DNS Server role monitored by SCOM.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState \u003c 255 AND a.MonitoringObjectFullName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(\u0027;\u0027, COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + \u0027;\u0027) - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "DNS servers",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Servers not healthy$/"
+                                                         }
+                                   },
+                       "id":  2,
+                       "type":  "stat",
+                       "description":  "Servers whose DNS role is Warning or Critical.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState \u003c 255 AND a.MonitoringObjectFullName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(\u0027;\u0027, COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + \u0027;\u0027) - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Servers not healthy",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  4
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Zones$/"
+                                                         }
+                                   },
+                       "id":  3,
+                       "type":  "stat",
+                       "description":  "Zones discovered on the selected servers.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState \u003c 255 AND a.MonitoringObjectFullName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(\u0027;\u0027, COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + \u0027;\u0027) - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Zones",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  8
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Zones not healthy$/"
+                                                         }
+                                   },
+                       "id":  4,
+                       "type":  "stat",
+                       "description":  "Zones in Warning or Critical state.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState \u003c 255 AND a.MonitoringObjectFullName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(\u0027;\u0027, COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + \u0027;\u0027) - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Zones not healthy",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Open DNS alerts$/"
+                                                         }
+                                   },
+                       "id":  5,
+                       "type":  "stat",
+                       "description":  "Open alerts raised by DNS objects on the selected servers.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"DNS servers\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)) AS \"Servers not healthy\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote})\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView g WHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote}) AND g.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones not healthy\",\n  (SELECT COUNT(*) FROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a WHERE a.ResolutionState \u003c 255 AND a.MonitoringObjectFullName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n     AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(\u0027;\u0027, COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + \u0027;\u0027) - 1) IN (${dnshost:singlequote})) AS \"Open DNS alerts\"",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Open DNS alerts",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  8,
+                                       "h":  4,
+                                       "x":  16
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  6,
+                       "type":  "table",
+                       "description":  "Role health with Zone counts.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+                                                                          {
+                                                                              "targetBlank":  false,
+                                                                              "title":  "Open server detail",
+                                                                              "url":  "/d/scom-dns-server/dns-server-server-detail?var-dnshost=${__data.fields.Host}\u0026${__url_time_range}"
+                                                                          }
+                                                                      ],
+                                                            "noValue":  "No data"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 200\n  g.Path AS Host,\n  CASE g.HealthState WHEN 1 THEN \u0027Healthy\u0027 WHEN 2 THEN \u0027Warning\u0027 WHEN 3 THEN \u0027Critical\u0027 ELSE \u0027Not monitored\u0027 END AS Health,\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(\u0027;\u0027, v.Path + \u0027;\u0027) - 1) = g.Path\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones\",\n  (SELECT COUNT(*) FROM dbo.ManagedEntityGenericView v WHERE v.IsDeleted = 0 AND LEFT(v.Path, CHARINDEX(\u0027;\u0027, v.Path + \u0027;\u0027) - 1) = g.Path AND v.HealthState IN (2, 3)\n     AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = v.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)) AS \"Zones not healthy\",\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND g.Path IN (${dnshost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Server\u0027)\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, g.Path",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "DNS servers (click a server for detail)",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  7,
+                       "type":  "table",
+                       "description":  "Health of each Zone, worst first.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+                                                                          {
+                                                                              "targetBlank":  false,
+                                                                              "title":  "Open server detail",
+                                                                              "url":  "/d/scom-dns-server/dns-server-server-detail?var-dnshost=${__data.fields.Host}\u0026${__url_time_range}"
+                                                                          }
+                                                                      ],
+                                                            "noValue":  "No data"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, \u0027Zone \u0027, \u0027\u0027), \u0027 on \u0027 + LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1), \u0027\u0027) AS \"Zone\",\n  LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN \u0027Healthy\u0027 WHEN 2 THEN \u0027Warning\u0027 WHEN 3 THEN \u0027Critical\u0027 ELSE \u0027Not monitored\u0027 END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(\u0027;\u0027, g.Path + \u0027;\u0027) - 1) IN (${dnshost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027)\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Zones",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  8,
+                       "type":  "table",
+                       "description":  "Warning / Critical monitors on DNS objects.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+                                                                          {
+                                                                              "targetBlank":  false,
+                                                                              "title":  "Open server detail",
+                                                                              "url":  "/d/scom-dns-server/dns-server-server-detail?var-dnshost=${__data.fields.Host}\u0026${__url_time_range}"
+                                                                          }
+                                                                      ],
+                                                            "noValue":  "No data"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN \u0027Critical\u0027 ELSE \u0027Warning\u0027 END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(\u0027;\u0027, COALESCE(e.Path, e.DisplayName) + \u0027;\u0027) - 1) AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0 AND e.FullName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n  AND LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(\u0027;\u0027, COALESCE(e.Path, e.DisplayName) + \u0027;\u0027) - 1) IN (${dnshost:singlequote})\nORDER BY 1 DESC, 5 DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Unhealthy DNS monitors",
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  9,
+                       "type":  "table",
+                       "description":  "Open alerts raised in the selected time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No data"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Severity"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "links",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "targetBlank":  false,
+                                                                                                          "title":  "Open alert details",
+                                                                                                          "url":  "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}\u0026${__url_time_range}"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Alert"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.hidden",
+                                                                                        "value":  true
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "AlertId"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN \u0027Critical\u0027 WHEN 1 THEN \u0027Warning\u0027 ELSE \u0027Information\u0027 END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, \u0027\u0027), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(\u0027;\u0027, COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + \u0027;\u0027) - 1) AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState \u003c 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n  AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(\u0027;\u0027, COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + \u0027;\u0027) - 1) IN (${dnshost:singlequote})\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Active DNS alerts",
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  10,
+                       "type":  "table",
+                       "description":  "Newest sample of every counter collected for DNS objects (24 h).",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+                                                                          {
+                                                                              "targetBlank":  false,
+                                                                              "title":  "Open server detail",
+                                                                              "url":  "/d/scom-dns-server/dns-server-server-detail?var-dnshost=${__data.fields.Host}\u0026${__url_time_range}"
+                                                                          }
+                                                                      ],
+                                                            "noValue":  "No data"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH x AS (\n  SELECT h.DisplayName AS host,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027 THEN REPLACE(REPLACE(e.DisplayName, \u0027Zone \u0027, \u0027\u0027), \u0027 on \u0027 + h.DisplayName, \u0027\u0027) ELSE \u0027(server)\u0027 END AS scope,\n         r.ObjectName AS o, r.CounterName AS c, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.ManagedEntityRowId, r.RuleRowId, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n    AND p.DateTime \u003e DATEADD(hour, -24, GETUTCDATE())\n    AND h.DisplayName IN (${dnshost:singlequote})\n)\nSELECT TOP 500 host AS Host, scope AS Scope, o AS Object, c AS Counter, v AS Value, t AS \"Sampled (UTC)\"\nFROM x WHERE rn = 1 ORDER BY host, scope, o, c",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Latest performance samples",
+                       "gridPos":  {
+                                       "y":  20,
+                                       "w":  24,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  11,
+                       "type":  "timeseries",
+                       "description":  "Counter DNS | Total Query Received/sec, per server (and per zone where the pack collects it).",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "unit":  "reqps",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027 THEN REPLACE(REPLACE(e.DisplayName, \u0027Zone \u0027, \u0027\u0027), \u0027 on \u0027 + h.DisplayName, \u0027\u0027) + \u0027 (\u0027 + h.DisplayName + \u0027)\u0027 ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n    AND r.ObjectName = \u0027DNS\u0027 AND r.CounterName = \u0027Total Query Received/sec\u0027\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027 THEN REPLACE(REPLACE(e.DisplayName, \u0027Zone \u0027, \u0027\u0027), \u0027 on \u0027 + h.DisplayName, \u0027\u0027) + \u0027 (\u0027 + h.DisplayName + \u0027)\u0027 ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n    AND r.ObjectName = \u0027DNS\u0027 AND r.CounterName = \u0027Total Query Received/sec\u0027\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "DNS queries received per second",
+                       "gridPos":  {
+                                       "y":  28,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  12,
+                       "type":  "timeseries",
+                       "description":  "Counters DNS | Recursive Query Failure/sec and Recursive TimeOut/sec. A sustained non-zero line means forwarders or root hints are not answering.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "unit":  "none",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         r.CounterName + \u0027 (\u0027 + h.DisplayName + \u0027)\u0027 AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n    AND r.ObjectName = \u0027DNS\u0027 AND r.CounterName IN (\u0027Recursive Query Failure/sec\u0027, \u0027Recursive TimeOut/sec\u0027)\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         r.CounterName + \u0027 (\u0027 + h.DisplayName + \u0027)\u0027,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n    AND r.ObjectName = \u0027DNS\u0027 AND r.CounterName IN (\u0027Recursive Query Failure/sec\u0027, \u0027Recursive TimeOut/sec\u0027)\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Recursive query failures and time-outs per second",
+                       "gridPos":  {
+                                       "y":  28,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  13,
+                       "type":  "timeseries",
+                       "description":  "Any counter SCOM collects for DNS objects. Choose it in the Counter drop-down.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "unit":  "none",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027 THEN REPLACE(REPLACE(e.DisplayName, \u0027Zone \u0027, \u0027\u0027), \u0027 on \u0027 + h.DisplayName, \u0027\u0027) + \u0027 (\u0027 + h.DisplayName + \u0027)\u0027 ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n    AND r.ObjectName + \u0027|\u0027 + r.CounterName = \u0027${dnscounter}\u0027\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%.Zone\u0027 THEN REPLACE(REPLACE(e.DisplayName, \u0027Zone \u0027, \u0027\u0027), \u0027 on \u0027 + h.DisplayName, \u0027\u0027) + \u0027 (\u0027 + h.DisplayName + \u0027)\u0027 ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE \u0027Microsoft.Windows.DNSServer.%\u0027\n    AND r.ObjectName + \u0027|\u0027 + r.CounterName = \u0027${dnscounter}\u0027\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Selected DNS counter (choose in the Counter drop-down)",
+                       "gridPos":  {
+                                       "y":  36,
+                                       "w":  24,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   }
+               ],
+    "description":  "DNS server health, zones, alerts and collected counters from the SCOM DNS management pack.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
                   {
-                    "options": {
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      },
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Health"
-            }
-          }
-        ]
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT TOP 1000\n  REPLACE(REPLACE(g.DisplayName, 'Zone ', ''), ' on ' + LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1), '') AS \"Zone\",\n  LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) AS Host,\n  CASE g.HealthState WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n  g.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView g\nWHERE g.IsDeleted = 0 AND LEFT(g.Path, CHARINDEX(';', g.Path + ';') - 1) IN (${dnshost:singlequote})\n  AND EXISTS (SELECT 1 FROM dbo.ManagedTypeView t WHERE t.Id = g.MonitoringClassId AND t.Name LIKE 'Microsoft.Windows.DNSServer.%.Zone')\nORDER BY CASE g.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 3, 1",
-          "format": "table"
-        }
-      ],
-      "title": "Zones",
-      "gridPos": {
-        "y": 4,
-        "w": 12,
-        "h": 8,
-        "x": 12
-      }
-    },
-    {
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "id": 8,
-      "type": "table",
-      "description": "Warning / Critical monitors on DNS objects.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [
-            {
-              "targetBlank": false,
-              "title": "Open server detail",
-              "url": "/d/scom-dns-server/dns-server-server-detail?var-dnshost=${__data.fields.Host}&${__url_time_range}"
-            }
-          ],
-          "noValue": "No data"
-        },
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
                   {
-                    "options": {
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      },
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      }
-                    },
-                    "type": "value"
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
                   }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Health"
-            }
-          }
-        ]
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0 AND e.FullName LIKE 'Microsoft.Windows.DNSServer.%'\n  AND LEFT(COALESCE(e.Path, e.DisplayName), CHARINDEX(';', COALESCE(e.Path, e.DisplayName) + ';') - 1) IN (${dnshost:singlequote})\nORDER BY 1 DESC, 5 DESC",
-          "format": "table"
-        }
-      ],
-      "title": "Unhealthy DNS monitors",
-      "gridPos": {
-        "y": 12,
-        "w": 12,
-        "h": 8,
-        "x": 0
-      }
-    },
-    {
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "id": 9,
-      "type": "table",
-      "description": "Open alerts raised in the selected time range.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [],
-          "noValue": "No data"
-        },
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      },
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "targetBlank": false,
-                    "title": "Open alert details",
-                    "url": "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}&${__url_time_range}"
-                  }
-                ]
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Alert"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "custom.hidden",
-                "value": true
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "AlertId"
-            }
-          }
-        ]
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN 'Critical' WHEN 1 THEN 'Warning' ELSE 'Information' END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, ''), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = 'ENU' THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState < 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE 'Microsoft.Windows.DNSServer.%'\n  AND LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(';', COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + ';') - 1) IN (${dnshost:singlequote})\nORDER BY a.Severity DESC, a.TimeRaised DESC",
-          "format": "table"
-        }
-      ],
-      "title": "Active DNS alerts",
-      "gridPos": {
-        "y": 12,
-        "w": 12,
-        "h": 8,
-        "x": 12
-      }
-    },
-    {
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "id": 10,
-      "type": "table",
-      "description": "Newest sample of every counter collected for DNS objects (24 h).",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [
-            {
-              "targetBlank": false,
-              "title": "Open server detail",
-              "url": "/d/scom-dns-server/dns-server-server-detail?var-dnshost=${__data.fields.Host}&${__url_time_range}"
-            }
-          ],
-          "noValue": "No data"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS host,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%.Zone' THEN REPLACE(REPLACE(e.DisplayName, 'Zone ', ''), ' on ' + h.DisplayName, '') ELSE '(server)' END AS scope,\n         r.ObjectName AS o, r.CounterName AS c, p.SampleValue AS v, p.DateTime AS t,\n         ROW_NUMBER() OVER (PARTITION BY e.ManagedEntityRowId, r.RuleRowId, i.InstanceName ORDER BY p.DateTime DESC) AS rn\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%'\n    AND p.DateTime > DATEADD(hour, -24, GETUTCDATE())\n    AND h.DisplayName IN (${dnshost:singlequote})\n)\nSELECT TOP 500 host AS Host, scope AS Scope, o AS Object, c AS Counter, v AS Value, t AS \"Sampled (UTC)\"\nFROM x WHERE rn = 1 ORDER BY host, scope, o, c",
-          "format": "table"
-        }
-      ],
-      "title": "Latest performance samples",
-      "gridPos": {
-        "y": 20,
-        "w": 24,
-        "h": 8,
-        "x": 0
-      }
-    },
-    {
-      "options": {
-        "legend": {
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table"
-        },
-        "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
-        }
-      },
-      "id": 11,
-      "type": "timeseries",
-      "description": "Counter DNS | Total Query Received/sec, per server (and per zone where the pack collects it).",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "spanNulls": 3900000,
-            "lineWidth": 2,
-            "showPoints": "never",
-            "fillOpacity": 8
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "unit": "reqps",
-          "noValue": "No data in range"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%.Zone' THEN REPLACE(REPLACE(e.DisplayName, 'Zone ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%'\n    AND r.ObjectName = 'DNS' AND r.CounterName = 'Total Query Received/sec'\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%.Zone' THEN REPLACE(REPLACE(e.DisplayName, 'Zone ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%'\n    AND r.ObjectName = 'DNS' AND r.CounterName = 'Total Query Received/sec'\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
-          "format": "time_series"
-        }
-      ],
-      "title": "DNS queries received per second",
-      "gridPos": {
-        "y": 28,
-        "w": 12,
-        "h": 8,
-        "x": 0
-      }
-    },
-    {
-      "options": {
-        "legend": {
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table"
-        },
-        "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
-        }
-      },
-      "id": 12,
-      "type": "timeseries",
-      "description": "Counters DNS | Recursive Query Failure/sec and Recursive TimeOut/sec. A sustained non-zero line means forwarders or root hints are not answering.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "spanNulls": 3900000,
-            "lineWidth": 2,
-            "showPoints": "never",
-            "fillOpacity": 8
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "unit": "none",
-          "noValue": "No data in range"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         r.CounterName + ' (' + h.DisplayName + ')' AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%'\n    AND r.ObjectName = 'DNS' AND r.CounterName IN ('Recursive Query Failure/sec', 'Recursive TimeOut/sec')\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         r.CounterName + ' (' + h.DisplayName + ')',\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%'\n    AND r.ObjectName = 'DNS' AND r.CounterName IN ('Recursive Query Failure/sec', 'Recursive TimeOut/sec')\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
-          "format": "time_series"
-        }
-      ],
-      "title": "Recursive query failures and time-outs per second",
-      "gridPos": {
-        "y": 28,
-        "w": 12,
-        "h": 8,
-        "x": 12
-      }
-    },
-    {
-      "options": {
-        "legend": {
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table"
-        },
-        "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
-        }
-      },
-      "id": 13,
-      "type": "timeseries",
-      "description": "Any counter SCOM collects for DNS objects. Choose it in the Counter drop-down.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "spanNulls": 3900000,
-            "lineWidth": 2,
-            "showPoints": "never",
-            "fillOpacity": 8
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "unit": "none",
-          "noValue": "No data in range"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%.Zone' THEN REPLACE(REPLACE(e.DisplayName, 'Zone ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END AS metric,\n         AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%'\n    AND r.ObjectName + '|' + r.CounterName = '${dnscounter}'\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n  UNION ALL\n  SELECT p.DateTime,\n         CASE WHEN et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%.Zone' THEN REPLACE(REPLACE(e.DisplayName, 'Zone ', ''), ' on ' + h.DisplayName, '') + ' (' + h.DisplayName + ')' ELSE h.DisplayName END,\n         AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntityType et ON et.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND et.ManagedEntityTypeSystemName LIKE 'Microsoft.Windows.DNSServer.%'\n    AND r.ObjectName + '|' + r.CounterName = '${dnscounter}'\n    AND h.DisplayName IN (${dnshost:singlequote})\n  GROUP BY p.DateTime, e.DisplayName, et.ManagedEntityTypeSystemName, h.DisplayName, r.CounterName\n) x ORDER BY time",
-          "format": "time_series"
-        }
-      ],
-      "title": "Selected DNS counter (choose in the Counter drop-down)",
-      "gridPos": {
-        "y": 36,
-        "w": 24,
-        "h": 8,
-        "x": 0
-      }
-    }
-  ],
-  "description": "DNS server health, zones, alerts and collected counters from the SCOM DNS management pack.",
-  "timezone": "browser",
-  "refresh": "1m",
-  "schemaVersion": 39,
-  "editable": true,
-  "links": [
-    {
-      "keepTime": true,
-      "tags": [
-        "scom-core"
-      ],
-      "includeVars": true,
-      "type": "dashboards",
-      "title": "SCOM Platform",
-      "asDropdown": true
-    },
-    {
-      "keepTime": true,
-      "tags": [
-        "scom-pack"
-      ],
-      "includeVars": false,
-      "type": "dashboards",
-      "title": "Technology packs",
-      "asDropdown": true
-    }
-  ]
+              ]
 }

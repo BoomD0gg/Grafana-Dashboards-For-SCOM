@@ -1,824 +1,846 @@
 {
-  "version": 1,
-  "time": {
-    "to": "now",
-    "from": "now-6h"
-  },
-  "graphTooltip": 1,
-  "templating": {
-    "list": [
-      {
-        "type": "datasource",
-        "name": "ds_dw",
-        "label": "SCOM Data Warehouse",
-        "description": "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
-        "query": "mssql",
-        "regex": "/warehouse|dw/i",
-        "current": {},
-        "hide": 0,
-        "includeAll": false,
-        "multi": false,
-        "options": [],
-        "refresh": 1,
-        "skipUrlSync": false
-      },
-      {
-        "type": "datasource",
-        "name": "ds_om",
-        "label": "SCOM Operational DB",
-        "description": "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
-        "query": "mssql",
-        "regex": "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
-        "current": {},
-        "hide": 0,
-        "includeAll": false,
-        "multi": false,
-        "options": [],
-        "refresh": 1,
-        "skipUrlSync": false
-      },
-      {
-        "options": [],
-        "refresh": 2,
-        "definition": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
-        "type": "query",
-        "includeAll": true,
-        "label": "Server",
-        "datasource": {
-          "type": "mssql",
-          "uid": "${ds_dw}"
-        },
-        "name": "server",
-        "multi": true,
-        "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.Windows.Computer'\nORDER BY e.DisplayName",
-        "sort": 1,
-        "current": {}
-      }
-    ]
-  },
-  "uid": "scom-ws-fleet",
-  "title": "Windows Server - Fleet",
-  "tags": [
-    "scom",
-    "scom-pack",
-    "windows-server",
-    "pack:windows-server"
-  ],
-  "annotations": {
-    "list": []
-  },
-  "panels": [
-    {
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "id": 1,
-      "type": "table",
-      "description": "CPU, memory and the least-free logical disk per server, averaged over the last 60 minutes. NO DATA = SCOM has delivered no sample in that hour.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [
-            {
-              "targetBlank": false,
-              "title": "Open server detail",
-              "url": "/d/scom-ws-detail/windows-server-detail?var-server=${__data.fields.Computer}&${__url_time_range}"
-            }
-          ],
-          "noValue": "No data"
-        },
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "decimals",
-                "value": 1
-              },
-              {
-                "id": "min",
-                "value": 0
-              },
-              {
-                "id": "max",
-                "value": 100
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "gauge",
-                  "mode": "basic"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "steps": [
-                    {
-                      "value": null,
-                      "color": "#56A64B"
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-6h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_dw",
+                                        "label":  "SCOM Data Warehouse",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/warehouse|dw/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_om",
+                                        "label":  "SCOM Operational DB",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\nORDER BY e.DisplayName",
+                                        "type":  "query",
+                                        "includeAll":  true,
+                                        "label":  "Server",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_dw}"
+                                                       },
+                                        "name":  "server",
+                                        "multi":  true,
+                                        "query":  "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\nORDER BY e.DisplayName",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    }
+                                ]
+                   },
+    "uid":  "scom-ws-fleet",
+    "title":  "Windows Server - Fleet",
+    "tags":  [
+                 "scom",
+                 "scom-pack",
+                 "windows-server",
+                 "pack:windows-server"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
                     },
-                    {
-                      "value": 70,
-                      "color": "#FF9830"
-                    },
-                    {
-                      "value": 90,
-                      "color": "#E02F44"
-                    }
-                  ],
-                  "mode": "absolute"
-                }
-              },
-              {
-                "id": "noValue",
-                "value": "NO DATA"
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "CPU %"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "decimals",
-                "value": 1
-              },
-              {
-                "id": "min",
-                "value": 0
-              },
-              {
-                "id": "max",
-                "value": 100
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "gauge",
-                  "mode": "basic"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "steps": [
-                    {
-                      "value": null,
-                      "color": "#56A64B"
-                    },
-                    {
-                      "value": 70,
-                      "color": "#FF9830"
-                    },
-                    {
-                      "value": 90,
-                      "color": "#E02F44"
-                    }
-                  ],
-                  "mode": "absolute"
-                }
-              },
-              {
-                "id": "noValue",
-                "value": "NO DATA"
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Memory %"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "decimals",
-                "value": 1
-              },
-              {
-                "id": "min",
-                "value": 0
-              },
-              {
-                "id": "max",
-                "value": 100
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "gauge",
-                  "mode": "basic"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "steps": [
-                    {
-                      "value": null,
-                      "color": "#E02F44"
-                    },
-                    {
-                      "value": 10,
-                      "color": "#FF9830"
-                    },
-                    {
-                      "value": 20,
-                      "color": "#56A64B"
-                    }
-                  ],
-                  "mode": "absolute"
-                }
-              },
-              {
-                "id": "noValue",
-                "value": "NO DATA"
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Lowest disk free %"
-            }
-          }
-        ]
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "WITH x AS (\n  SELECT h.DisplayName AS comp, r.ObjectName AS o, r.CounterName AS c, i.InstanceName AS inst, AVG(p.SampleValue) AS v, MAX(p.DateTime) AS last_t\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n    AND h.DisplayName IN (${server:singlequote})\n    AND ( (r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time' AND i.InstanceName = '_Total')\n       OR (r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed')\n       OR (r.ObjectName = 'LogicalDisk' AND r.CounterName = '% Free Space') )\n  GROUP BY h.DisplayName, r.ObjectName, r.CounterName, i.InstanceName\n)\nSELECT comp AS Computer,\n  MAX(CASE WHEN o = 'Processor Information' THEN v END) AS \"CPU %\",\n  MAX(CASE WHEN o = 'Memory' THEN v END) AS \"Memory %\",\n  MIN(CASE WHEN o = 'LogicalDisk' THEN v END) AS \"Lowest disk free %\",\n  MAX(last_t) AS \"Last sample (UTC)\"\nFROM x GROUP BY comp ORDER BY comp",
-          "format": "table"
-        }
-      ],
-      "title": "Resource usage per server (last 60 min average - click a server for detail)",
-      "gridPos": {
-        "y": 0,
-        "w": 14,
-        "h": 10,
-        "x": 0
-      }
-    },
-    {
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "id": 2,
-      "type": "table",
-      "description": "Free space now (last 60 min average). Amber under 20 %, red under 10 %.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [
-            {
-              "targetBlank": false,
-              "title": "Open server detail",
-              "url": "/d/scom-ws-detail/windows-server-detail?var-server=${__data.fields.Computer}&${__url_time_range}"
-            }
-          ],
-          "noValue": "No data"
-        },
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "decimals",
-                "value": 1
-              },
-              {
-                "id": "min",
-                "value": 0
-              },
-              {
-                "id": "max",
-                "value": 100
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "gauge",
-                  "mode": "basic"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "steps": [
-                    {
-                      "value": null,
-                      "color": "#E02F44"
-                    },
-                    {
-                      "value": 10,
-                      "color": "#FF9830"
-                    },
-                    {
-                      "value": 20,
-                      "color": "#56A64B"
-                    }
-                  ],
-                  "mode": "absolute"
-                }
-              },
-              {
-                "id": "noValue",
-                "value": "NO DATA"
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Free %"
-            }
-          },
-          {
-            "properties": [
-              {
-                "id": "decimals",
-                "value": 1
-              },
-              {
-                "id": "unit",
-                "value": "none"
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Free GB"
-            }
-          }
-        ]
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT TOP 300\n  h.DisplayName AS Computer,\n  i.InstanceName AS Disk,\n  AVG(CASE WHEN r.CounterName = '% Free Space' THEN p.SampleValue END) AS \"Free %\",\n  AVG(CASE WHEN r.CounterName = 'Free Megabytes' THEN p.SampleValue END) / 1024.0 AS \"Free GB\"\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE p.DateTime > DATEADD(minute, -60, GETUTCDATE())\n  AND r.ObjectName = 'LogicalDisk' AND r.CounterName IN ('% Free Space', 'Free Megabytes')\n  AND h.DisplayName IN (${server:singlequote})\nGROUP BY h.DisplayName, i.InstanceName\nHAVING AVG(CASE WHEN r.CounterName = '% Free Space' THEN p.SampleValue END) IS NOT NULL\nORDER BY 3, 1, 2",
-          "format": "table"
-        }
-      ],
-      "title": "Logical disks - least free first",
-      "gridPos": {
-        "y": 0,
-        "w": 10,
-        "h": 10,
-        "x": 14
-      }
-    },
-    {
-      "options": {
-        "legend": {
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table"
-        },
-        "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
-        }
-      },
-      "id": 3,
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "spanNulls": 3900000,
-            "lineWidth": 2,
-            "showPoints": "never",
-            "fillOpacity": 8
-          },
-          "min": 0,
-          "unit": "percent",
-          "max": 100,
-          "noValue": "No data in range"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Processor Information' AND r.CounterName = '% Processor Time'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
-          "format": "time_series"
-        }
-      ],
-      "title": "CPU - % processor time",
-      "gridPos": {
-        "y": 10,
-        "w": 12,
-        "h": 8,
-        "x": 0
-      }
-    },
-    {
-      "options": {
-        "legend": {
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table"
-        },
-        "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
-        }
-      },
-      "id": 4,
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "spanNulls": 3900000,
-            "lineWidth": 2,
-            "showPoints": "never",
-            "fillOpacity": 8
-          },
-          "min": 0,
-          "unit": "percent",
-          "max": 100,
-          "noValue": "No data in range"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Memory' AND r.CounterName = 'PercentMemoryUsed'\n    AND (i.InstanceName IN ('_Total','') OR '_Total' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
-          "format": "time_series"
-        }
-      ],
-      "title": "Memory - % used",
-      "gridPos": {
-        "y": 10,
-        "w": 12,
-        "h": 8,
-        "x": 12
-      }
-    },
-    {
-      "options": {
-        "legend": {
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table"
-        },
-        "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
-        }
-      },
-      "id": 5,
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "spanNulls": 3900000,
-            "lineWidth": 2,
-            "showPoints": "never",
-            "fillOpacity": 8
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "min": 0,
-          "unit": "Bps",
-          "noValue": "No data in range"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Network Adapter' AND r.CounterName = 'Bytes Total/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'Network Adapter' AND r.CounterName = 'Bytes Total/sec'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
-          "format": "time_series"
-        }
-      ],
-      "title": "Network - bytes total per second",
-      "gridPos": {
-        "y": 18,
-        "w": 12,
-        "h": 8,
-        "x": 0
-      }
-    },
-    {
-      "options": {
-        "legend": {
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table"
-        },
-        "tooltip": {
-          "sort": "desc",
-          "mode": "multi"
-        }
-      },
-      "id": 6,
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_dw}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "spanNulls": 3900000,
-            "lineWidth": 2,
-            "showPoints": "never",
-            "fillOpacity": 8
-          },
-          "color": {
-            "mode": "palette-classic"
-          },
-          "min": 0,
-          "unit": "ms",
-          "noValue": "No data in range"
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_dw}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END AS metric,\n         AVG(p.SampleValue) * 1000 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) <= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Avg. Disk sec/Transfer'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN ('', '_Total') THEN '' ELSE ' [' + i.InstanceName + ']' END,\n         AVG(p.AverageValue) * 1000\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) > 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = 'LogicalDisk' AND r.CounterName = 'Avg. Disk sec/Transfer'\n    AND (i.InstanceName IN ('_Total', '') OR '*' = '*')\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
-          "format": "time_series"
-        }
-      ],
-      "title": "Disk latency - average ms per transfer",
-      "gridPos": {
-        "y": 18,
-        "w": 12,
-        "h": 8,
-        "x": 12
-      }
-    },
-    {
-      "options": {
-        "showHeader": true,
-        "footer": {
-          "show": false
-        },
-        "cellHeight": "sm"
-      },
-      "id": 7,
-      "type": "table",
-      "description": "Unit monitors currently not Healthy on the selected servers and the objects they host.",
-      "datasource": {
-        "type": "mssql",
-        "uid": "${ds_om}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true
-          },
-          "links": [
-            {
-              "targetBlank": false,
-              "title": "Open server detail",
-              "url": "/d/scom-ws-detail/windows-server-detail?var-server=${__data.fields.Computer}&${__url_time_range}"
-            }
-          ],
-          "noValue": "No data"
-        },
-        "overrides": [
-          {
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
+    "panels":  [
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  1,
+                       "type":  "table",
+                       "description":  "CPU, memory and the least-free logical disk per server, averaged over the last 60 minutes. NO DATA = SCOM has delivered no sample in that hour.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+                                                                          {
+                                                                              "targetBlank":  false,
+                                                                              "title":  "Open server detail",
+                                                                              "url":  "/d/scom-ws-detail/windows-server-detail?var-server=${__data.fields.Computer}\u0026${__url_time_range}"
+                                                                          }
+                                                                      ],
+                                                            "noValue":  "No data"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "unit",
+                                                                                        "value":  "percent"
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "decimals",
+                                                                                        "value":  1
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "min",
+                                                                                        "value":  0
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "max",
+                                                                                        "value":  100
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "gauge",
+                                                                                                      "mode":  "basic"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  70,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  90,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "NO DATA"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPU %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "unit",
+                                                                                        "value":  "percent"
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "decimals",
+                                                                                        "value":  1
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "min",
+                                                                                        "value":  0
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "max",
+                                                                                        "value":  100
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "gauge",
+                                                                                                      "mode":  "basic"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  70,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  90,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "NO DATA"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Memory %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "unit",
+                                                                                        "value":  "percent"
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "decimals",
+                                                                                        "value":  1
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "min",
+                                                                                        "value":  0
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "max",
+                                                                                        "value":  100
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "gauge",
+                                                                                                      "mode":  "basic"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  10,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  20,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "NO DATA"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Lowest disk free %"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH x AS (\n  SELECT h.DisplayName AS comp, r.ObjectName AS o, r.CounterName AS c, i.InstanceName AS inst, AVG(p.SampleValue) AS v, MAX(p.DateTime) AS last_t\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE p.DateTime \u003e DATEADD(minute, -60, GETUTCDATE())\n    AND h.DisplayName IN (${server:singlequote})\n    AND ( (r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName = \u0027% Processor Time\u0027 AND i.InstanceName = \u0027_Total\u0027)\n       OR (r.ObjectName = \u0027Memory\u0027 AND r.CounterName = \u0027PercentMemoryUsed\u0027)\n       OR (r.ObjectName = \u0027LogicalDisk\u0027 AND r.CounterName = \u0027% Free Space\u0027) )\n  GROUP BY h.DisplayName, r.ObjectName, r.CounterName, i.InstanceName\n)\nSELECT comp AS Computer,\n  MAX(CASE WHEN o = \u0027Processor Information\u0027 THEN v END) AS \"CPU %\",\n  MAX(CASE WHEN o = \u0027Memory\u0027 THEN v END) AS \"Memory %\",\n  MIN(CASE WHEN o = \u0027LogicalDisk\u0027 THEN v END) AS \"Lowest disk free %\",\n  MAX(last_t) AS \"Last sample (UTC)\"\nFROM x GROUP BY comp ORDER BY comp",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Resource usage per server (last 60 min average - click a server for detail)",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  14,
+                                       "h":  10,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  2,
+                       "type":  "table",
+                       "description":  "Free space now (last 60 min average). Amber under 20 %, red under 10 %.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+                                                                          {
+                                                                              "targetBlank":  false,
+                                                                              "title":  "Open server detail",
+                                                                              "url":  "/d/scom-ws-detail/windows-server-detail?var-server=${__data.fields.Computer}\u0026${__url_time_range}"
+                                                                          }
+                                                                      ],
+                                                            "noValue":  "No data"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "unit",
+                                                                                        "value":  "percent"
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "decimals",
+                                                                                        "value":  1
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "min",
+                                                                                        "value":  0
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "max",
+                                                                                        "value":  100
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "gauge",
+                                                                                                      "mode":  "basic"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  10,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  20,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "NO DATA"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Free %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "decimals",
+                                                                                        "value":  1
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "unit",
+                                                                                        "value":  "none"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Free GB"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 300\n  h.DisplayName AS Computer,\n  i.InstanceName AS Disk,\n  AVG(CASE WHEN r.CounterName = \u0027% Free Space\u0027 THEN p.SampleValue END) AS \"Free %\",\n  AVG(CASE WHEN r.CounterName = \u0027Free Megabytes\u0027 THEN p.SampleValue END) / 1024.0 AS \"Free GB\"\nFROM Perf.vPerfRaw p\nJOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\nJOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\nJOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE p.DateTime \u003e DATEADD(minute, -60, GETUTCDATE())\n  AND r.ObjectName = \u0027LogicalDisk\u0027 AND r.CounterName IN (\u0027% Free Space\u0027, \u0027Free Megabytes\u0027)\n  AND h.DisplayName IN (${server:singlequote})\nGROUP BY h.DisplayName, i.InstanceName\nHAVING AVG(CASE WHEN r.CounterName = \u0027% Free Space\u0027 THEN p.SampleValue END) IS NOT NULL\nORDER BY 3, 1, 2",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Logical disks - least free first",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  10,
+                                       "h":  10,
+                                       "x":  14
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  3,
+                       "type":  "timeseries",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName = \u0027% Processor Time\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027,\u0027\u0027) OR \u0027_Total\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName = \u0027% Processor Time\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027,\u0027\u0027) OR \u0027_Total\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "CPU - % processor time",
+                       "gridPos":  {
+                                       "y":  10,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  4,
+                       "type":  "timeseries",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Memory\u0027 AND r.CounterName = \u0027PercentMemoryUsed\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027,\u0027\u0027) OR \u0027_Total\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Memory\u0027 AND r.CounterName = \u0027PercentMemoryUsed\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027,\u0027\u0027) OR \u0027_Total\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Memory - % used",
+                       "gridPos":  {
+                                       "y":  10,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  5,
+                       "type":  "timeseries",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "min":  0,
+                                                            "unit":  "Bps",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN (\u0027\u0027, \u0027_Total\u0027) THEN \u0027\u0027 ELSE \u0027 [\u0027 + i.InstanceName + \u0027]\u0027 END AS metric,\n         AVG(p.SampleValue) * 1 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Network Adapter\u0027 AND r.CounterName = \u0027Bytes Total/sec\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027, \u0027\u0027) OR \u0027*\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN (\u0027\u0027, \u0027_Total\u0027) THEN \u0027\u0027 ELSE \u0027 [\u0027 + i.InstanceName + \u0027]\u0027 END,\n         AVG(p.AverageValue) * 1\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Network Adapter\u0027 AND r.CounterName = \u0027Bytes Total/sec\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027, \u0027\u0027) OR \u0027*\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Network - bytes total per second",
+                       "gridPos":  {
+                                       "y":  18,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  6,
+                       "type":  "timeseries",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "min":  0,
+                                                            "unit":  "ms",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time,\n         h.DisplayName + CASE WHEN i.InstanceName IN (\u0027\u0027, \u0027_Total\u0027) THEN \u0027\u0027 ELSE \u0027 [\u0027 + i.InstanceName + \u0027]\u0027 END AS metric,\n         AVG(p.SampleValue) * 1000 AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027LogicalDisk\u0027 AND r.CounterName = \u0027Avg. Disk sec/Transfer\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027, \u0027\u0027) OR \u0027*\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName, i.InstanceName\n  UNION ALL\n  SELECT p.DateTime,\n         h.DisplayName + CASE WHEN i.InstanceName IN (\u0027\u0027, \u0027_Total\u0027) THEN \u0027\u0027 ELSE \u0027 [\u0027 + i.InstanceName + \u0027]\u0027 END,\n         AVG(p.AverageValue) * 1000\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027LogicalDisk\u0027 AND r.CounterName = \u0027Avg. Disk sec/Transfer\u0027\n    AND (i.InstanceName IN (\u0027_Total\u0027, \u0027\u0027) OR \u0027*\u0027 = \u0027*\u0027)\n    AND h.DisplayName IN (${server:singlequote})\n  GROUP BY p.DateTime, h.DisplayName, i.InstanceName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Disk latency - average ms per transfer",
+                       "gridPos":  {
+                                       "y":  18,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  7,
+                       "type":  "table",
+                       "description":  "Unit monitors currently not Healthy on the selected servers and the objects they host.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+                                                                          {
+                                                                              "targetBlank":  false,
+                                                                              "title":  "Open server detail",
+                                                                              "url":  "/d/scom-ws-detail/windows-server-detail?var-server=${__data.fields.Computer}\u0026${__url_time_range}"
+                                                                          }
+                                                                      ],
+                                                            "noValue":  "No data"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 300\n  CASE s.HealthState WHEN 3 THEN \u0027Critical\u0027 ELSE \u0027Warning\u0027 END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  COALESCE(e.Path, e.DisplayName) AS Computer,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0\n  AND (e.DisplayName IN (${server:singlequote}) OR e.Path IN (${server:singlequote}))\nORDER BY s.HealthState DESC, s.LastModified DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Unhealthy monitors (Warning / Critical)",
+                       "gridPos":  {
+                                       "y":  26,
+                                       "w":  24,
+                                       "h":  9,
+                                       "x":  0
+                                   }
+                   }
+               ],
+    "description":  "Resource usage, disks, network and unhealthy monitors across all Windows servers monitored by SCOM.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
                   {
-                    "options": {
-                      "Healthy": {
-                        "index": 3,
-                        "color": "#56A64B"
-                      },
-                      "Not monitored": {
-                        "index": 4,
-                        "color": "#8E8E93"
-                      },
-                      "Information": {
-                        "index": 2,
-                        "color": "#5794F2"
-                      },
-                      "Warning": {
-                        "index": 1,
-                        "color": "#FF9830"
-                      },
-                      "Present": {
-                        "index": 6,
-                        "color": "#56A64B"
-                      },
-                      "MISSING": {
-                        "index": 5,
-                        "color": "#E02F44"
-                      },
-                      "Critical": {
-                        "index": 0,
-                        "color": "#E02F44"
-                      }
-                    },
-                    "type": "value"
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
                   }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ],
-            "matcher": {
-              "id": "byName",
-              "options": "Health"
-            }
-          }
-        ]
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "refId": "A",
-          "datasource": {
-            "type": "mssql",
-            "uid": "${ds_om}"
-          },
-          "rawQuery": true,
-          "rawSql": "SELECT TOP 300\n  CASE s.HealthState WHEN 3 THEN 'Critical' ELSE 'Warning' END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = 'ENU' THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  COALESCE(e.Path, e.DisplayName) AS Computer,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0\n  AND (e.DisplayName IN (${server:singlequote}) OR e.Path IN (${server:singlequote}))\nORDER BY s.HealthState DESC, s.LastModified DESC",
-          "format": "table"
-        }
-      ],
-      "title": "Unhealthy monitors (Warning / Critical)",
-      "gridPos": {
-        "y": 26,
-        "w": 24,
-        "h": 9,
-        "x": 0
-      }
-    }
-  ],
-  "description": "Resource usage, disks, network and unhealthy monitors across all Windows servers monitored by SCOM.",
-  "timezone": "browser",
-  "refresh": "1m",
-  "schemaVersion": 39,
-  "editable": true,
-  "links": [
-    {
-      "keepTime": true,
-      "tags": [
-        "scom-core"
-      ],
-      "includeVars": true,
-      "type": "dashboards",
-      "title": "SCOM Platform",
-      "asDropdown": true
-    },
-    {
-      "keepTime": true,
-      "tags": [
-        "scom-pack"
-      ],
-      "includeVars": false,
-      "type": "dashboards",
-      "title": "Technology packs",
-      "asDropdown": true
-    }
-  ]
+              ]
 }

@@ -1,0 +1,1193 @@
+{
+    "version":  1,
+    "time":  {
+                 "from":  "now-30d",
+                 "to":  "now+90d"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_dw",
+                                        "label":  "SCOM Data Warehouse",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/warehouse|dw/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_om",
+                                        "label":  "SCOM Operational DB",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\nORDER BY e.DisplayName",
+                                        "type":  "query",
+                                        "includeAll":  true,
+                                        "label":  "Server",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_dw}"
+                                                       },
+                                        "name":  "server",
+                                        "multi":  true,
+                                        "query":  "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\nORDER BY e.DisplayName",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    },
+                                    {
+                                        "options":  [
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "80",
+                                                            "text":  "80"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "85",
+                                                            "text":  "85"
+                                                        },
+                                                        {
+                                                            "selected":  true,
+                                                            "value":  "90",
+                                                            "text":  "90"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "95",
+                                                            "text":  "95"
+                                                        }
+                                                    ],
+                                        "type":  "custom",
+                                        "includeAll":  false,
+                                        "label":  "Threshold %",
+                                        "query":  "80,85,90,95",
+                                        "name":  "thr",
+                                        "multi":  false,
+                                        "hide":  0,
+                                        "current":  {
+                                                        "text":  "90",
+                                                        "value":  "90"
+                                                    }
+                                    },
+                                    {
+                                        "options":  [
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "30",
+                                                            "text":  "30"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "60",
+                                                            "text":  "60"
+                                                        },
+                                                        {
+                                                            "selected":  true,
+                                                            "value":  "90",
+                                                            "text":  "90"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "180",
+                                                            "text":  "180"
+                                                        }
+                                                    ],
+                                        "type":  "custom",
+                                        "includeAll":  false,
+                                        "label":  "Horizon (days)",
+                                        "query":  "30,60,90,180",
+                                        "name":  "horizon",
+                                        "multi":  false,
+                                        "hide":  0,
+                                        "current":  {
+                                                        "text":  "90",
+                                                        "value":  "90"
+                                                    }
+                                    },
+                                    {
+                                        "options":  [
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "14",
+                                                            "text":  "14"
+                                                        },
+                                                        {
+                                                            "selected":  true,
+                                                            "value":  "30",
+                                                            "text":  "30"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "60",
+                                                            "text":  "60"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "90",
+                                                            "text":  "90"
+                                                        }
+                                                    ],
+                                        "type":  "custom",
+                                        "includeAll":  false,
+                                        "label":  "History (days)",
+                                        "query":  "14,30,60,90",
+                                        "name":  "history",
+                                        "multi":  false,
+                                        "hide":  0,
+                                        "current":  {
+                                                        "text":  "30",
+                                                        "value":  "30"
+                                                    }
+                                    },
+                                    {
+                                        "options":  [
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "70",
+                                                            "text":  "70"
+                                                        },
+                                                        {
+                                                            "selected":  true,
+                                                            "value":  "80",
+                                                            "text":  "80"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "90",
+                                                            "text":  "90"
+                                                        }
+                                                    ],
+                                        "type":  "custom",
+                                        "includeAll":  false,
+                                        "label":  "High load %",
+                                        "query":  "70,80,90",
+                                        "name":  "hi",
+                                        "multi":  false,
+                                        "hide":  0,
+                                        "current":  {
+                                                        "text":  "80",
+                                                        "value":  "80"
+                                                    }
+                                    },
+                                    {
+                                        "options":  [
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "10",
+                                                            "text":  "10"
+                                                        },
+                                                        {
+                                                            "selected":  true,
+                                                            "value":  "20",
+                                                            "text":  "20"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "30",
+                                                            "text":  "30"
+                                                        },
+                                                        {
+                                                            "selected":  false,
+                                                            "value":  "40",
+                                                            "text":  "40"
+                                                        }
+                                                    ],
+                                        "type":  "custom",
+                                        "includeAll":  false,
+                                        "label":  "Low load %",
+                                        "query":  "10,20,30,40",
+                                        "name":  "lo",
+                                        "multi":  false,
+                                        "hide":  0,
+                                        "current":  {
+                                                        "text":  "20",
+                                                        "value":  "20"
+                                                    }
+                                    }
+                                ]
+                   },
+    "uid":  "scom-ins-capacity",
+    "title":  "Insights - Capacity Planning",
+    "tags":  [
+                 "scom",
+                 "scom-pack",
+                 "insights",
+                 "pack:insights"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  24,
+                                       "h":  3,
+                                       "x":  0
+                                   },
+                       "title":  "",
+                       "id":  1,
+                       "type":  "text",
+                       "options":  {
+                                       "content":  "**Capacity planning.** A straight line is fitted to the daily values over the *History* you choose, and the tables show how soon each disk, database or server reaches the limits you set. It is a baseline, not a prediction: it knows nothing about planned projects, one-off clean-ups or seasonal peaks, and it needs at least 7 days of data per item. To see the projected lines in the chart, keep the time range reaching into the future (the default is the last 30 days to 90 days ahead).",
+                                       "mode":  "markdown"
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  2,
+                       "type":  "table",
+                       "description":  "Used space per disk with its growth per day and the days until the Threshold is reached. Soonest first.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "-"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Over threshold now":  {
+                                                                                                                                                     "index":  0,
+                                                                                                                                                     "color":  "#E02F44"
+                                                                                                                                                 },
+                                                                                                                          "Within horizon":  {
+                                                                                                                                                 "index":  2,
+                                                                                                                                                 "color":  "#FF9830"
+                                                                                                                                             },
+                                                                                                                          "Not growing":  {
+                                                                                                                                              "index":  4,
+                                                                                                                                              "color":  "#56A64B"
+                                                                                                                                          },
+                                                                                                                          "Beyond horizon":  {
+                                                                                                                                                 "index":  3,
+                                                                                                                                                 "color":  "#56A64B"
+                                                                                                                                             },
+                                                                                                                          "Within 30 days":  {
+                                                                                                                                                 "index":  1,
+                                                                                                                                                 "color":  "#E02F44"
+                                                                                                                                             },
+                                                                                                                          "Not enough history":  {
+                                                                                                                                                     "index":  5,
+                                                                                                                                                     "color":  "#8E8E93"
+                                                                                                                                                 }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-background"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  31,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  91,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Days to threshold"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "decimals",
+                                                                                        "value":  1
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Used % now"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "decimals",
+                                                                                        "value":  3
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Growth (% points per day)"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  250
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Server"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  70
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Disk"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  150
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH d AS (\n  SELECT h.DisplayName AS server, i.InstanceName AS disk, CAST(p.DateTime AS date) AS dy, AVG(100.0 - p.AverageValue) AS used\n  FROM Perf.vPerfDaily p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId AND r.ObjectName = \u0027LogicalDisk\u0027 AND r.CounterName = \u0027% Free Space\u0027\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE h.DisplayName IN (${server:singlequote}) AND i.InstanceName NOT IN (\u0027_Total\u0027, \u0027\u0027)\n    AND p.DateTime \u003e= DATEADD(day, -${history}, CAST(GETUTCDATE() AS date))\n  GROUP BY h.DisplayName, i.InstanceName, CAST(p.DateTime AS date)\n),\nx AS (\n  SELECT server, disk, dy, used, CAST(DATEDIFF(day, \u00272000-01-01\u0027, dy) AS float) AS n FROM d\n),\ns AS (\n  SELECT server, disk, COUNT(*) AS pts, SUM(n) AS sx, SUM(used) AS sy, SUM(n * used) AS sxy, SUM(n * n) AS sxx,\n         MAX(dy) AS lastday, MIN(dy) AS firstday\n  FROM x GROUP BY server, disk\n),\nf AS (\n  SELECT s.server, s.disk, s.pts, s.lastday,\n         CASE WHEN s.pts \u003e= 2 AND (s.pts * s.sxx - s.sx * s.sx) \u003c\u003e 0 THEN (s.pts * s.sxy - s.sx * s.sy) / (s.pts * s.sxx - s.sx * s.sx) END AS slope,\n         (SELECT TOP 1 x.used FROM x WHERE x.server = s.server AND x.disk = s.disk ORDER BY x.dy DESC) AS used_now\n  FROM s\n)\nSELECT f.server AS Server, f.disk AS Disk,\n       ROUND(f.used_now, 1) AS \"Used % now\",\n       ROUND(f.slope, 3) AS \"Growth (% points per day)\",\n       CASE WHEN f.pts \u003c 7 THEN NULL WHEN f.used_now \u003e= ${thr} THEN 0 WHEN f.slope \u003e 0.0005 THEN ROUND((${thr} - f.used_now) / f.slope, 0) END AS \"Days to threshold\",\n       CASE WHEN f.pts \u003e= 7 AND f.used_now \u003c ${thr} AND f.slope \u003e 0.0005 THEN CONVERT(varchar(10), DATEADD(day, CAST((${thr} - f.used_now) / f.slope AS int), CAST(GETUTCDATE() AS date)), 23) END AS \"Reaches threshold on\",\n       CASE WHEN f.pts \u003c 7 THEN \u0027Not enough history\u0027\n            WHEN f.used_now \u003e= ${thr} THEN \u0027Over threshold now\u0027\n            WHEN f.slope IS NULL OR f.slope \u003c= 0.0005 THEN \u0027Not growing\u0027\n            WHEN (${thr} - f.used_now) / f.slope \u003c= 30 THEN \u0027Within 30 days\u0027\n            WHEN (${thr} - f.used_now) / f.slope \u003c= ${horizon} THEN \u0027Within horizon\u0027\n            ELSE \u0027Beyond horizon\u0027 END AS Status,\n       f.pts AS \"Days of data\"\nFROM f\nORDER BY CASE WHEN f.pts \u003c 7 THEN 3 WHEN f.used_now \u003e= ${thr} THEN 0 WHEN f.slope \u003e 0.0005 THEN 1 ELSE 2 END,\n         CASE WHEN f.slope \u003e 0.0005 THEN (${thr} - f.used_now) / f.slope END, f.server, f.disk",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Disks: when will they fill?",
+                       "gridPos":  {
+                                       "y":  3,
+                                       "w":  24,
+                                       "h":  10,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  3,
+                       "type":  "timeseries",
+                       "description":  "Used % history, then a dashed projected line, against the threshold. At most 6 disks.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  true,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "auto",
+                                                                           "pointSize":  5,
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No disk is growing in the selected servers"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.lineStyle",
+                                                                                        "value":  {
+                                                                                                      "dash":  [
+                                                                                                                   10,
+                                                                                                                   10
+                                                                                                               ],
+                                                                                                      "fill":  "dash"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byRegexp",
+                                                                                 "options":  ".*projected %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "fixedColor":  "#E02F44",
+                                                                                                      "mode":  "fixed"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.lineStyle",
+                                                                                        "value":  {
+                                                                                                      "dash":  [
+                                                                                                                   4,
+                                                                                                                   6
+                                                                                                               ],
+                                                                                                      "fill":  "dash"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.fillOpacity",
+                                                                                        "value":  0
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Threshold %"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH d AS (\n  SELECT h.DisplayName AS server, i.InstanceName AS disk, CAST(p.DateTime AS date) AS dy, AVG(100.0 - p.AverageValue) AS used\n  FROM Perf.vPerfDaily p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId AND r.ObjectName = \u0027LogicalDisk\u0027 AND r.CounterName = \u0027% Free Space\u0027\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE h.DisplayName IN (${server:singlequote}) AND i.InstanceName NOT IN (\u0027_Total\u0027, \u0027\u0027)\n    AND p.DateTime \u003e= DATEADD(day, -${history}, CAST(GETUTCDATE() AS date))\n  GROUP BY h.DisplayName, i.InstanceName, CAST(p.DateTime AS date)\n),\nx AS (SELECT server, disk, dy, used, CAST(DATEDIFF(day, \u00272000-01-01\u0027, dy) AS float) AS n FROM d),\ns AS (\n  SELECT server, disk, COUNT(*) AS pts, SUM(n) AS sx, SUM(used) AS sy, SUM(n * used) AS sxy, SUM(n * n) AS sxx, MAX(dy) AS lastday\n  FROM x GROUP BY server, disk HAVING COUNT(*) \u003e= 7\n),\nf AS (\n  SELECT s.server, s.disk, s.lastday,\n         (s.pts * s.sxy - s.sx * s.sy) / NULLIF(s.pts * s.sxx - s.sx * s.sx, 0) AS slope,\n         (SELECT TOP 1 x.used FROM x WHERE x.server = s.server AND x.disk = s.disk ORDER BY x.dy DESC) AS used_now\n  FROM s\n),\npick AS (\n  SELECT TOP 6 f.* FROM f WHERE f.slope \u003e 0.0005 ORDER BY CASE WHEN f.used_now \u003e= ${thr} THEN 0 ELSE 1 END, (${thr} - f.used_now) / f.slope\n)\nSELECT y.time, y.metric, y.value FROM (\n  SELECT CAST(x.dy AS datetime) AS time, p.server + \u0027 \u0027 + p.disk + \u0027 used %\u0027 AS metric, ROUND(x.used, 2) AS value\n  FROM x JOIN pick p ON p.server = x.server AND p.disk = x.disk\n  UNION ALL\n  SELECT DATEADD(day, n.number * 5, CAST(p.lastday AS datetime)), p.server + \u0027 \u0027 + p.disk + \u0027 projected %\u0027,\n         CASE WHEN p.used_now + p.slope * n.number * 5 \u003e 100 THEN 100 ELSE ROUND(p.used_now + p.slope * n.number * 5, 2) END\n  FROM pick p JOIN master.dbo.spt_values n ON n.type = \u0027P\u0027 AND n.number \u003c= ${horizon} / 5\n  UNION ALL\n  SELECT DATEADD(day, n.number * 5, CAST(DATEADD(day, -${history}, GETUTCDATE()) AS date)), \u0027Threshold %\u0027, ${thr}\n  FROM master.dbo.spt_values n WHERE n.type = \u0027P\u0027 AND n.number \u003c= (${history} + ${horizon}) / 5 AND EXISTS (SELECT 1 FROM pick)\n) y\nORDER BY y.time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "The disks that will fill soonest, with projection",
+                       "gridPos":  {
+                                       "y":  13,
+                                       "w":  24,
+                                       "h":  9,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  4,
+                       "type":  "table",
+                       "description":  "p95 is the load the server stayed at or below for 95% of the hours. Constrained: p95 at or above High load. Over-provisioned: p95 at or below Low load. The trend is the change in percentage points per 30 days.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "-"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Balanced":  {
+                                                                                                                                           "index":  2,
+                                                                                                                                           "color":  "#56A64B"
+                                                                                                                                       },
+                                                                                                                          "Over-provisioned":  {
+                                                                                                                                                   "index":  1,
+                                                                                                                                                   "color":  "#5794F2"
+                                                                                                                                               },
+                                                                                                                          "Not enough data":  {
+                                                                                                                                                  "index":  3,
+                                                                                                                                                  "color":  "#8E8E93"
+                                                                                                                                              },
+                                                                                                                          "Constrained":  {
+                                                                                                                                              "index":  0,
+                                                                                                                                              "color":  "#FF9830"
+                                                                                                                                          }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPU assessment"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Balanced":  {
+                                                                                                                                           "index":  2,
+                                                                                                                                           "color":  "#56A64B"
+                                                                                                                                       },
+                                                                                                                          "Over-provisioned":  {
+                                                                                                                                                   "index":  1,
+                                                                                                                                                   "color":  "#5794F2"
+                                                                                                                                               },
+                                                                                                                          "Not enough data":  {
+                                                                                                                                                  "index":  3,
+                                                                                                                                                  "color":  "#8E8E93"
+                                                                                                                                              },
+                                                                                                                          "Constrained":  {
+                                                                                                                                              "index":  0,
+                                                                                                                                              "color":  "#FF9830"
+                                                                                                                                          }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Memory assessment"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  250
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Server"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  130
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPU trend /30d"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  150
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Memory trend /30d"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  140
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPU assessment"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  150
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Memory assessment"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH hv AS (\n  SELECT h.DisplayName AS server, r.ObjectName AS obj, p.DateTime, p.AverageValue AS v\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE h.DisplayName IN (${server:singlequote}) AND i.InstanceName IN (\u0027_Total\u0027, \u0027\u0027)\n    AND ((r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName = \u0027% Processor Time\u0027) OR (r.ObjectName = \u0027Memory\u0027 AND r.CounterName = \u0027PercentMemoryUsed\u0027))\n    AND p.DateTime \u003e= DATEADD(day, -${history}, GETUTCDATE())\n),\npc AS (\n  SELECT DISTINCT server, obj,\n         PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY v) OVER (PARTITION BY server, obj) AS p95,\n         AVG(v) OVER (PARTITION BY server, obj) AS av, MAX(v) OVER (PARTITION BY server, obj) AS mx, COUNT(*) OVER (PARTITION BY server, obj) AS hrs\n  FROM hv\n),\ndv AS (\n  SELECT server, obj, CAST(DATEDIFF(day, \u00272000-01-01\u0027, CAST(DateTime AS date)) AS float) AS n, AVG(v) AS v\n  FROM hv GROUP BY server, obj, CAST(DateTime AS date)\n),\ntr AS (\n  SELECT server, obj, COUNT(*) AS pts, SUM(n) AS sx, SUM(v) AS sy, SUM(n * v) AS sxy, SUM(n * n) AS sxx FROM dv GROUP BY server, obj\n),\ncm AS (\n  SELECT pc.server, pc.obj, pc.p95, pc.av, pc.mx, pc.hrs,\n         CASE WHEN tr.pts \u003e= 7 THEN 30.0 * (tr.pts * tr.sxy - tr.sx * tr.sy) / NULLIF(tr.pts * tr.sxx - tr.sx * tr.sx, 0) END AS trend30\n  FROM pc JOIN tr ON tr.server = pc.server AND tr.obj = pc.obj\n)\nSELECT c.server AS Server,\n       ROUND(c.av, 1) AS \"CPU avg %\", ROUND(c.p95, 1) AS \"CPU p95 %\", ROUND(c.mx, 1) AS \"CPU max %\", ROUND(c.trend30, 1) AS \"CPU trend /30d\",\n       CASE WHEN c.hrs \u003c 24 THEN \u0027Not enough data\u0027 WHEN c.p95 \u003e= ${hi} THEN \u0027Constrained\u0027 WHEN c.p95 \u003c= ${lo} THEN \u0027Over-provisioned\u0027 ELSE \u0027Balanced\u0027 END AS \"CPU assessment\",\n       ROUND(m.av, 1) AS \"Memory avg %\", ROUND(m.p95, 1) AS \"Memory p95 %\", ROUND(m.mx, 1) AS \"Memory max %\", ROUND(m.trend30, 1) AS \"Memory trend /30d\",\n       CASE WHEN m.hrs \u003c 24 THEN \u0027Not enough data\u0027 WHEN m.p95 \u003e= ${hi} THEN \u0027Constrained\u0027 WHEN m.p95 \u003c= ${lo} THEN \u0027Over-provisioned\u0027 ELSE \u0027Balanced\u0027 END AS \"Memory assessment\"\nFROM cm c\nLEFT JOIN cm m ON m.server = c.server AND m.obj = \u0027Memory\u0027\nWHERE c.obj = \u0027Processor Information\u0027\nORDER BY CASE WHEN c.p95 \u003e= ${hi} OR m.p95 \u003e= ${hi} THEN 0 WHEN c.p95 \u003c= ${lo} AND m.p95 \u003c= ${lo} THEN 2 ELSE 1 END, c.p95 DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "CPU and memory: constrained or over-provisioned?",
+                       "gridPos":  {
+                                       "y":  22,
+                                       "w":  24,
+                                       "h":  9,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  5,
+                       "type":  "table",
+                       "description":  "How fast each database grows and when the space already allocated to it is used up (SQL Server then grows the file).",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "-"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Over threshold now":  {
+                                                                                                                                                     "index":  0,
+                                                                                                                                                     "color":  "#E02F44"
+                                                                                                                                                 },
+                                                                                                                          "Within horizon":  {
+                                                                                                                                                 "index":  2,
+                                                                                                                                                 "color":  "#FF9830"
+                                                                                                                                             },
+                                                                                                                          "Not growing":  {
+                                                                                                                                              "index":  4,
+                                                                                                                                              "color":  "#56A64B"
+                                                                                                                                          },
+                                                                                                                          "Beyond horizon":  {
+                                                                                                                                                 "index":  3,
+                                                                                                                                                 "color":  "#56A64B"
+                                                                                                                                             },
+                                                                                                                          "Within 30 days":  {
+                                                                                                                                                 "index":  1,
+                                                                                                                                                 "color":  "#E02F44"
+                                                                                                                                             },
+                                                                                                                          "Not enough history":  {
+                                                                                                                                                     "index":  5,
+                                                                                                                                                     "color":  "#8E8E93"
+                                                                                                                                                 }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  260
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Server"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  220
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Database"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  240
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Days until allocated space is used"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH d AS (\n  SELECT h.DisplayName AS server, e.DisplayName AS db, r.CounterName AS ctr, CAST(p.DateTime AS date) AS dy, AVG(p.AverageValue) AS v\n  FROM Perf.vPerfDaily p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId AND r.ObjectName = \u0027SQL Database\u0027 AND r.CounterName IN (\u0027DB Allocated Space Used (MB)\u0027, \u0027DB Allocated Space Unused (MB)\u0027)\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE EXISTS (SELECT 1 FROM dbo.vManagedEntity c JOIN dbo.vManagedEntityType ct ON ct.ManagedEntityTypeRowId = c.ManagedEntityTypeRowId AND ct.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n                WHERE c.DisplayName IN (${server:singlequote}) AND LEFT(c.DisplayName, CHARINDEX(\u0027.\u0027, c.DisplayName + \u0027.\u0027) - 1) = LEFT(h.DisplayName, PATINDEX(\u0027%[.\\]%\u0027, h.DisplayName + \u0027.\u0027) - 1))\n    AND p.DateTime \u003e= DATEADD(day, -${history}, CAST(GETUTCDATE() AS date))\n  GROUP BY h.DisplayName, e.DisplayName, r.CounterName, CAST(p.DateTime AS date)\n),\nu AS (SELECT server, db, dy, v, CAST(DATEDIFF(day, \u00272000-01-01\u0027, dy) AS float) AS n FROM d WHERE ctr = \u0027DB Allocated Space Used (MB)\u0027),\ns AS (SELECT server, db, COUNT(*) AS pts, SUM(n) AS sx, SUM(v) AS sy, SUM(n * v) AS sxy, SUM(n * n) AS sxx FROM u GROUP BY server, db),\ng AS (\n  SELECT s.server, s.db, s.pts, (s.pts * s.sxy - s.sx * s.sy) / NULLIF(s.pts * s.sxx - s.sx * s.sx, 0) AS mbday,\n         (SELECT TOP 1 u.v FROM u WHERE u.server = s.server AND u.db = s.db ORDER BY u.dy DESC) AS used_now,\n         (SELECT TOP 1 d2.v FROM d d2 WHERE d2.server = s.server AND d2.db = s.db AND d2.ctr = \u0027DB Allocated Space Unused (MB)\u0027 ORDER BY d2.dy DESC) AS unused_now\n  FROM s\n)\nSELECT TOP 200 g.server AS Server, g.db AS \"Database\",\n       ROUND(g.used_now / 1024.0, 2) AS \"Used (GB)\", ROUND(g.unused_now / 1024.0, 2) AS \"Allocated, unused (GB)\",\n       ROUND(g.mbday, 2) AS \"Growth (MB per day)\",\n       CASE WHEN g.pts \u003e= 7 AND g.mbday \u003e 0.01 AND g.unused_now IS NOT NULL THEN ROUND(g.unused_now / g.mbday, 0) END AS \"Days until allocated space is used\",\n       CASE WHEN g.pts \u003c 7 THEN \u0027Not enough history\u0027 WHEN g.mbday IS NULL OR g.mbday \u003c= 0.01 THEN \u0027Not growing\u0027 WHEN g.unused_now / g.mbday \u003c= 30 THEN \u0027Within 30 days\u0027 WHEN g.unused_now / g.mbday \u003c= ${horizon} THEN \u0027Within horizon\u0027 ELSE \u0027Beyond horizon\u0027 END AS Status\nFROM g\nORDER BY CASE WHEN g.pts \u003e= 7 AND g.mbday \u003e 0.01 AND g.unused_now IS NOT NULL THEN 0 ELSE 1 END, CASE WHEN g.pts \u003e= 7 AND g.mbday \u003e 0.01 THEN g.unused_now / g.mbday END, g.mbday DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "SQL Server databases: growth",
+                       "gridPos":  {
+                                       "y":  31,
+                                       "w":  24,
+                                       "h":  7,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  6,
+                       "type":  "table",
+                       "description":  "Size, use, maximum size and growth setting of each file. A file that cannot grow and is nearly full stops SCOM recording state.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "-"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "result":  {
+                                                                                                                                         "index":  0,
+                                                                                                                                         "color":  "#E02F44"
+                                                                                                                                     },
+                                                                                                                          "pattern":  "^Critical.*"
+                                                                                                                      },
+                                                                                                          "type":  "regex"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "result":  {
+                                                                                                                                         "index":  1,
+                                                                                                                                         "color":  "#FF9830"
+                                                                                                                                     },
+                                                                                                                          "pattern":  "^Warning.*"
+                                                                                                                      },
+                                                                                                          "type":  "regex"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "OK":  {
+                                                                                                                                     "index":  2,
+                                                                                                                                     "color":  "#56A64B"
+                                                                                                                                 }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  240
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  70
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Type"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT DB_NAME() AS \"Database\", f.name AS \"File\", CASE f.type WHEN 0 THEN \u0027Data\u0027 ELSE \u0027Log\u0027 END AS Type,\n       CAST(f.size * 8 / 1024.0 AS decimal(12, 0)) AS \"Size (MB)\",\n       CAST(FILEPROPERTY(f.name, \u0027SpaceUsed\u0027) * 8 / 1024.0 AS decimal(12, 0)) AS \"Used (MB)\",\n       CAST(100.0 * FILEPROPERTY(f.name, \u0027SpaceUsed\u0027) / NULLIF(f.size, 0) AS decimal(5, 1)) AS \"Used % of file\",\n       CASE WHEN f.max_size = -1 OR f.max_size \u003e= 268435456 THEN \u0027Unlimited\u0027 ELSE CAST(CAST(f.max_size * 8 / 1024.0 AS decimal(12, 0)) AS varchar(20)) + \u0027 MB\u0027 END AS \"Maximum size\",\n       CASE WHEN f.growth = 0 THEN \u0027No growth\u0027 WHEN f.is_percent_growth = 1 THEN CAST(f.growth AS varchar(10)) + \u0027%\u0027 ELSE CAST(f.growth * 8 / 1024 AS varchar(10)) + \u0027 MB\u0027 END AS Growth,\n       CASE WHEN f.growth = 0 AND 100.0 * FILEPROPERTY(f.name, \u0027SpaceUsed\u0027) / NULLIF(f.size, 0) \u003e= 80 THEN \u0027Critical: cannot grow and nearly full\u0027\n            WHEN f.growth = 0 THEN \u0027Warning: cannot grow\u0027\n            WHEN f.max_size \u003c\u003e -1 AND f.max_size \u003c 268435456 AND f.size * 1.0 / f.max_size \u003e= 0.8 THEN \u0027Warning: nearly at its maximum size\u0027\n            ELSE \u0027OK\u0027 END AS Status\nFROM sys.database_files f\nORDER BY f.type, f.name",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "SCOM operational database files",
+                       "gridPos":  {
+                                       "y":  38,
+                                       "w":  24,
+                                       "h":  5,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  7,
+                       "type":  "table",
+                       "description":  "The same for the data warehouse.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "-"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "result":  {
+                                                                                                                                         "index":  0,
+                                                                                                                                         "color":  "#E02F44"
+                                                                                                                                     },
+                                                                                                                          "pattern":  "^Critical.*"
+                                                                                                                      },
+                                                                                                          "type":  "regex"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "result":  {
+                                                                                                                                         "index":  1,
+                                                                                                                                         "color":  "#FF9830"
+                                                                                                                                     },
+                                                                                                                          "pattern":  "^Warning.*"
+                                                                                                                      },
+                                                                                                          "type":  "regex"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "OK":  {
+                                                                                                                                     "index":  2,
+                                                                                                                                     "color":  "#56A64B"
+                                                                                                                                 }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  240
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  70
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Type"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT DB_NAME() AS \"Database\", f.name AS \"File\", CASE f.type WHEN 0 THEN \u0027Data\u0027 ELSE \u0027Log\u0027 END AS Type,\n       CAST(f.size * 8 / 1024.0 AS decimal(12, 0)) AS \"Size (MB)\",\n       CAST(FILEPROPERTY(f.name, \u0027SpaceUsed\u0027) * 8 / 1024.0 AS decimal(12, 0)) AS \"Used (MB)\",\n       CAST(100.0 * FILEPROPERTY(f.name, \u0027SpaceUsed\u0027) / NULLIF(f.size, 0) AS decimal(5, 1)) AS \"Used % of file\",\n       CASE WHEN f.max_size = -1 OR f.max_size \u003e= 268435456 THEN \u0027Unlimited\u0027 ELSE CAST(CAST(f.max_size * 8 / 1024.0 AS decimal(12, 0)) AS varchar(20)) + \u0027 MB\u0027 END AS \"Maximum size\",\n       CASE WHEN f.growth = 0 THEN \u0027No growth\u0027 WHEN f.is_percent_growth = 1 THEN CAST(f.growth AS varchar(10)) + \u0027%\u0027 ELSE CAST(f.growth * 8 / 1024 AS varchar(10)) + \u0027 MB\u0027 END AS Growth,\n       CASE WHEN f.growth = 0 AND 100.0 * FILEPROPERTY(f.name, \u0027SpaceUsed\u0027) / NULLIF(f.size, 0) \u003e= 80 THEN \u0027Critical: cannot grow and nearly full\u0027\n            WHEN f.growth = 0 THEN \u0027Warning: cannot grow\u0027\n            WHEN f.max_size \u003c\u003e -1 AND f.max_size \u003c 268435456 AND f.size * 1.0 / f.max_size \u003e= 0.8 THEN \u0027Warning: nearly at its maximum size\u0027\n            ELSE \u0027OK\u0027 END AS Status\nFROM sys.database_files f\nORDER BY f.type, f.name",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "SCOM data warehouse files",
+                       "gridPos":  {
+                                       "y":  43,
+                                       "w":  24,
+                                       "h":  5,
+                                       "x":  0
+                                   }
+                   }
+               ],
+    "description":  "When disks and databases will fill, which servers are over-provisioned or constrained, and the state of SCOM\u0027s own database files.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

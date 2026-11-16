@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 - Insights, and Hyper-V performance dashboards
+
+### Added
+- **Hyper-V performance dashboards**, inside the existing `hyper-v` folder: **Hyper-V Performance - Host** (CPU, memory, storage, network, virtual switches and VM capacity) and **Hyper-V Performance - Virtual Machines** (a table of every VM, then CPU, memory, disk and network graphs for the VMs you pick; click a VM name to graph it). They read the counters of the **Hyper-V Performance (Community)** management pack and are empty without it. Tested on a lab host with two nearly idle VMs. See [HYPERV-PERFORMANCE.md](docs/HYPERV-PERFORMANCE.md).
+- **Insights** (new folder `insights`, three dashboards), built from data SCOM already stores:
+  - **Insights - Server Timeline**: what happened on one or several servers, in order (choose several when an incident crosses servers; a table shows which server went critical first): alerts raised and closed, monitor health changes, maintenance mode and Windows error events, with the first critical change, the monitors that are unhealthy now (oldest first), CPU and memory graphs marked with alerts and critical changes, and alerts in 5-minute buckets. A starting point for root cause analysis, not proof of cause.
+  - **Insights - Capacity Planning**: disks with growth per day and days until a threshold you choose, a chart with a projected line, CPU and memory against high and low load limits (constrained or over-provisioned), SQL Server database growth, and the files of SCOM's own operational database and data warehouse (size, how full, whether they can grow).
+  - **Insights - Trends**: alerts per day, monitors going critical per day, time to resolve alerts, CPU and memory against the previous period, the alerts raised most often and the monitors that change state most often (flapping).
+  - Forecasts are a straight-line baseline and need at least 7 days of history. See [INSIGHTS.md](docs/INSIGHTS.md) for how they work, what was tested and what was not.
 ## 0.3.0 - SCOM architecture diagram
 
 ### Added

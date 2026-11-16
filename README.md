@@ -4,10 +4,10 @@
 
 # SCOM Grafana Dashboards
 
-![Version](https://img.shields.io/badge/version-0.3.0-blue)
+![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![Grafana](https://img.shields.io/badge/Grafana-11%2B%20(tested%2013.3)-F46800)
 ![SCOM](https://img.shields.io/badge/SCOM-2022%20validated-0078D4)
-![Dashboards](https://img.shields.io/badge/dashboards-29%20validated%20%2B%204%20untested-brightgreen)
+![Dashboards](https://img.shields.io/badge/dashboards-32%20validated%20%2B%204%20untested-brightgreen)
 ![License](https://img.shields.io/badge/license-Apache--2.0-lightgrey)
 
 **Free Grafana dashboards for System Center Operations Manager (SCOM).**
@@ -20,7 +20,7 @@ The goal is simple: **give everyone who needs to see SCOM data a modern dashboar
 
 ## 📥 Get the dashboards
 
-**Latest release: v0.3.0**
+**Latest release: v0.4.0**
 
 [**Browse the dashboards**](dashboards/) • [**Download everything (ZIP)**](../../archive/refs/heads/main.zip) • [**Installation guide**](docs/INSTALLATION.md)
 
@@ -35,6 +35,7 @@ Each dashboard is a single `.json` file you import with Grafana's built-in **Imp
 - **Enterprise overview** — monitored computers, health, open alerts, availability, CPU/memory trends and data freshness in one screen
 - **Technology dashboards** with an overview and a drill-down for each — click a server name and land on its detail dashboard
 - **A full alerts page**: open, closed or all alerts, filtered by severity, server and name, with a click-through to **alert details** (description, alert context, history and product knowledge, as in the SCOM console) from every alert table
+- **Root cause hints, capacity planning and trends**: a per-server timeline of what happened first, forecasts of when disks and databases will fill (including SCOM's own), over-provisioned and constrained servers, and trends in alerts and flapping monitors
 - **An architecture diagram of SCOM itself**: the management server, its databases, agents, pools and the links between them, coloured by health, so a failed component or link stands out at a glance
 - **Application stack availability**: group your servers (or use a SCOM distributed application) and see each stack's availability against an SLA target, its downtime, which component caused it, and a monthly report
 - **Health, alerts and unhealthy monitors** for every technology, worst first
@@ -52,12 +53,13 @@ Each dashboard is a single `.json` file you import with Grafana's built-in **Imp
 | Dashboards | Folder | SCOM management pack needed | Status |
 |---|---|---|---|
 | **SCOM Enterprise Overview**, Server Drill-down, Platform Status, **Alerts**, **Alert Details** | [`scom-core`](dashboards/scom-core/) | none | ✅ Validated |
+| **Insights** — Server Timeline, Capacity Planning, Trends | [`insights`](dashboards/insights/) | none (uses the data SCOM already collects, see [the guide](docs/INSIGHTS.md)) | ✅ Validated (young lab, see the guide) |
 | **Availability** — Overview, Stack Detail, Monthly Report | [`availability`](dashboards/availability/) | none (needs a SCOM group or distributed application, see [the guide](docs/AVAILABILITY.md)) | ✅ Validated |
 | **Windows Server** — Fleet, Detail | [`windows-server`](dashboards/windows-server/) | Windows Server Operating System | ✅ Validated |
 | **Active Directory** — Overview, DC Detail | [`active-directory`](dashboards/active-directory/) | Active Directory Domain Services | ✅ Validated |
 | **SQL Server** — Overview, Instance Detail | [`sql-server`](dashboards/sql-server/) | SQL Server on Windows | ✅ Validated |
 | **Exchange** — Overview, Server Detail | [`exchange`](dashboards/exchange/) | Exchange Server 2013 and above | ✅ Validated (one server) |
-| **Hyper-V** — Overview, Host Detail | [`hyper-v`](dashboards/hyper-v/) | Hyper-V | ✅ Validated |
+| **Hyper-V** — Overview, Host Detail, Performance (Host, Virtual Machines) | [`hyper-v`](dashboards/hyper-v/) | Hyper-V; the two Performance dashboards also need Hyper-V Performance (Community), see [the guide](docs/HYPERV-PERFORMANCE.md) | ✅ Validated (performance dashboards tested on an idle lab) |
 | **IIS** — Overview, Server Detail | [`iis`](dashboards/iis/) | Internet Information Services | ✅ Validated |
 | **DNS Server** — Overview, Server Detail | [`dns-server`](dashboards/dns-server/) | Windows Server DNS | ✅ Validated |
 | **DHCP Server** — Overview, Server Detail | [`dhcp-server`](dashboards/dhcp-server/) | Windows Server DHCP | ✅ Validated |
