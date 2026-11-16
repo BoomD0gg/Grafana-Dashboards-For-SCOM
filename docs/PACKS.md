@@ -5,7 +5,7 @@ All dashboards are version 0.2.1. "Validated" means tested in a lab against real
 | Folder | Dashboards | Management packs to import | Status |
 |---|---|---|---|
 | `dashboards/scom-core` | SCOM Enterprise Overview, Server Drill-down, Platform Status, Alerts, Alert Details | none (Windows Server MP recommended) | Validated |
-| `dashboards/availability` | Availability - Overview, Stack Detail, Monthly Report | none (needs a group or distributed application in SCOM) | Validated with groups of Windows computers, including a real outage |
+| `dashboards/availability` | Availability - Overview, Stack Detail, Monthly Report | none (needs a group or distributed application in SCOM, see [AVAILABILITY.md](AVAILABILITY.md)) | Validated with groups of Windows computers, including a real outage |
 | `dashboards/windows-server` | Windows Server - Fleet, Detail | Microsoft.Windows.Server.Library, Server.2016.Monitoring | Validated |
 | `dashboards/active-directory` | Active Directory - Overview, DC Detail | Microsoft.Windows.Server.AD.Class.Library, AD.2016.Monitoring | Validated |
 | `dashboards/sql-server` | SQL Server - Overview, Instance Detail | Microsoft.SQLServer.Core.Library, Windows.Discovery, Windows.Monitoring | Validated |

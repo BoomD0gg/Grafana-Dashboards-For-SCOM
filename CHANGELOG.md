@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Documentation
+- New guide [AVAILABILITY.md](docs/AVAILABILITY.md): what a stack is, how to create one in the SCOM console, the drop-downs, how the figures are calculated, what was tested and troubleshooting for the Availability dashboards.
+
 ## 0.2.1 - availability dashboards: no stacks no longer shows an error
 
 ### Fixed

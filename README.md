@@ -51,7 +51,7 @@ Each dashboard is a single `.json` file you import with Grafana's built-in **Imp
 | Dashboards | Folder | SCOM management pack needed | Status |
 |---|---|---|---|
 | **SCOM Enterprise Overview**, Server Drill-down, Platform Status, **Alerts**, **Alert Details** | [`scom-core`](dashboards/scom-core/) | none | ✅ Validated |
-| **Availability** — Overview, Stack Detail, Monthly Report | [`availability`](dashboards/availability/) | none (needs a SCOM group or distributed application) | ✅ Validated |
+| **Availability** — Overview, Stack Detail, Monthly Report | [`availability`](dashboards/availability/) | none (needs a SCOM group or distributed application, see [the guide](docs/AVAILABILITY.md)) | ✅ Validated |
 | **Windows Server** — Fleet, Detail | [`windows-server`](dashboards/windows-server/) | Windows Server Operating System | ✅ Validated |
 | **Active Directory** — Overview, DC Detail | [`active-directory`](dashboards/active-directory/) | Active Directory Domain Services | ✅ Validated |
 | **SQL Server** — Overview, Instance Detail | [`sql-server`](dashboards/sql-server/) | SQL Server on Windows | ✅ Validated |

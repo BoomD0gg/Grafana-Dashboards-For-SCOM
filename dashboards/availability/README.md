@@ -6,7 +6,7 @@ Availability of your application stacks (SCOM groups and distributed application
 
 ## Management packs to import in SCOM
 
-- None. You need at least one group or distributed application in SCOM. Availability comes from the availability monitors of the members, which every Windows computer has.
+- None. You need at least one group or distributed application in SCOM, with monitored servers as members. Availability comes from the availability monitors of the members, which every Windows computer has. **How to create a stack and what the drop-downs do: [AVAILABILITY.md](../../docs/AVAILABILITY.md).**
 
 ## Availability - Overview
 

@@ -41,5 +41,8 @@ The dashboards show what SCOM records. Role health lags its monitors by a few mi
 ## Server names look odd or duplicated
 Some management packs create more than one object per server (for example several health sets or counters). The detail dashboards group them by server; the overview tables list each object.
 
+## The Availability dashboards say "No stacks found" or show an SQL error
+Read [AVAILABILITY.md](AVAILABILITY.md): it explains what a stack is, how to create one, the **Stacks** drop-down (the default is **All groups and applications**; **My stacks** is empty until you create a group in your own management pack), and what to do about "Incorrect syntax near ')'" (an older version, fixed in 0.2.1).
+
 ## Still stuck?
 [Open an issue](../../../issues/new/choose) with the dashboard name, Grafana and SCOM versions, and the panel's error text. Remove server names, domain names and addresses first.
