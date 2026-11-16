@@ -53,6 +53,23 @@
         "query": "SELECT e.DisplayName AS __text, e.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nWHERE t.ManagedEntityTypeSystemName = 'Microsoft.SystemCenter.HealthService'\nORDER BY 1",
         "sort": 1,
         "current": {}
+      },
+      {
+        "options": [],
+        "refresh": 2,
+        "definition": "WITH found AS (SELECT DISTINCT h.DisplayName AS n FROM dbo.MTV_HealthService h WHERE h.IsManagementServer = 1)\nSELECT n AS __text, n AS __value FROM found\nUNION ALL\nSELECT '(none)', '(none)' WHERE NOT EXISTS (SELECT 1 FROM found)\nORDER BY 1",
+        "type": "query",
+        "includeAll": false,
+        "label": "Management server (diagram)",
+        "datasource": {
+          "type": "mssql",
+          "uid": "${ds_om}"
+        },
+        "name": "topoms",
+        "multi": false,
+        "query": "WITH found AS (SELECT DISTINCT h.DisplayName AS n FROM dbo.MTV_HealthService h WHERE h.IsManagementServer = 1)\nSELECT n AS __text, n AS __value FROM found\nUNION ALL\nSELECT '(none)', '(none)' WHERE NOT EXISTS (SELECT 1 FROM found)\nORDER BY 1",
+        "sort": 1,
+        "current": {}
       }
     ]
   },
@@ -68,6 +85,828 @@
     "list": []
   },
   "panels": [
+    {
+      "options": {
+        "infinitePan": false,
+        "showAdvancedTypes": false,
+        "inlineEditing": false,
+        "root": {
+          "placement": {
+            "left": 0,
+            "width": 100,
+            "top": 0,
+            "height": 100
+          },
+          "name": "Element 1",
+          "background": {
+            "color": {
+              "fixed": "transparent"
+            }
+          },
+          "elements": [
+            {
+              "placement": {
+                "left": 30,
+                "width": 250,
+                "top": 20,
+                "height": 70
+              },
+              "border": {
+                "width": 2,
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "web_hs"
+                }
+              },
+              "name": "Web console",
+              "type": "rectangle",
+              "connections": [
+                {
+                  "size": {
+                    "fixed": 4,
+                    "min": 1,
+                    "max": 10
+                  },
+                  "source": {
+                    "y": 0,
+                    "x": 1
+                  },
+                  "path": "straight",
+                  "color": {
+                    "fixed": "#8E8E93",
+                    "field": "web_hs"
+                  },
+                  "target": {
+                    "y": 0.5,
+                    "x": "-1"
+                  },
+                  "targetName": "Management server"
+                }
+              ],
+              "config": {
+                "size": 15,
+                "color": {
+                  "fixed": "#FFFFFF"
+                },
+                "valign": "middle",
+                "align": "center",
+                "text": {
+                  "field": "lbl_web",
+                  "fixed": "",
+                  "mode": "field"
+                }
+              },
+              "background": {
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "web_hs"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              }
+            },
+            {
+              "placement": {
+                "left": 30,
+                "width": 250,
+                "top": 130,
+                "height": 70
+              },
+              "border": {
+                "width": 2,
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "link_agents"
+                }
+              },
+              "name": "Agents",
+              "type": "rectangle",
+              "connections": [
+                {
+                  "size": {
+                    "fixed": 4,
+                    "min": 1,
+                    "max": 10
+                  },
+                  "source": {
+                    "y": 0,
+                    "x": 1
+                  },
+                  "path": "straight",
+                  "color": {
+                    "fixed": "#8E8E93",
+                    "field": "link_agents"
+                  },
+                  "target": {
+                    "y": 0,
+                    "x": "-1"
+                  },
+                  "targetName": "Management server"
+                }
+              ],
+              "config": {
+                "size": 15,
+                "color": {
+                  "fixed": "#FFFFFF"
+                },
+                "valign": "middle",
+                "align": "center",
+                "text": {
+                  "field": "lbl_agents",
+                  "fixed": "",
+                  "mode": "field"
+                }
+              },
+              "background": {
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "link_agents"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              }
+            },
+            {
+              "placement": {
+                "left": 30,
+                "width": 250,
+                "top": 240,
+                "height": 90
+              },
+              "border": {
+                "width": 2,
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "link_agents"
+                }
+              },
+              "name": "Agents not reporting",
+              "type": "rectangle",
+              "connections": [
+                {
+                  "size": {
+                    "fixed": 4,
+                    "min": 1,
+                    "max": 10
+                  },
+                  "source": {
+                    "y": 0,
+                    "x": 1
+                  },
+                  "path": "straight",
+                  "color": {
+                    "fixed": "#8E8E93",
+                    "field": "link_agents"
+                  },
+                  "target": {
+                    "y": "-0.5",
+                    "x": "-1"
+                  },
+                  "targetName": "Management server"
+                }
+              ],
+              "config": {
+                "size": 15,
+                "color": {
+                  "fixed": "#FFFFFF"
+                },
+                "valign": "middle",
+                "align": "center",
+                "text": {
+                  "field": "lbl_bad",
+                  "fixed": "",
+                  "mode": "field"
+                }
+              },
+              "background": {
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "link_agents"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              }
+            },
+            {
+              "placement": {
+                "left": 400,
+                "width": 250,
+                "top": 20,
+                "height": 70
+              },
+              "border": {
+                "width": 2,
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "pools_hs"
+                }
+              },
+              "name": "Resource pools",
+              "type": "rectangle",
+              "connections": [
+                {
+                  "size": {
+                    "fixed": 4,
+                    "min": 1,
+                    "max": 10
+                  },
+                  "source": {
+                    "y": "-1",
+                    "x": 0
+                  },
+                  "path": "straight",
+                  "color": {
+                    "fixed": "#8E8E93",
+                    "field": "pools_hs"
+                  },
+                  "target": {
+                    "y": 1,
+                    "x": 0
+                  },
+                  "targetName": "Management server"
+                }
+              ],
+              "config": {
+                "size": 15,
+                "color": {
+                  "fixed": "#FFFFFF"
+                },
+                "valign": "middle",
+                "align": "center",
+                "text": {
+                  "field": "lbl_pools",
+                  "fixed": "",
+                  "mode": "field"
+                }
+              },
+              "background": {
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "pools_hs"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              }
+            },
+            {
+              "placement": {
+                "left": 400,
+                "width": 250,
+                "top": 130,
+                "height": 100
+              },
+              "border": {
+                "width": 2,
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "ms_hs"
+                }
+              },
+              "name": "Management server",
+              "type": "rectangle",
+              "connections": [
+                {
+                  "size": {
+                    "fixed": 4,
+                    "min": 1,
+                    "max": 10
+                  },
+                  "source": {
+                    "y": 0.5,
+                    "x": 1
+                  },
+                  "path": "straight",
+                  "color": {
+                    "fixed": "#8E8E93",
+                    "field": "link_om"
+                  },
+                  "target": {
+                    "y": 0,
+                    "x": "-1"
+                  },
+                  "targetName": "Operational database"
+                },
+                {
+                  "size": {
+                    "fixed": 4,
+                    "min": 1,
+                    "max": 10
+                  },
+                  "source": {
+                    "y": "-0.5",
+                    "x": 1
+                  },
+                  "path": "straight",
+                  "color": {
+                    "fixed": "#8E8E93",
+                    "field": "link_dw"
+                  },
+                  "target": {
+                    "y": 0,
+                    "x": "-1"
+                  },
+                  "targetName": "Data warehouse"
+                }
+              ],
+              "config": {
+                "size": 15,
+                "color": {
+                  "fixed": "#FFFFFF"
+                },
+                "valign": "middle",
+                "align": "center",
+                "text": {
+                  "field": "lbl_ms",
+                  "fixed": "",
+                  "mode": "field"
+                }
+              },
+              "background": {
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "ms_hs"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              }
+            },
+            {
+              "placement": {
+                "left": 780,
+                "width": 300,
+                "top": 40,
+                "height": 100
+              },
+              "border": {
+                "width": 2,
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "om_hs"
+                }
+              },
+              "name": "Operational database",
+              "type": "rectangle",
+              "connections": [],
+              "config": {
+                "size": 15,
+                "color": {
+                  "fixed": "#FFFFFF"
+                },
+                "valign": "middle",
+                "align": "center",
+                "text": {
+                  "field": "lbl_om",
+                  "fixed": "",
+                  "mode": "field"
+                }
+              },
+              "background": {
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "om_hs"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              }
+            },
+            {
+              "placement": {
+                "left": 780,
+                "width": 300,
+                "top": 220,
+                "height": 100
+              },
+              "border": {
+                "width": 2,
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "dw_hs"
+                }
+              },
+              "name": "Data warehouse",
+              "type": "rectangle",
+              "connections": [],
+              "config": {
+                "size": 15,
+                "color": {
+                  "fixed": "#FFFFFF"
+                },
+                "valign": "middle",
+                "align": "center",
+                "text": {
+                  "field": "lbl_dw",
+                  "fixed": "",
+                  "mode": "field"
+                }
+              },
+              "background": {
+                "color": {
+                  "fixed": "#6E6E73",
+                  "field": "dw_hs"
+                }
+              },
+              "constraint": {
+                "horizontal": "left",
+                "vertical": "top"
+              }
+            }
+          ],
+          "border": {
+            "color": {
+              "fixed": "transparent"
+            }
+          },
+          "type": "frame",
+          "constraint": {
+            "horizontal": "left",
+            "vertical": "top"
+          }
+        },
+        "panZoom": false
+      },
+      "id": 20,
+      "type": "canvas",
+      "description": "Each box is a SCOM component, coloured by its health (green healthy, amber warning, red critical, grey not monitored). Each line is a link, coloured by the worst signal SCOM has for it: agents use the heartbeat, the operational database uses the Data Access and Configuration services, the data warehouse uses the warehouse connector and synchronisation service. Choose the management server in the drop-down at the top.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No management server found",
+          "color": {
+            "fixedColor": "#8E8E93",
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "2": {
+                  "color": "#E08A12",
+                  "text": "Warning",
+                  "index": 2
+                },
+                "3": {
+                  "color": "#D12D3F",
+                  "text": "Critical",
+                  "index": 3
+                },
+                "1": {
+                  "color": "#2E8B3E",
+                  "text": "Healthy",
+                  "index": 1
+                },
+                "0": {
+                  "color": "#6E6E73",
+                  "text": "Not monitored",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "DECLARE @ms nvarchar(256) = (SELECT TOP 1 h.DisplayName FROM dbo.MTV_HealthService h WHERE h.IsManagementServer = 1 AND h.DisplayName IN (${topoms:singlequote}) ORDER BY h.DisplayName);\nDECLARE @dwdb nvarchar(256), @dwsrv nvarchar(256), @c1 sysname, @c2 sysname, @sql nvarchar(max);\nSELECT @c1 = MAX(CASE WHEN c.name LIKE 'MainDatabaseName[_]%' THEN c.name END), @c2 = MAX(CASE WHEN c.name LIKE 'MainDatabaseServerName[_]%' THEN c.name END)\nFROM sys.columns c WHERE c.object_id = OBJECT_ID(N'dbo.[MTV_Microsoft$SystemCenter$DataWarehouse]');\nIF @c1 IS NOT NULL AND @c2 IS NOT NULL\nBEGIN\n  SET @sql = N'SELECT TOP 1 @a = ' + QUOTENAME(@c1) + N', @b = ' + QUOTENAME(@c2) + N' FROM dbo.[MTV_Microsoft$SystemCenter$DataWarehouse]';\n  EXEC sp_executesql @sql, N'@a nvarchar(256) OUTPUT, @b nvarchar(256) OUTPUT', @a = @dwdb OUTPUT, @b = @dwsrv OUTPUT;\nEND;\nWITH ent AS (\n  SELECT e.DisplayName, e.Path, t.Name AS Cls, e.HealthState AS hs, e.IsAvailable AS av\n  FROM dbo.ManagedEntityGenericView e\n  JOIN dbo.ManagedTypeView t ON t.Id = e.MonitoringClassId\n  WHERE e.IsDeleted = 0 AND t.Name IN ('Microsoft.SystemCenter.ManagementServer', 'Microsoft.SystemCenter.ManagementDataAccessService', 'Microsoft.SystemCenter.ManagementConfigurationService',\n        'Microsoft.SystemCenter.DataWarehouseConnectorServer', 'Microsoft.SystemCenter.DataWarehouseSynchronizationService', 'Microsoft.SystemCenter.HealthService',\n        'Microsoft.SystemCenter.HealthServiceWatcher', 'Microsoft.SystemCenter.ManagementServicePoolWatcher', 'Microsoft.SystemCenter.WebConsoleWatcher', 'Microsoft.SQLServer.Windows.Database')\n),\ndbs AS (\n  SELECT 'om' AS k, DB_NAME() AS dbname, LEFT(@@SERVERNAME, PATINDEX('%[,\\]%', @@SERVERNAME + ',') - 1) AS host\n  UNION ALL\n  SELECT 'dw', @dwdb, LEFT(@dwsrv, PATINDEX('%[,\\]%', @dwsrv + ',') - 1) WHERE @dwdb IS NOT NULL\n),\ndbh AS (\n  SELECT d.k, d.dbname, d.host, (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SQLServer.Windows.Database' AND e.DisplayName = d.dbname AND e.Path LIKE d.host + '%') AS hs\n  FROM dbs d\n),\nm1 AS (\n  SELECT @ms AS ms,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.ManagementServer' AND e.DisplayName = @ms) AS hs,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.ManagementDataAccessService' AND e.DisplayName LIKE '%' + @ms) AS das,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.ManagementConfigurationService' AND e.Path = @ms) AS cfg,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.DataWarehouseConnectorServer' AND e.DisplayName = @ms) AS dwc,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.DataWarehouseSynchronizationService') AS dws,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.WebConsoleWatcher' AND e.Path = @ms) AS web,\n         (SELECT COUNT(*) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.WebConsoleWatcher' AND e.Path = @ms) AS hasweb\n  WHERE @ms IS NOT NULL\n),\ncomm AS (\n  SELECT s.DisplayName AS agent\n  FROM dbo.Relationship r\n  JOIN dbo.RelationshipType rt ON rt.RelationshipTypeId = r.RelationshipTypeId AND rt.RelationshipTypeName = 'Microsoft.SystemCenter.HealthServiceCommunication'\n  JOIN dbo.BaseManagedEntity s ON s.BaseManagedEntityId = r.SourceEntityId\n  JOIN dbo.BaseManagedEntity t ON t.BaseManagedEntityId = r.TargetEntityId\n  WHERE r.IsDeleted = 0 AND t.DisplayName = @ms\n),\nag AS (\n  SELECT c.agent,\n         CASE WHEN EXISTS (SELECT 1 FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.HealthServiceWatcher' AND e.DisplayName = c.agent AND e.av = 0) THEN 3\n              WHEN EXISTS (SELECT 1 FROM ent e WHERE e.Cls IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher') AND e.DisplayName = c.agent AND e.hs = 3) THEN 3\n              WHEN EXISTS (SELECT 1 FROM ent e WHERE e.Cls IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher') AND e.DisplayName = c.agent AND e.hs = 2) THEN 2\n              ELSE 1 END AS hs\n  FROM comm c\n),\nagc AS (\n  SELECT COUNT(CASE WHEN a.hs = 1 THEN 1 END) AS ok, COUNT(CASE WHEN a.hs <> 1 THEN 1 END) AS bad, COUNT(*) AS total,\n         STUFF((SELECT TOP 6 ', ' + LEFT(x.agent, CHARINDEX('.', x.agent + '.') - 1) FROM ag x WHERE x.hs <> 1 ORDER BY CASE x.hs WHEN 3 THEN 0 ELSE 1 END, x.agent FOR XML PATH('')), 1, 2, '') AS badnames\n  FROM ag a\n),\npools AS (\n  SELECT LEFT(e.DisplayName, LEN(e.DisplayName) - 8) AS pool, e.hs\n  FROM ent e\n  WHERE e.Cls = 'Microsoft.SystemCenter.ManagementServicePoolWatcher' AND e.DisplayName LIKE '% Watcher'\n    AND EXISTS (SELECT 1 FROM dbo.Relationship r\n                JOIN dbo.RelationshipType rt ON rt.RelationshipTypeId = r.RelationshipTypeId AND rt.RelationshipTypeName = 'Microsoft.SystemCenter.ManagementServicePoolContainsManagementService'\n                JOIN dbo.BaseManagedEntity s ON s.BaseManagedEntityId = r.SourceEntityId\n                JOIN dbo.BaseManagedEntity t ON t.BaseManagedEntityId = r.TargetEntityId\n                WHERE r.IsDeleted = 0 AND t.DisplayName = @ms AND s.DisplayName = LEFT(e.DisplayName, LEN(e.DisplayName) - 8))\n)\nSELECT\n  LEFT(m1.ms, CHARINDEX('.', m1.ms + '.') - 1) AS ms_name,\n  COALESCE(m1.hs, 0) AS ms_hs,\n  COALESCE((SELECT hs FROM dbh WHERE k = 'om'), 0) AS om_hs,\n  COALESCE((SELECT hs FROM dbh WHERE k = 'dw'), 0) AS dw_hs,\n  CASE WHEN m1.das = 3 OR m1.cfg = 3 THEN 3 WHEN m1.das = 2 OR m1.cfg = 2 THEN 2 WHEN m1.das = 1 OR m1.cfg = 1 THEN 1 ELSE 0 END AS link_om,\n  CASE WHEN m1.dwc = 3 OR m1.dws = 3 THEN 3 WHEN m1.dwc = 2 OR m1.dws = 2 THEN 2 WHEN m1.dwc = 1 OR m1.dws = 1 THEN 1 ELSE 0 END AS link_dw,\n  CASE WHEN agc.total = 0 THEN 0 WHEN agc.bad = 0 THEN 1 WHEN agc.bad = agc.total THEN 3 ELSE 2 END AS link_agents,\n  (SELECT CASE WHEN MAX(CASE WHEN hs = 3 THEN 1 ELSE 0 END) = 1 THEN 3 WHEN MAX(CASE WHEN hs = 2 THEN 1 ELSE 0 END) = 1 THEN 2 WHEN MAX(CASE WHEN hs = 1 THEN 1 ELSE 0 END) = 1 THEN 1 ELSE 0 END FROM pools) AS pools_hs,\n  COALESCE(m1.web, 0) AS web_hs,\n  LEFT(m1.ms, CHARINDEX('.', m1.ms + '.') - 1) + ' (management server) - ' + CASE COALESCE(m1.hs, 0) WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS lbl_ms,\n  COALESCE((SELECT dbname FROM dbh WHERE k = 'om') + ' on ' + (SELECT LEFT(host, CHARINDEX('.', host + '.') - 1) FROM dbh WHERE k = 'om') + ' - ' + CASE (SELECT hs FROM dbh WHERE k = 'om') WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END, 'Operational database not found') AS lbl_om,\n  COALESCE((SELECT dbname FROM dbh WHERE k = 'dw') + ' on ' + (SELECT LEFT(host, CHARINDEX('.', host + '.') - 1) FROM dbh WHERE k = 'dw') + ' - ' + CASE (SELECT hs FROM dbh WHERE k = 'dw') WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END, 'Data warehouse not found') AS lbl_dw,\n  CAST(agc.ok AS varchar(10)) + ' agents reporting' AS lbl_agents,\n  CASE WHEN agc.bad = 0 THEN 'No agents missing' ELSE CAST(agc.bad AS varchar(10)) + ' not reporting: ' + COALESCE(agc.badnames, '') END AS lbl_bad,\n  CAST((SELECT COUNT(*) FROM pools) AS varchar(10)) + ' resource pools' AS lbl_pools,\n  CASE WHEN m1.hasweb = 0 THEN 'Web console: not found' ELSE 'Web console: ' + CASE COALESCE(m1.web, 0) WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END END AS lbl_web\nFROM m1 CROSS JOIN agc",
+          "format": "table"
+        }
+      ],
+      "title": "SCOM architecture",
+      "gridPos": {
+        "y": 0,
+        "w": 24,
+        "h": 11,
+        "x": 0
+      }
+    },
+    {
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "sm"
+      },
+      "id": 21,
+      "type": "table",
+      "description": "Every management server and gateway, unhealthy first: how many agents report to it, how many of them are not reporting, its resource pools and the state of its links to the operational database and the data warehouse. The diagram above draws the one chosen in the Management server drop-down.",
+      "datasource": {
+        "type": "mssql",
+        "uid": "${ds_om}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "links": [],
+          "noValue": "No data"
+        },
+        "overrides": [
+          {
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto",
+                  "wrapText": true
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Resource pools"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "To operational database"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Healthy": {
+                        "index": 3,
+                        "color": "#56A64B"
+                      },
+                      "Not monitored": {
+                        "index": 4,
+                        "color": "#8E8E93"
+                      },
+                      "Information": {
+                        "index": 2,
+                        "color": "#5794F2"
+                      },
+                      "Warning": {
+                        "index": 1,
+                        "color": "#FF9830"
+                      },
+                      "Present": {
+                        "index": 6,
+                        "color": "#56A64B"
+                      },
+                      "MISSING": {
+                        "index": 5,
+                        "color": "#E02F44"
+                      },
+                      "Critical": {
+                        "index": 0,
+                        "color": "#E02F44"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "To data warehouse"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 260
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Management server"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Role"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Agents"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "Not reporting"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 190
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "To operational database"
+            }
+          },
+          {
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ],
+            "matcher": {
+              "id": "byName",
+              "options": "To data warehouse"
+            }
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "refId": "A",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${ds_om}"
+          },
+          "rawQuery": true,
+          "rawSql": "WITH ent AS (\n  SELECT e.DisplayName, e.Path, t.Name AS Cls, e.HealthState AS hs, e.IsAvailable AS av\n  FROM dbo.ManagedEntityGenericView e\n  JOIN dbo.ManagedTypeView t ON t.Id = e.MonitoringClassId\n  WHERE e.IsDeleted = 0 AND t.Name IN ('Microsoft.SystemCenter.ManagementServer', 'Microsoft.SystemCenter.ManagementDataAccessService', 'Microsoft.SystemCenter.ManagementConfigurationService',\n        'Microsoft.SystemCenter.DataWarehouseConnectorServer', 'Microsoft.SystemCenter.DataWarehouseSynchronizationService', 'Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher')\n),\nmss AS (\n  SELECT DISTINCT h.DisplayName AS ms, h.IsManagementServer AS isms, h.IsGateway AS isgw\n  FROM dbo.MTV_HealthService h WHERE h.IsManagementServer = 1 OR h.IsGateway = 1\n),\nag AS (\n  SELECT s.DisplayName AS agent, t.DisplayName AS target,\n         CASE WHEN EXISTS (SELECT 1 FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.HealthServiceWatcher' AND e.DisplayName = s.DisplayName AND e.av = 0) THEN 3\n              WHEN EXISTS (SELECT 1 FROM ent e WHERE e.Cls IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher') AND e.DisplayName = s.DisplayName AND e.hs = 3) THEN 3\n              WHEN EXISTS (SELECT 1 FROM ent e WHERE e.Cls IN ('Microsoft.SystemCenter.HealthService', 'Microsoft.SystemCenter.HealthServiceWatcher') AND e.DisplayName = s.DisplayName AND e.hs = 2) THEN 2\n              ELSE 1 END AS hs\n  FROM dbo.Relationship r\n  JOIN dbo.RelationshipType rt ON rt.RelationshipTypeId = r.RelationshipTypeId AND rt.RelationshipTypeName = 'Microsoft.SystemCenter.HealthServiceCommunication'\n  JOIN dbo.BaseManagedEntity s ON s.BaseManagedEntityId = r.SourceEntityId\n  JOIN dbo.BaseManagedEntity t ON t.BaseManagedEntityId = r.TargetEntityId\n  WHERE r.IsDeleted = 0\n),\npoolm AS (\n  SELECT s.DisplayName AS pool, t.DisplayName AS ms\n  FROM dbo.Relationship r\n  JOIN dbo.RelationshipType rt ON rt.RelationshipTypeId = r.RelationshipTypeId AND rt.RelationshipTypeName = 'Microsoft.SystemCenter.ManagementServicePoolContainsManagementService'\n  JOIN dbo.BaseManagedEntity s ON s.BaseManagedEntityId = r.SourceEntityId\n  JOIN dbo.BaseManagedEntity t ON t.BaseManagedEntityId = r.TargetEntityId\n  WHERE r.IsDeleted = 0\n),\nx AS (\n  SELECT m.ms, m.isms, m.isgw,\n         COALESCE((SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.ManagementServer' AND e.DisplayName = m.ms),\n                  (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.HealthService' AND e.DisplayName = m.ms)) AS hs,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.ManagementDataAccessService' AND e.DisplayName LIKE '%' + m.ms) AS das,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.ManagementConfigurationService' AND e.Path = m.ms) AS cfg,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.DataWarehouseConnectorServer' AND e.DisplayName = m.ms) AS dwc,\n         (SELECT MAX(e.hs) FROM ent e WHERE e.Cls = 'Microsoft.SystemCenter.DataWarehouseSynchronizationService') AS dws,\n         (SELECT COUNT(*) FROM ag a WHERE a.target = m.ms) AS agents,\n         (SELECT COUNT(*) FROM ag a WHERE a.target = m.ms AND a.hs = 3) AS missing,\n         COALESCE((SELECT ', ' + p.pool FROM poolm p WHERE p.ms = m.ms ORDER BY p.pool FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), '') AS pools\n  FROM mss m\n)\nSELECT x.ms AS \"Management server\",\n       CASE WHEN x.isms = 0 AND x.isgw = 1 THEN 'Gateway' ELSE 'Management server' END AS Role,\n       CASE COALESCE(x.hs, 0) WHEN 1 THEN 'Healthy' WHEN 2 THEN 'Warning' WHEN 3 THEN 'Critical' ELSE 'Not monitored' END AS Health,\n       x.agents AS Agents,\n       x.missing AS \"Not reporting\",\n       CASE WHEN x.pools = '' THEN '-' ELSE STUFF(x.pools, 1, 2, '') END AS \"Resource pools\",\n       CASE WHEN x.isms = 0 THEN 'n/a' WHEN x.das = 3 OR x.cfg = 3 THEN 'Critical' WHEN x.das = 2 OR x.cfg = 2 THEN 'Warning' WHEN x.das = 1 OR x.cfg = 1 THEN 'Healthy' ELSE 'Not monitored' END AS \"To operational database\",\n       CASE WHEN x.isms = 0 THEN 'n/a' WHEN x.dwc = 3 OR x.dws = 3 THEN 'Critical' WHEN x.dwc = 2 OR x.dws = 2 THEN 'Warning' WHEN x.dwc = 1 OR x.dws = 1 THEN 'Healthy' ELSE 'Not monitored' END AS \"To data warehouse\"\nFROM x\nORDER BY CASE WHEN COALESCE(x.hs, 0) = 3 THEN 0 WHEN COALESCE(x.hs, 0) = 2 THEN 1 WHEN COALESCE(x.hs, 0) = 0 THEN 2 ELSE 3 END, x.ms",
+          "format": "table"
+        }
+      ],
+      "title": "Management servers and resource pools",
+      "gridPos": {
+        "y": 11,
+        "w": 24,
+        "h": 6,
+        "x": 0
+      }
+    },
     {
       "options": {
         "textMode": "value",
@@ -122,7 +961,7 @@
       ],
       "title": "Agents",
       "gridPos": {
-        "y": 0,
+        "y": 17,
         "w": 3,
         "h": 4,
         "x": 0
@@ -182,7 +1021,7 @@
       ],
       "title": "Management servers",
       "gridPos": {
-        "y": 0,
+        "y": 17,
         "w": 3,
         "h": 4,
         "x": 3
@@ -242,7 +1081,7 @@
       ],
       "title": "Healthy",
       "gridPos": {
-        "y": 0,
+        "y": 17,
         "w": 3,
         "h": 4,
         "x": 6
@@ -306,7 +1145,7 @@
       ],
       "title": "Warning",
       "gridPos": {
-        "y": 0,
+        "y": 17,
         "w": 3,
         "h": 4,
         "x": 9
@@ -370,7 +1209,7 @@
       ],
       "title": "Critical",
       "gridPos": {
-        "y": 0,
+        "y": 17,
         "w": 3,
         "h": 4,
         "x": 12
@@ -434,7 +1273,7 @@
       ],
       "title": "Older than server",
       "gridPos": {
-        "y": 0,
+        "y": 17,
         "w": 3,
         "h": 4,
         "x": 15
@@ -498,7 +1337,7 @@
       ],
       "title": "Proxy disabled",
       "gridPos": {
-        "y": 0,
+        "y": 17,
         "w": 3,
         "h": 4,
         "x": 18
@@ -562,7 +1401,7 @@
       ],
       "title": "Open infra alerts",
       "gridPos": {
-        "y": 0,
+        "y": 17,
         "w": 3,
         "h": 4,
         "x": 21
@@ -612,7 +1451,7 @@
       ],
       "title": "Management group",
       "gridPos": {
-        "y": 4,
+        "y": 21,
         "w": 24,
         "h": 3,
         "x": 0
@@ -783,7 +1622,7 @@
       ],
       "title": "Agents and management servers",
       "gridPos": {
-        "y": 7,
+        "y": 24,
         "w": 14,
         "h": 10,
         "x": 0
@@ -886,7 +1725,7 @@
       ],
       "title": "Unhealthy SCOM infrastructure monitors",
       "gridPos": {
-        "y": 7,
+        "y": 24,
         "w": 10,
         "h": 10,
         "x": 14
@@ -1019,7 +1858,7 @@
       ],
       "title": "Open SCOM infrastructure alerts",
       "gridPos": {
-        "y": 17,
+        "y": 34,
         "w": 14,
         "h": 8,
         "x": 0
@@ -1118,7 +1957,7 @@
       ],
       "title": "Agent outages in range",
       "gridPos": {
-        "y": 17,
+        "y": 34,
         "w": 10,
         "h": 8,
         "x": 14
@@ -1178,7 +2017,7 @@
       ],
       "title": "Agents by health state",
       "gridPos": {
-        "y": 25,
+        "y": 42,
         "w": 12,
         "h": 7,
         "x": 0
@@ -1238,14 +2077,14 @@
       ],
       "title": "Open alerts in the management group",
       "gridPos": {
-        "y": 25,
+        "y": 42,
         "w": 12,
         "h": 7,
         "x": 12
       }
     }
   ],
-  "description": "Health of the SCOM management group itself: agents, management servers, version drift, proxy state, alerts and outages.",
+  "description": "Health of the SCOM management group itself: an architecture diagram of its components and links, agents, management servers, version drift, proxy state, alerts and outages.",
   "timezone": "browser",
   "refresh": "1m",
   "schemaVersion": 39,

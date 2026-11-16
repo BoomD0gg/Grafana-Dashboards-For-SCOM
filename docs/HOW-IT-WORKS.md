@@ -31,6 +31,10 @@ The performance charts show the counters SCOM actually collects for your environ
 - **No demo data.** Every number comes from your SCOM.
 - **Availability is real elapsed time.** SCOM writes an hourly state row only for hours in which something changed or was not healthy, so a healthy hour has no row. Availability is therefore the time lost divided by the time that actually passed (from when the object was first monitored, or the start of the time range), not by the number of rows. For an application stack, the downtime of its members is combined hour by hour: with "any component down" the longest single member outage in each hour counts (members failing at different times within one hour are not added together), with "all components down" every member has to be down.
 
+## The SCOM architecture diagram
+
+The diagram at the top of **SCOM Infrastructure - Overview** is a Grafana Canvas panel. Every name in it (the management server, the database names and servers, the agents, the pools) is read from SCOM, and every colour comes from a health state SCOM records. A line has no health of its own in SCOM, so each one takes the worst signal of the services behind it (see the folder page for the list). Two behaviours to know: SCOM takes about five minutes to notice that an agent has stopped reporting (it then turns the agent's health Critical and raises a heartbeat alert, or marks the agent unavailable, and the diagram reads both). And where SCOM has no signal, a box or line is grey, not green.
+
 ## What "validated" means
 
 A dashboard is called validated when it was installed in a test lab, every query ran against real SCOM data, the objects and counts it showed were compared with the servers themselves, and (where possible) a fault was introduced, such as stopping a service, to confirm the dashboard reacted. What was and was not covered for each is in [PACKS.md](PACKS.md).

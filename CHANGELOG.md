@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 - SCOM architecture diagram
+
+### Added
+- **An architecture diagram of SCOM itself** at the top of **SCOM Infrastructure - Overview**: the management server, its operational database and data warehouse, its agents, resource pools and web console, with each box coloured by its health and each link coloured by the worst signal SCOM has for it, so a failed component or link stands out. Choose the management server in the new drop-down at the top. A box or line is grey where SCOM has no health data for it.
+  - In lab testing a stopped agent turned the agents link amber and named the missing agent (SCOM takes about five minutes to notice, then raises a heartbeat alert), and a stopped Data Access service turned the management server to operational database link red. Not tested: a data warehouse link failure, a resource pool failure, several management servers and gateways.
+  - A table under the diagram, **Management servers and resource pools**, lists every management server and gateway: health, how many agents report to it and how many are not reporting, its resource pools, and the state of its links to the operational database and the data warehouse.
+  - The diagram has a fixed layout and draws the management server chosen in the drop-down. Gateways and the reporting server are not drawn. Only a single management server has been tested.
+  - The database boxes show health only if the SQL Server on Windows management pack is imported.
 
 ### Documentation
 - New guide [AVAILABILITY.md](docs/AVAILABILITY.md): what a stack is, how to create one in the SCOM console, the drop-downs, how the figures are calculated, what was tested and troubleshooting for the Availability dashboards.
