@@ -18,7 +18,7 @@ All dashboards are version 0.4.0. "Validated" means tested in a lab against real
 | `dashboards/file-services` | File Services - Overview, Server Detail | Microsoft.Windows.FileServices.2016, FileServer.DFSR.2016 | Validated, fault detection not demonstrated |
 | `dashboards/exchange` | Exchange - Overview, Server Detail | Microsoft.Exchange.15 (SC MP for Exchange 2013 and above) | Validated on one Exchange 2019 server |
 | `dashboards/untested/remote-access` | Remote Access - Overview, Server Detail | Microsoft.Windows.RemoteAccess.10.0.Monitoring | **Untested** |
-| `dashboards/untested/failover-clustering` | Failover Clustering - Overview, Server Detail | Microsoft.Windows.Cluster.Library, Cluster.Management.Monitoring | **Untested** |
+| `dashboards/failover-clustering` | Failover Clustering - Overview, Node Detail | Microsoft.Windows.Cluster.Library, Cluster.Management.Library and Monitoring (and the Windows Server 2016 and later versions) | Validated on a two-node cluster (cluster disks, Cluster Shared Volumes, resources and networks were not exercised, see the folder page) |
 
 ## What was checked for the validated dashboards
 

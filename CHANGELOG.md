@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 - Failover Clustering validated, and a Version column
+
+### Changed
+- **Failover Clustering is now validated** and moves out of the untested folder to `dashboards/failover-clustering`. It was rebuilt after being tested on a real two-node cluster: the earlier version looked for objects SCOM does not create and showed nothing. **Failover Clustering - Overview** and **Node Detail** (renamed from Server Detail) now show the cluster nodes (node, Cluster Service and agent heartbeat), the clusters, their cluster groups, unhealthy monitors and open alerts. The drop-down lists the cluster nodes. The performance panels were removed because the management pack collects no counters.
+  - Tested on a two-node Windows Server 2025 cluster: a stopped cluster service turned the node red, raised alerts and was listed in the unhealthy monitors; a powered-off node turned its agent heartbeat red; a clustered role taken offline turned its cluster group and the cluster red and raised an alert.
+  - A node that has been down for a while stops being listed by SCOM as a cluster Node object, so the node list also includes every host that runs a Cluster Service and a failed node stays visible.
+  - Not tested: cluster disks and Cluster Shared Volumes, cluster resources and networks, several clusters, Windows Server 2016 and 2019 clusters.
+  - Re-import the `failover-clustering` folder. If you imported the earlier version from `untested/failover-clustering`, delete that old folder afterwards.
+- **A Version column on the home page.** Each folder now has a version: the release in which that folder last changed. When it goes up, re-import that folder.
+
 ## 0.4.0 - Insights, and Hyper-V performance dashboards
 
 ### Added
