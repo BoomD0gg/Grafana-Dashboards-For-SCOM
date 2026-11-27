@@ -747,9 +747,40 @@
                                                                                         "value":  [
                                                                                                       {
                                                                                                           "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#8E8E93",
+                                                                                                                                    "text":  "Not monitored",
+                                                                                                                                    "index":  13
+                                                                                                                                },
+                                                                                                                          "3":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
                                                                                                                           "Healthy":  {
                                                                                                                                           "index":  3,
                                                                                                                                           "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#56A64B",
+                                                                                                                                    "text":  "Healthy",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
                                                                                                                                       },
                                                                                                                           "Not monitored":  {
                                                                                                                                                 "index":  4,
@@ -759,22 +790,16 @@
                                                                                                                                               "index":  2,
                                                                                                                                               "color":  "#5794F2"
                                                                                                                                           },
-                                                                                                                          "Warning":  {
-                                                                                                                                          "index":  1,
-                                                                                                                                          "color":  "#FF9830"
-                                                                                                                                      },
-                                                                                                                          "Present":  {
-                                                                                                                                          "index":  6,
-                                                                                                                                          "color":  "#56A64B"
-                                                                                                                                      },
-                                                                                                                          "MISSING":  {
-                                                                                                                                          "index":  5,
-                                                                                                                                          "color":  "#E02F44"
-                                                                                                                                      },
-                                                                                                                          "Critical":  {
-                                                                                                                                           "index":  0,
-                                                                                                                                           "color":  "#E02F44"
-                                                                                                                                       }
+                                                                                                                          "-1":  {
+                                                                                                                                     "color":  "#8E8E93",
+                                                                                                                                     "text":  "n/a",
+                                                                                                                                     "index":  14
+                                                                                                                                 },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                }
                                                                                                                       },
                                                                                                           "type":  "value"
                                                                                                       }
@@ -803,7 +828,7 @@
                                                               "uid":  "${ds_om}"
                                                           },
                                            "rawQuery":  true,
-                                           "rawSql":  "SELECT TOP 300\n  CASE s.HealthState WHEN 3 THEN \u0027Critical\u0027 ELSE \u0027Warning\u0027 END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  COALESCE(e.Path, e.DisplayName) AS Computer,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0\n  AND (e.DisplayName IN (${server:singlequote}) OR e.Path IN (${server:singlequote}))\nORDER BY s.HealthState DESC, s.LastModified DESC",
+                                           "rawSql":  "SELECT TOP 300\n  CASE s.HealthState WHEN 3 THEN 3 ELSE 2 END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  COALESCE(e.Path, e.DisplayName) AS Computer,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3)\n  AND EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1)\n  AND e.IsDeleted = 0\n  AND (e.DisplayName IN (${server:singlequote}) OR e.Path IN (${server:singlequote}))\nORDER BY s.HealthState DESC, s.LastModified DESC",
                                            "format":  "table"
                                        }
                                    ],

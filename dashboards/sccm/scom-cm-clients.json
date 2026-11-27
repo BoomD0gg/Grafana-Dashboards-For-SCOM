@@ -1,0 +1,603 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-24h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_cm",
+                                        "label":  "SCCM Database",
+                                        "description":  "Microsoft SQL Server data source for the Configuration Manager site database (CM_\u003csite code\u003e), with a read-only login. Chosen automatically if its name contains \"SCCM\", \"ConfigMgr\" or \"Configuration Manager\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/sccm|configmgr|configuration manager|\\bcm\\b/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT Name AS __text, CollectionID AS __value\nFROM dbo.v_Collection\nWHERE CollectionType = 2\nORDER BY Name",
+                                        "type":  "query",
+                                        "includeAll":  false,
+                                        "label":  "Collection",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_cm}"
+                                                       },
+                                        "name":  "cmcoll",
+                                        "multi":  false,
+                                        "query":  "SELECT Name AS __text, CollectionID AS __value\nFROM dbo.v_Collection\nWHERE CollectionType = 2\nORDER BY Name",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    }
+                                ]
+                   },
+    "uid":  "scom-cm-clients",
+    "title":  "SCCM - Client Health",
+    "tags":  [
+                 "scom-pack",
+                 "sccm",
+                 "pack:sccm"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Active clients$/"
+                                                         }
+                                   },
+                       "id":  1,
+                       "type":  "stat",
+                       "description":  "Clients that have reported to the site recently.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH c AS (\n  SELECT s.Client0, cs.ClientActiveStatus, cs.LastEvaluationHealthy\n  FROM dbo.v_ClientCollectionMembers m\n  JOIN dbo.v_R_System s ON s.ResourceID = m.ResourceID\n  LEFT JOIN dbo.v_CH_ClientSummary cs ON cs.ResourceID = m.ResourceID\n  WHERE m.CollectionID = \u0027${cmcoll}\u0027\n), comp AS (\n  SELECT Status FROM dbo.v_ComponentSummarizer WHERE TallyInterval = \u00270001128000100008\u0027\n)\nSELECT\n  COUNT(*) AS [Devices],\n  SUM(CASE WHEN Client0 = 1 THEN 1 ELSE 0 END) AS [Clients],\n  SUM(CASE WHEN Client0 = 1 AND ClientActiveStatus = 1 THEN 1 ELSE 0 END) AS [Active clients],\n  SUM(CASE WHEN Client0 = 1 AND ISNULL(ClientActiveStatus, 0) = 0 THEN 1 ELSE 0 END) AS [Inactive clients],\n  SUM(CASE WHEN Client0 = 1 AND LastEvaluationHealthy = 0 THEN 1 ELSE 0 END) AS [Clients failing health checks],\n  SUM(CASE WHEN ISNULL(Client0, 0) \u003c\u003e 1 THEN 1 ELSE 0 END) AS [Devices without a client],\n  (SELECT COUNT(*) FROM dbo.v_SiteSystemSummarizer WHERE Status \u003e 0) AS [Site systems not healthy],\n  (SELECT COUNT(*) FROM comp WHERE Status \u003e 0) AS [Components not healthy]\nFROM c",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Active clients",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Inactive clients$/"
+                                                         }
+                                   },
+                       "id":  2,
+                       "type":  "stat",
+                       "description":  "Clients that have not reported to the site recently.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH c AS (\n  SELECT s.Client0, cs.ClientActiveStatus, cs.LastEvaluationHealthy\n  FROM dbo.v_ClientCollectionMembers m\n  JOIN dbo.v_R_System s ON s.ResourceID = m.ResourceID\n  LEFT JOIN dbo.v_CH_ClientSummary cs ON cs.ResourceID = m.ResourceID\n  WHERE m.CollectionID = \u0027${cmcoll}\u0027\n), comp AS (\n  SELECT Status FROM dbo.v_ComponentSummarizer WHERE TallyInterval = \u00270001128000100008\u0027\n)\nSELECT\n  COUNT(*) AS [Devices],\n  SUM(CASE WHEN Client0 = 1 THEN 1 ELSE 0 END) AS [Clients],\n  SUM(CASE WHEN Client0 = 1 AND ClientActiveStatus = 1 THEN 1 ELSE 0 END) AS [Active clients],\n  SUM(CASE WHEN Client0 = 1 AND ISNULL(ClientActiveStatus, 0) = 0 THEN 1 ELSE 0 END) AS [Inactive clients],\n  SUM(CASE WHEN Client0 = 1 AND LastEvaluationHealthy = 0 THEN 1 ELSE 0 END) AS [Clients failing health checks],\n  SUM(CASE WHEN ISNULL(Client0, 0) \u003c\u003e 1 THEN 1 ELSE 0 END) AS [Devices without a client],\n  (SELECT COUNT(*) FROM dbo.v_SiteSystemSummarizer WHERE Status \u003e 0) AS [Site systems not healthy],\n  (SELECT COUNT(*) FROM comp WHERE Status \u003e 0) AS [Components not healthy]\nFROM c",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Inactive clients",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  6
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Clients failing health checks$/"
+                                                         }
+                                   },
+                       "id":  3,
+                       "type":  "stat",
+                       "description":  "Active clients whose last client health evaluation failed.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH c AS (\n  SELECT s.Client0, cs.ClientActiveStatus, cs.LastEvaluationHealthy\n  FROM dbo.v_ClientCollectionMembers m\n  JOIN dbo.v_R_System s ON s.ResourceID = m.ResourceID\n  LEFT JOIN dbo.v_CH_ClientSummary cs ON cs.ResourceID = m.ResourceID\n  WHERE m.CollectionID = \u0027${cmcoll}\u0027\n), comp AS (\n  SELECT Status FROM dbo.v_ComponentSummarizer WHERE TallyInterval = \u00270001128000100008\u0027\n)\nSELECT\n  COUNT(*) AS [Devices],\n  SUM(CASE WHEN Client0 = 1 THEN 1 ELSE 0 END) AS [Clients],\n  SUM(CASE WHEN Client0 = 1 AND ClientActiveStatus = 1 THEN 1 ELSE 0 END) AS [Active clients],\n  SUM(CASE WHEN Client0 = 1 AND ISNULL(ClientActiveStatus, 0) = 0 THEN 1 ELSE 0 END) AS [Inactive clients],\n  SUM(CASE WHEN Client0 = 1 AND LastEvaluationHealthy = 0 THEN 1 ELSE 0 END) AS [Clients failing health checks],\n  SUM(CASE WHEN ISNULL(Client0, 0) \u003c\u003e 1 THEN 1 ELSE 0 END) AS [Devices without a client],\n  (SELECT COUNT(*) FROM dbo.v_SiteSystemSummarizer WHERE Status \u003e 0) AS [Site systems not healthy],\n  (SELECT COUNT(*) FROM comp WHERE Status \u003e 0) AS [Components not healthy]\nFROM c",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Clients failing health checks",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Devices without a client$/"
+                                                         }
+                                   },
+                       "id":  4,
+                       "type":  "stat",
+                       "description":  "Devices discovered by the site that do not have the client installed.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH c AS (\n  SELECT s.Client0, cs.ClientActiveStatus, cs.LastEvaluationHealthy\n  FROM dbo.v_ClientCollectionMembers m\n  JOIN dbo.v_R_System s ON s.ResourceID = m.ResourceID\n  LEFT JOIN dbo.v_CH_ClientSummary cs ON cs.ResourceID = m.ResourceID\n  WHERE m.CollectionID = \u0027${cmcoll}\u0027\n), comp AS (\n  SELECT Status FROM dbo.v_ComponentSummarizer WHERE TallyInterval = \u00270001128000100008\u0027\n)\nSELECT\n  COUNT(*) AS [Devices],\n  SUM(CASE WHEN Client0 = 1 THEN 1 ELSE 0 END) AS [Clients],\n  SUM(CASE WHEN Client0 = 1 AND ClientActiveStatus = 1 THEN 1 ELSE 0 END) AS [Active clients],\n  SUM(CASE WHEN Client0 = 1 AND ISNULL(ClientActiveStatus, 0) = 0 THEN 1 ELSE 0 END) AS [Inactive clients],\n  SUM(CASE WHEN Client0 = 1 AND LastEvaluationHealthy = 0 THEN 1 ELSE 0 END) AS [Clients failing health checks],\n  SUM(CASE WHEN ISNULL(Client0, 0) \u003c\u003e 1 THEN 1 ELSE 0 END) AS [Devices without a client],\n  (SELECT COUNT(*) FROM dbo.v_SiteSystemSummarizer WHERE Status \u003e 0) AS [Site systems not healthy],\n  (SELECT COUNT(*) FROM comp WHERE Status \u003e 0) AS [Components not healthy]\nFROM c",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Devices without a client",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  18
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  5,
+                       "type":  "table",
+                       "description":  "Health: Critical = inactive client, Warning = active but failed its health evaluation, Not monitored = no client or no client summary yet. The date columns are when each client cycle last reported.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No devices in this collection"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#8E8E93",
+                                                                                                                                    "text":  "Not monitored",
+                                                                                                                                    "index":  13
+                                                                                                                                },
+                                                                                                                          "3":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#56A64B",
+                                                                                                                                    "text":  "Healthy",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "-1":  {
+                                                                                                                                     "color":  "#8E8E93",
+                                                                                                                                     "text":  "n/a",
+                                                                                                                                     "index":  14
+                                                                                                                                 },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  110
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Activity"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  100
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health check"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  120
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Client version"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last policy request"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last heartbeat"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last hardware inventory"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last software inventory"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last online"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Management point"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  s.Name0 AS [Device],\n  CASE WHEN ISNULL(s.Client0, 0) \u003c\u003e 1 THEN 0 WHEN cs.ClientActiveStatus IS NULL THEN 0 WHEN cs.ClientActiveStatus = 0 THEN 3 WHEN cs.LastEvaluationHealthy = 0 THEN 2 ELSE 1 END AS [Health],\n  CASE WHEN ISNULL(s.Client0, 0) \u003c\u003e 1 THEN \u0027No client\u0027 WHEN cs.ClientActiveStatus = 1 THEN \u0027Active\u0027 WHEN cs.ClientActiveStatus = 0 THEN \u0027Inactive\u0027 ELSE \u0027Unknown\u0027 END AS [Activity],\n  CASE cs.LastEvaluationHealthy WHEN 1 THEN \u0027Passed\u0027 WHEN 0 THEN \u0027Failed\u0027 ELSE \u0027-\u0027 END AS [Health check],\n  ISNULL(NULLIF(s.Client_Version0, \u0027\u0027), \u0027-\u0027) AS [Client version],\n  COALESCE(REPLACE(o.Caption0, \u0027Microsoft \u0027, \u0027\u0027), REPLACE(ISNULL(s.Operating_System_Name_and0, \u0027Unknown\u0027), \u0027Microsoft Windows NT \u0027, \u0027\u0027)) AS [OS],\n  cs.LastPolicyRequest AS [Last policy request],\n  cs.LastDDR AS [Last heartbeat],\n  COALESCE(cs.LastHW, w.LastHWScan) AS [Last hardware inventory],\n  cs.LastSW AS [Last software inventory],\n  cs.LastOnline AS [Last online],\n  cs.LastMPServerName AS [Management point]\nFROM dbo.v_ClientCollectionMembers m\nJOIN dbo.v_R_System s ON s.ResourceID = m.ResourceID\nLEFT JOIN dbo.v_CH_ClientSummary cs ON cs.ResourceID = m.ResourceID\nLEFT JOIN dbo.v_GS_OPERATING_SYSTEM o ON o.ResourceID = m.ResourceID\nLEFT JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID\nWHERE m.CollectionID = \u0027${cmcoll}\u0027\nORDER BY CASE WHEN ISNULL(s.Client0, 0) \u003c\u003e 1 THEN 1 WHEN cs.ClientActiveStatus = 0 THEN 3 WHEN cs.LastEvaluationHealthy = 0 THEN 2 ELSE 0 END DESC, s.Name0",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Client health by device (worst first)",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  24,
+                                       "h":  16,
+                                       "x":  0
+                                   }
+                   }
+               ],
+    "description":  "Configuration Manager client health per device: activity, health evaluation and the last policy, heartbeat and inventory cycles.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

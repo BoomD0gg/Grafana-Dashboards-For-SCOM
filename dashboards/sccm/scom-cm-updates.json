@@ -1,0 +1,1097 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-24h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_cm",
+                                        "label":  "SCCM Database",
+                                        "description":  "Microsoft SQL Server data source for the Configuration Manager site database (CM_\u003csite code\u003e), with a read-only login. Chosen automatically if its name contains \"SCCM\", \"ConfigMgr\" or \"Configuration Manager\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/sccm|configmgr|configuration manager|\\bcm\\b/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT Name AS __text, CollectionID AS __value\nFROM dbo.v_Collection\nWHERE CollectionType = 2\nORDER BY Name",
+                                        "type":  "query",
+                                        "includeAll":  false,
+                                        "label":  "Collection",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_cm}"
+                                                       },
+                                        "name":  "cmcoll",
+                                        "multi":  false,
+                                        "query":  "SELECT Name AS __text, CollectionID AS __value\nFROM dbo.v_Collection\nWHERE CollectionType = 2\nORDER BY Name",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    }
+                                ]
+                   },
+    "uid":  "scom-cm-updates",
+    "title":  "SCCM - Software Updates",
+    "tags":  [
+                 "scom-pack",
+                 "sccm",
+                 "pack:sccm"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Updates in catalog$/"
+                                                         }
+                                   },
+                       "id":  1,
+                       "type":  "stat",
+                       "description":  "Updates synchronised into the catalog that are not expired or superseded.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsExpired = 0 AND IsSuperseded = 0) AS [Updates in catalog],\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsDeployed = 1) AS [Updates deployed],\n  (SELECT COUNT(DISTINCT cs.CI_ID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Updates needed],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Devices missing updates],\n  (SELECT COUNT(*) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2 AND cs.LastErrorCode NOT IN (0, 4294967295)) AS [Installs with errors],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID) AS [Devices scanned]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Updates in catalog",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Updates deployed$/"
+                                                         }
+                                   },
+                       "id":  2,
+                       "type":  "stat",
+                       "description":  "Updates that are part of at least one deployment.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsExpired = 0 AND IsSuperseded = 0) AS [Updates in catalog],\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsDeployed = 1) AS [Updates deployed],\n  (SELECT COUNT(DISTINCT cs.CI_ID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Updates needed],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Devices missing updates],\n  (SELECT COUNT(*) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2 AND cs.LastErrorCode NOT IN (0, 4294967295)) AS [Installs with errors],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID) AS [Devices scanned]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Updates deployed",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  4
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Updates needed$/"
+                                                         }
+                                   },
+                       "id":  3,
+                       "type":  "stat",
+                       "description":  "Distinct updates that at least one device in the collection still needs.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsExpired = 0 AND IsSuperseded = 0) AS [Updates in catalog],\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsDeployed = 1) AS [Updates deployed],\n  (SELECT COUNT(DISTINCT cs.CI_ID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Updates needed],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Devices missing updates],\n  (SELECT COUNT(*) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2 AND cs.LastErrorCode NOT IN (0, 4294967295)) AS [Installs with errors],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID) AS [Devices scanned]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Updates needed",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  8
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Devices missing updates$/"
+                                                         }
+                                   },
+                       "id":  4,
+                       "type":  "stat",
+                       "description":  "Devices in the collection that need at least one update.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsExpired = 0 AND IsSuperseded = 0) AS [Updates in catalog],\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsDeployed = 1) AS [Updates deployed],\n  (SELECT COUNT(DISTINCT cs.CI_ID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Updates needed],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Devices missing updates],\n  (SELECT COUNT(*) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2 AND cs.LastErrorCode NOT IN (0, 4294967295)) AS [Installs with errors],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID) AS [Devices scanned]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Devices missing updates",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Installs with errors$/"
+                                                         }
+                                   },
+                       "id":  5,
+                       "type":  "stat",
+                       "description":  "Needed updates whose last install attempt returned an error code.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsExpired = 0 AND IsSuperseded = 0) AS [Updates in catalog],\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsDeployed = 1) AS [Updates deployed],\n  (SELECT COUNT(DISTINCT cs.CI_ID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Updates needed],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Devices missing updates],\n  (SELECT COUNT(*) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2 AND cs.LastErrorCode NOT IN (0, 4294967295)) AS [Installs with errors],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID) AS [Devices scanned]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Installs with errors",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  16
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Devices scanned$/"
+                                                         }
+                                   },
+                       "id":  6,
+                       "type":  "stat",
+                       "description":  "Devices in the collection that have reported an update scan.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsExpired = 0 AND IsSuperseded = 0) AS [Updates in catalog],\n  (SELECT COUNT(*) FROM dbo.v_UpdateInfo WHERE IsDeployed = 1) AS [Updates deployed],\n  (SELECT COUNT(DISTINCT cs.CI_ID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Updates needed],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2) AS [Devices missing updates],\n  (SELECT COUNT(*) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID WHERE cs.Status = 2 AND cs.LastErrorCode NOT IN (0, 4294967295)) AS [Installs with errors],\n  (SELECT COUNT(DISTINCT cs.ResourceID) FROM dbo.v_Update_ComplianceStatus cs JOIN m ON m.ResourceID = cs.ResourceID) AS [Devices scanned]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Devices scanned",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  20
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  7,
+                       "type":  "table",
+                       "description":  "What the devices of the selected collection still miss, grouped by the vendor severity.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No updates are needed"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Low":  {
+                                                                                                                                      "index":  3,
+                                                                                                                                      "color":  "#8E8E93"
+                                                                                                                                  },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "Important":  {
+                                                                                                                                            "index":  1,
+                                                                                                                                            "color":  "#FF9830"
+                                                                                                                                        },
+                                                                                                                          "Moderate":  {
+                                                                                                                                           "index":  2,
+                                                                                                                                           "color":  "#5794F2"
+                                                                                                                                       },
+                                                                                                                          "Unspecified":  {
+                                                                                                                                              "index":  4,
+                                                                                                                                              "color":  "#8E8E93"
+                                                                                                                                          }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Severity"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Updates"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Devices"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  CASE u.Severity WHEN 10 THEN \u0027Critical\u0027 WHEN 8 THEN \u0027Important\u0027 WHEN 6 THEN \u0027Moderate\u0027 WHEN 2 THEN \u0027Low\u0027 ELSE \u0027Unspecified\u0027 END AS [Severity],\n  COUNT(DISTINCT u.CI_ID) AS [Updates],\n  COUNT(DISTINCT cs.ResourceID) AS [Devices],\n  COUNT(*) AS [Missing installs]\nFROM dbo.v_Update_ComplianceStatus cs\nJOIN dbo.v_UpdateInfo u ON u.CI_ID = cs.CI_ID\nJOIN dbo.v_ClientCollectionMembers m ON m.ResourceID = cs.ResourceID AND m.CollectionID = \u0027${cmcoll}\u0027\nWHERE cs.Status = 2\nGROUP BY u.Severity\nORDER BY u.Severity DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Updates needed by severity",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  9,
+                                       "h":  7,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  8,
+                       "type":  "table",
+                       "description":  "Software update deployments and how many devices have installed, already had, miss or failed the updates.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No update deployments"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "unit",
+                                                                                        "value":  "percent"
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  80,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  95,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Compliance %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Failed"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Missing"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Compliance %"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  d.AssignmentName AS [Deployment],\n  d.CollectionName AS [Collection],\n  d.StartTime AS [Available from],\n  d.NumTotal AS [Devices],\n  d.NumInstalled AS [Installed],\n  d.NumPresent AS [Already present],\n  d.NumMissing AS [Missing],\n  d.NumFailed AS [Failed],\n  d.NumUnknown AS [Unknown],\n  CASE WHEN d.NumTotal \u003e 0 THEN CAST(100.0 * (d.NumInstalled + d.NumPresent + d.NumNotApplicable) / d.NumTotal AS decimal(5, 1)) END AS [Compliance %],\n  d.LastSummaryTime AS [Last summarised]\nFROM dbo.v_UpdateDeploymentSummary d\nORDER BY d.StartTime DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Update deployments",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  15,
+                                       "h":  7,
+                                       "x":  9
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  9,
+                       "type":  "table",
+                       "description":  "Devices of the selected collection with updates still to install.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No device is missing updates"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Critical needed"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Installs with errors"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  130
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Updates needed"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  130
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Critical needed"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  150
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Installs with errors"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last scan"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 100\n  s.Name0 AS [Device],\n  SUM(CASE WHEN cs.Status = 2 THEN 1 ELSE 0 END) AS [Updates needed],\n  SUM(CASE WHEN cs.Status = 2 AND u.Severity = 10 THEN 1 ELSE 0 END) AS [Critical needed],\n  SUM(CASE WHEN cs.Status = 3 THEN 1 ELSE 0 END) AS [Installed],\n  SUM(CASE WHEN cs.Status = 2 AND cs.LastErrorCode NOT IN (0, 4294967295) THEN 1 ELSE 0 END) AS [Installs with errors],\n  MAX(cs.LastStatusCheckTime) AS [Last scan]\nFROM dbo.v_Update_ComplianceStatus cs\nJOIN dbo.v_UpdateInfo u ON u.CI_ID = cs.CI_ID\nJOIN dbo.v_ClientCollectionMembers m ON m.ResourceID = cs.ResourceID AND m.CollectionID = \u0027${cmcoll}\u0027\nJOIN dbo.v_R_System s ON s.ResourceID = cs.ResourceID\nGROUP BY s.Name0\nHAVING SUM(CASE WHEN cs.Status = 2 THEN 1 ELSE 0 END) \u003e 0\nORDER BY SUM(CASE WHEN cs.Status = 2 THEN 1 ELSE 0 END) DESC, s.Name0",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Devices missing the most updates",
+                       "gridPos":  {
+                                       "y":  11,
+                                       "w":  14,
+                                       "h":  9,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  10,
+                       "type":  "table",
+                       "description":  "The most recently released updates that are not expired or superseded.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "The catalog is empty"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "Low":  {
+                                                                                                                                      "index":  3,
+                                                                                                                                      "color":  "#8E8E93"
+                                                                                                                                  },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "Important":  {
+                                                                                                                                            "index":  1,
+                                                                                                                                            "color":  "#FF9830"
+                                                                                                                                        },
+                                                                                                                          "Moderate":  {
+                                                                                                                                           "index":  2,
+                                                                                                                                           "color":  "#5794F2"
+                                                                                                                                       },
+                                                                                                                          "Unspecified":  {
+                                                                                                                                              "index":  4,
+                                                                                                                                              "color":  "#8E8E93"
+                                                                                                                                          }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Severity"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  100
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Severity"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Article"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Article"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Bulletin"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 100\n  u.DatePosted AS [Released],\n  u.Title AS [Update],\n  CASE u.Severity WHEN 10 THEN \u0027Critical\u0027 WHEN 8 THEN \u0027Important\u0027 WHEN 6 THEN \u0027Moderate\u0027 WHEN 2 THEN \u0027Low\u0027 ELSE \u0027Unspecified\u0027 END AS [Severity],\n  u.ArticleID AS [Article],\n  u.BulletinID AS [Bulletin],\n  CASE WHEN u.IsDeployed = 1 THEN \u0027Yes\u0027 ELSE \u0027No\u0027 END AS [Deployed]\nFROM dbo.v_UpdateInfo u\nWHERE u.IsExpired = 0 AND u.IsSuperseded = 0\nORDER BY u.DatePosted DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Latest updates in the catalog",
+                       "gridPos":  {
+                                       "y":  11,
+                                       "w":  10,
+                                       "h":  9,
+                                       "x":  14
+                                   }
+                   }
+               ],
+    "description":  "Patch compliance from Configuration Manager: updates needed by severity, deployments and the devices that miss the most.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

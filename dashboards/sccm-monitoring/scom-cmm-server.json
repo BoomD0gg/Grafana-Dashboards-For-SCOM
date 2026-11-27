@@ -1,0 +1,1129 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-24h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_dw",
+                                        "label":  "SCOM Data Warehouse",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/warehouse|dw/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_om",
+                                        "label":  "SCOM Operational DB",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManager database. Chosen automatically if its name contains \"Operational\", \"Operations\" or \"SCOM\" (and not \"Warehouse\"/\"DW\"); otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/^(?!.*(warehouse|dw)).*(operational|operations|scom|\\bom\\b)/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName IN (\u0027MECM.SiteServer\u0027, \u0027MECM.ManagementPoint\u0027, \u0027MECM.DistributionPoint\u0027, \u0027MECM.SoftwareUpdatePoint\u0027, \u0027MECM.ServiceConnectionPoint\u0027, \u0027MECM.SQLServer\u0027, \u0027MECM.ServerComponent\u0027)\n  AND h.DisplayName IS NOT NULL\nORDER BY 1",
+                                        "type":  "query",
+                                        "includeAll":  false,
+                                        "label":  "Configuration Manager server",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_dw}"
+                                                       },
+                                        "name":  "cmhost",
+                                        "multi":  false,
+                                        "query":  "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName IN (\u0027MECM.SiteServer\u0027, \u0027MECM.ManagementPoint\u0027, \u0027MECM.DistributionPoint\u0027, \u0027MECM.SoftwareUpdatePoint\u0027, \u0027MECM.ServiceConnectionPoint\u0027, \u0027MECM.SQLServer\u0027, \u0027MECM.ServerComponent\u0027)\n  AND h.DisplayName IS NOT NULL\nORDER BY 1",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    }
+                                ]
+                   },
+    "uid":  "scom-cmm-server",
+    "title":  "SCCM Monitoring - Server Detail",
+    "tags":  [
+                 "scom",
+                 "scom-pack",
+                 "sccm-monitoring",
+                 "pack:sccm-monitoring"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  1,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "Server not found"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#8E8E93",
+                                                                                                                                    "text":  "Not monitored",
+                                                                                                                                    "index":  13
+                                                                                                                                },
+                                                                                                                          "3":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#56A64B",
+                                                                                                                                    "text":  "Healthy",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "-1":  {
+                                                                                                                                     "color":  "#8E8E93",
+                                                                                                                                     "text":  "n/a",
+                                                                                                                                     "index":  14
+                                                                                                                                 },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#8E8E93",
+                                                                                                                                    "text":  "Not monitored",
+                                                                                                                                    "index":  13
+                                                                                                                                },
+                                                                                                                          "3":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#56A64B",
+                                                                                                                                    "text":  "Healthy",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "-1":  {
+                                                                                                                                     "color":  "#8E8E93",
+                                                                                                                                     "text":  "n/a",
+                                                                                                                                     "index":  14
+                                                                                                                                 },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Agent heartbeat"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  230
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Host"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  100
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  80
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Roles"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  160
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Roles not healthy"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  125
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Components"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  215
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Components not healthy"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  150
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Agent heartbeat"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "LastStateChange"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH ent AS (\n  SELECT v.Id, t.Name AS Class, v.HealthState, v.StateLastModified, LEFT(v.Path, CHARINDEX(\u0027;\u0027, v.Path + \u0027;\u0027) - 1) AS Host\n  FROM dbo.ManagedEntityGenericView v JOIN dbo.ManagedTypeView t ON t.Id = v.MonitoringClassId\n  WHERE v.IsDeleted = 0 AND NULLIF(v.Path, \u0027\u0027) IS NOT NULL\n    AND t.Name IN (\u0027MECM.SiteServer\u0027, \u0027MECM.ManagementPoint\u0027, \u0027MECM.DistributionPoint\u0027, \u0027MECM.SoftwareUpdatePoint\u0027, \u0027MECM.ServiceConnectionPoint\u0027, \u0027MECM.SQLServer\u0027, \u0027MECM.SDKProvider\u0027, \u0027MECM.ContentStorageDrive\u0027, \u0027MECM.ServerComponent\u0027)\n), hosts AS (SELECT DISTINCT Host FROM ent WHERE Host IN (SELECT value FROM STRING_SPLIT(\u0027${cmhost:csv}\u0027, \u0027,\u0027)))\nSELECT TOP 200\n  h.Host AS Host,\n  CASE x.worst WHEN 3 THEN 3 WHEN 2 THEN 2 WHEN 1 THEN 1 ELSE 0 END AS Health,\n  x.roles AS Roles,\n  x.roles_bad AS \"Roles not healthy\",\n  x.comps AS Components,\n  x.comps_bad AS \"Components not healthy\",\n  CASE hb.hs WHEN 3 THEN 3 WHEN 2 THEN 2 WHEN 1 THEN 1 ELSE 0 END AS \"Agent heartbeat\",\n  x.since AS LastStateChange\nFROM hosts h\nOUTER APPLY (SELECT\n    SUM(CASE WHEN e.Class \u003c\u003e \u0027MECM.ServerComponent\u0027 THEN 1 ELSE 0 END) AS roles,\n    SUM(CASE WHEN e.Class \u003c\u003e \u0027MECM.ServerComponent\u0027 AND e.HealthState IN (2, 3) THEN 1 ELSE 0 END) AS roles_bad,\n    SUM(CASE WHEN e.Class = \u0027MECM.ServerComponent\u0027 THEN 1 ELSE 0 END) AS comps,\n    SUM(CASE WHEN e.Class = \u0027MECM.ServerComponent\u0027 AND e.HealthState IN (2, 3) THEN 1 ELSE 0 END) AS comps_bad,\n    MAX(e.HealthState) AS worst, MAX(e.StateLastModified) AS since\n  FROM ent e WHERE e.Host = h.Host) x\nOUTER APPLY (SELECT MAX(w.HealthState) AS hs FROM dbo.ManagedEntityGenericView w JOIN dbo.ManagedTypeView wt ON wt.Id = w.MonitoringClassId\n             WHERE w.IsDeleted = 0 AND wt.Name = \u0027Microsoft.SystemCenter.HealthServiceWatcher\u0027 AND w.DisplayName = h.Host) hb\nORDER BY CASE x.worst WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, h.Host",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Server",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  24,
+                                       "h":  4,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  2,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No roles found"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#8E8E93",
+                                                                                                                                    "text":  "Not monitored",
+                                                                                                                                    "index":  13
+                                                                                                                                },
+                                                                                                                          "3":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#56A64B",
+                                                                                                                                    "text":  "Healthy",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "-1":  {
+                                                                                                                                     "color":  "#8E8E93",
+                                                                                                                                     "text":  "n/a",
+                                                                                                                                     "index":  14
+                                                                                                                                 },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  100
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "LastStateChange"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 300\n  COALESCE(NULLIF(LEFT(v.Path, CHARINDEX(\u0027;\u0027, v.Path + \u0027;\u0027) - 1), \u0027\u0027), \u0027(site)\u0027) AS Host,\n  CASE t.Name WHEN \u0027MECM.PrimarySite\u0027 THEN \u0027Primary site\u0027 WHEN \u0027MECM.Hierarchy\u0027 THEN \u0027Hierarchy\u0027 WHEN \u0027MECM.SiteServer\u0027 THEN \u0027Site server\u0027 WHEN \u0027MECM.ManagementPoint\u0027 THEN \u0027Management point\u0027\n              WHEN \u0027MECM.DistributionPoint\u0027 THEN \u0027Distribution point\u0027 WHEN \u0027MECM.SoftwareUpdatePoint\u0027 THEN \u0027Software update point\u0027 WHEN \u0027MECM.ServiceConnectionPoint\u0027 THEN \u0027Service connection point\u0027\n              WHEN \u0027MECM.SQLServer\u0027 THEN \u0027Site database (SQL Server)\u0027 WHEN \u0027MECM.SDKProvider\u0027 THEN \u0027SMS Provider\u0027 WHEN \u0027MECM.ContentStorageDrive\u0027 THEN \u0027Content storage drive\u0027 ELSE t.Name END AS Role,\n  v.DisplayName AS Object,\n  CASE v.HealthState WHEN 3 THEN 3 WHEN 2 THEN 2 WHEN 1 THEN 1 ELSE 0 END AS Health,\n  v.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView v\nJOIN dbo.ManagedTypeView t ON t.Id = v.MonitoringClassId\nWHERE v.IsDeleted = 0\n  AND t.Name IN (\u0027MECM.Hierarchy\u0027, \u0027MECM.PrimarySite\u0027, \u0027MECM.SiteServer\u0027, \u0027MECM.ManagementPoint\u0027, \u0027MECM.DistributionPoint\u0027, \u0027MECM.SoftwareUpdatePoint\u0027, \u0027MECM.ServiceConnectionPoint\u0027, \u0027MECM.SQLServer\u0027, \u0027MECM.SDKProvider\u0027, \u0027MECM.ContentStorageDrive\u0027)\n  AND (NULLIF(v.Path, \u0027\u0027) IS NULL OR LEFT(v.Path, CHARINDEX(\u0027;\u0027, v.Path + \u0027;\u0027) - 1) IN (SELECT value FROM STRING_SPLIT(\u0027${cmhost:csv}\u0027, \u0027,\u0027)))\nORDER BY CASE v.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 1, 2",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Roles",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  3,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No components found"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#8E8E93",
+                                                                                                                                    "text":  "Not monitored",
+                                                                                                                                    "index":  13
+                                                                                                                                },
+                                                                                                                          "3":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#56A64B",
+                                                                                                                                    "text":  "Healthy",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "-1":  {
+                                                                                                                                     "color":  "#8E8E93",
+                                                                                                                                     "text":  "n/a",
+                                                                                                                                     "index":  14
+                                                                                                                                 },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  100
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "LastStateChange"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 300\n  LEFT(v.Path, CHARINDEX(\u0027;\u0027, v.Path + \u0027;\u0027) - 1) AS Host,\n  CASE WHEN CHARINDEX(\u0027 - \u0027, v.DisplayName) \u003e 0 THEN REPLACE(LEFT(v.DisplayName, CHARINDEX(\u0027 - \u0027, v.DisplayName) - 1), \u0027ConfigMgr \u0027, \u0027\u0027) ELSE v.DisplayName END AS Component,\n  CASE v.HealthState WHEN 3 THEN 3 WHEN 2 THEN 2 WHEN 1 THEN 1 ELSE 0 END AS Health,\n  v.StateLastModified AS LastStateChange\nFROM dbo.ManagedEntityGenericView v\nJOIN dbo.ManagedTypeView t ON t.Id = v.MonitoringClassId\nWHERE v.IsDeleted = 0 AND t.Name = \u0027MECM.ServerComponent\u0027 AND NULLIF(v.Path, \u0027\u0027) IS NOT NULL\n  AND LEFT(v.Path, CHARINDEX(\u0027;\u0027, v.Path + \u0027;\u0027) - 1) IN (SELECT value FROM STRING_SPLIT(\u0027${cmhost:csv}\u0027, \u0027,\u0027))\nORDER BY CASE v.HealthState WHEN 3 THEN 0 WHEN 2 THEN 1 WHEN 1 THEN 3 ELSE 2 END, 1, 2",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Server components",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  4,
+                       "type":  "timeseries",
+                       "description":  "Total processor time.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName IN (\u0027% Processor Time\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName = \u0027_Total\u0027\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName IN (\u0027% Processor Time\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName = \u0027_Total\u0027\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Processor time (%)",
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  12,
+                                       "h":  7,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  5,
+                       "type":  "timeseries",
+                       "description":  "Memory available.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "decmbytes",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Memory\u0027 AND r.CounterName IN (\u0027Available MBytes\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) \n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Memory\u0027 AND r.CounterName IN (\u0027Available MBytes\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) \n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Available memory (MB)",
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  12,
+                                       "h":  7,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  6,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "Nothing is unhealthy right now"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#8E8E93",
+                                                                                                                                    "text":  "Not monitored",
+                                                                                                                                    "index":  13
+                                                                                                                                },
+                                                                                                                          "3":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#56A64B",
+                                                                                                                                    "text":  "Healthy",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "-1":  {
+                                                                                                                                     "color":  "#8E8E93",
+                                                                                                                                     "text":  "n/a",
+                                                                                                                                     "index":  14
+                                                                                                                                 },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Health"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT DISTINCT TOP 300\n  CASE s.HealthState WHEN 3 THEN 3 ELSE 2 END AS Health,\n  COALESCE((SELECT TOP 1 m.DisplayName FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.DisplayName IS NOT NULL ORDER BY CASE WHEN m.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, m.LanguageCode), s.MonitorName) AS Monitor,\n  e.DisplayName AS Object,\n  CASE WHEN e.FullName LIKE \u0027Microsoft.SystemCenter.HealthServiceWatcher%\u0027 THEN e.DisplayName ELSE COALESCE(NULLIF(LEFT(e.Path, CHARINDEX(\u0027;\u0027, e.Path + \u0027;\u0027) - 1), \u0027\u0027), \u0027(site)\u0027) END AS Host,\n  s.LastModified AS Since\nFROM dbo.StateView s\nJOIN dbo.ManagedEntityGenericView e ON e.Id = s.BaseManagedEntityId\nWHERE s.HealthState IN (2, 3) AND e.IsDeleted = 0\n  AND s.MonitorName NOT IN (\u0027System.Health.EntityState\u0027, \u0027System.Health.AvailabilityState\u0027, \u0027System.Health.ConfigurationState\u0027, \u0027System.Health.PerformanceState\u0027, \u0027System.Health.SecurityState\u0027)\n  AND (EXISTS (SELECT 1 FROM dbo.MonitorView m WHERE m.Id = s.MonitorId AND m.IsUnitMonitor = 1) OR s.MonitorName = \u0027Microsoft.SystemCenter.HealthService.Heartbeat\u0027)\n  AND ((e.FullName LIKE \u0027MECM.%\u0027 AND (LEFT(e.Path, CHARINDEX(\u0027;\u0027, e.Path + \u0027;\u0027) - 1) IN (SELECT value FROM STRING_SPLIT(\u0027${cmhost:csv}\u0027, \u0027,\u0027)) OR NULLIF(e.Path, \u0027\u0027) IS NULL))\n       OR (e.FullName LIKE \u0027Microsoft.SystemCenter.HealthServiceWatcher%\u0027 AND e.DisplayName IN (SELECT value FROM STRING_SPLIT(\u0027${cmhost:csv}\u0027, \u0027,\u0027))))\nORDER BY 1 DESC, 5 DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Unhealthy monitors",
+                       "gridPos":  {
+                                       "y":  19,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  7,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_om}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No open alerts in range"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#5794F2",
+                                                                                                                                    "text":  "Information",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Severity"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "links",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "targetBlank":  false,
+                                                                                                          "title":  "Open alert details",
+                                                                                                          "url":  "/d/scom-core-alert/scom-alert-details?var-alertid=${__data.fields.AlertId}\u0026${__url_time_range}"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Alert"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.hidden",
+                                                                                        "value":  true
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "AlertId"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_om}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 300\n  a.Severity AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, \u0027\u0027), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  CASE WHEN a.MonitoringObjectFullName LIKE \u0027Microsoft.SystemCenter.HealthServiceWatcher%\u0027 THEN a.MonitoringObjectDisplayName ELSE COALESCE(NULLIF(LEFT(COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName), CHARINDEX(\u0027;\u0027, COALESCE(a.MonitoringObjectPath, a.MonitoringObjectDisplayName) + \u0027;\u0027) - 1), \u0027\u0027), \u0027(site)\u0027) END AS Host,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, al.ResolutionState, al.Severity, al.TimeRaised, al.RepeatCount, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState \u003c 255 AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND ((a.MonitoringObjectFullName LIKE \u0027MECM.%\u0027 AND (LEFT(COALESCE(a.MonitoringObjectPath, \u0027\u0027), CHARINDEX(\u0027;\u0027, COALESCE(a.MonitoringObjectPath, \u0027\u0027) + \u0027;\u0027) - 1) IN (SELECT value FROM STRING_SPLIT(\u0027${cmhost:csv}\u0027, \u0027,\u0027)) OR NULLIF(a.MonitoringObjectPath, \u0027\u0027) IS NULL))\n       OR (a.MonitoringObjectFullName LIKE \u0027Microsoft.SystemCenter.HealthServiceWatcher%\u0027 AND a.MonitoringObjectDisplayName IN (SELECT value FROM STRING_SPLIT(\u0027${cmhost:csv}\u0027, \u0027,\u0027))))\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Open alerts",
+                       "gridPos":  {
+                                       "y":  19,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   }
+               ],
+    "description":  "One Configuration Manager server: its roles, server components, processor and memory, monitors and alerts.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

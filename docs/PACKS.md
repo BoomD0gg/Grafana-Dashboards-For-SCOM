@@ -1,6 +1,6 @@
 # Dashboards and management packs
 
-All dashboards are version 0.4.0. "Validated" means tested in a lab against real SCOM 2022 data (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)). Each technology needs its Microsoft management pack imported in SCOM.
+The folder versions are on the home page (the release in which each folder last changed). "Validated" means tested in a lab against real SCOM 2022 data (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)). Each technology needs its Microsoft management pack imported in SCOM.
 
 | Folder | Dashboards | Management packs to import | Status |
 |---|---|---|---|
@@ -19,6 +19,9 @@ All dashboards are version 0.4.0. "Validated" means tested in a lab against real
 | `dashboards/exchange` | Exchange - Overview, Server Detail | Microsoft.Exchange.15 (SC MP for Exchange 2013 and above) | Validated on one Exchange 2019 server |
 | `dashboards/untested/remote-access` | Remote Access - Overview, Server Detail | Microsoft.Windows.RemoteAccess.10.0.Monitoring | **Untested** |
 | `dashboards/failover-clustering` | Failover Clustering - Overview, Node Detail | Microsoft.Windows.Cluster.Library, Cluster.Management.Library and Monitoring (and the Windows Server 2016 and later versions) | Validated on a two-node cluster (cluster disks, Cluster Shared Volumes, resources and networks were not exercised, see the folder page) |
+
+| `dashboards/sccm` | SCCM - Overview, Client Health, Software Updates, Deployments, Site Health, Hardware Inventory | none in SCOM; reads the Configuration Manager site database through a read-only SQL data source (see [SCCM.md](SCCM.md)) | Validated on one primary site with 20 clients (deployments, task sequences and failing clients were not exercised, see the guide) |
+| `dashboards/sccm-monitoring` | SCCM Monitoring - Overview, Performance, Server Detail | MECM (Microsoft Configuration Manager) management pack (see [SCCM.md](SCCM.md)) | Validated on one primary site (most of the management pack's performance rules are off by default, see the guide) |
 
 ## What was checked for the validated dashboards
 

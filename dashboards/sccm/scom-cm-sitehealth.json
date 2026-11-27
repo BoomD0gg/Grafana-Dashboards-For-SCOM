@@ -1,0 +1,1161 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-24h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_cm",
+                                        "label":  "SCCM Database",
+                                        "description":  "Microsoft SQL Server data source for the Configuration Manager site database (CM_\u003csite code\u003e), with a read-only login. Chosen automatically if its name contains \"SCCM\", \"ConfigMgr\" or \"Configuration Manager\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/sccm|configmgr|configuration manager|\\bcm\\b/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    }
+                                ]
+                   },
+    "uid":  "scom-cm-sitehealth",
+    "title":  "SCCM - Site Health",
+    "tags":  [
+                 "scom-pack",
+                 "sccm",
+                 "pack:sccm"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Site systems not healthy$/"
+                                                         }
+                                   },
+                       "id":  1,
+                       "type":  "stat",
+                       "description":  "Site system roles in Warning or Critical status.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  (SELECT COUNT(*) FROM dbo.v_SiteSystemSummarizer WHERE Status \u003e 0) AS [Site systems not healthy],\n  (SELECT COUNT(*) FROM dbo.v_ComponentSummarizer WHERE TallyInterval = \u00270001128000100008\u0027 AND Status \u003e 0) AS [Components not healthy],\n  (SELECT COUNT(*) FROM dbo.v_StatusMessage WHERE Severity = -1073741824 AND Time BETWEEN $__timeFrom() AND $__timeTo()) AS [Error messages],\n  (SELECT COUNT(*) FROM dbo.v_StatusMessage WHERE Severity = -2147483648 AND Time BETWEEN $__timeFrom() AND $__timeTo()) AS [Warning messages]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Site systems not healthy",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Components not healthy$/"
+                                                         }
+                                   },
+                       "id":  2,
+                       "type":  "stat",
+                       "description":  "Site components in Warning or Critical status over the last 24 hours.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  (SELECT COUNT(*) FROM dbo.v_SiteSystemSummarizer WHERE Status \u003e 0) AS [Site systems not healthy],\n  (SELECT COUNT(*) FROM dbo.v_ComponentSummarizer WHERE TallyInterval = \u00270001128000100008\u0027 AND Status \u003e 0) AS [Components not healthy],\n  (SELECT COUNT(*) FROM dbo.v_StatusMessage WHERE Severity = -1073741824 AND Time BETWEEN $__timeFrom() AND $__timeTo()) AS [Error messages],\n  (SELECT COUNT(*) FROM dbo.v_StatusMessage WHERE Severity = -2147483648 AND Time BETWEEN $__timeFrom() AND $__timeTo()) AS [Warning messages]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Components not healthy",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  6
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Error messages$/"
+                                                         }
+                                   },
+                       "id":  3,
+                       "type":  "stat",
+                       "description":  "Error status messages in the selected time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  (SELECT COUNT(*) FROM dbo.v_SiteSystemSummarizer WHERE Status \u003e 0) AS [Site systems not healthy],\n  (SELECT COUNT(*) FROM dbo.v_ComponentSummarizer WHERE TallyInterval = \u00270001128000100008\u0027 AND Status \u003e 0) AS [Components not healthy],\n  (SELECT COUNT(*) FROM dbo.v_StatusMessage WHERE Severity = -1073741824 AND Time BETWEEN $__timeFrom() AND $__timeTo()) AS [Error messages],\n  (SELECT COUNT(*) FROM dbo.v_StatusMessage WHERE Severity = -2147483648 AND Time BETWEEN $__timeFrom() AND $__timeTo()) AS [Warning messages]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Error messages",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Warning messages$/"
+                                                         }
+                                   },
+                       "id":  4,
+                       "type":  "stat",
+                       "description":  "Warning status messages in the selected time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  (SELECT COUNT(*) FROM dbo.v_SiteSystemSummarizer WHERE Status \u003e 0) AS [Site systems not healthy],\n  (SELECT COUNT(*) FROM dbo.v_ComponentSummarizer WHERE TallyInterval = \u00270001128000100008\u0027 AND Status \u003e 0) AS [Components not healthy],\n  (SELECT COUNT(*) FROM dbo.v_StatusMessage WHERE Severity = -1073741824 AND Time BETWEEN $__timeFrom() AND $__timeTo()) AS [Error messages],\n  (SELECT COUNT(*) FROM dbo.v_StatusMessage WHERE Severity = -2147483648 AND Time BETWEEN $__timeFrom() AND $__timeTo()) AS [Warning messages]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Warning messages",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  18
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  5,
+                       "type":  "timeseries",
+                       "description":  "Status messages the site has logged, per hour, in the selected time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "min":  0,
+                                                            "unit":  "none",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "fixedColor":  "#E02F44",
+                                                                                                      "mode":  "fixed"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Errors"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "fixedColor":  "#FF9830",
+                                                                                                      "mode":  "fixed"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Warnings"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  DATEADD(hour, DATEDIFF(hour, 0, Time), 0) AS time,\n  SUM(CASE WHEN Severity = -1073741824 THEN 1 ELSE 0 END) AS [Errors],\n  SUM(CASE WHEN Severity = -2147483648 THEN 1 ELSE 0 END) AS [Warnings]\nFROM dbo.v_StatusMessage\nWHERE Time BETWEEN $__timeFrom() AND $__timeTo() AND Severity IN (-1073741824, -2147483648)\nGROUP BY DATEADD(hour, DATEDIFF(hour, 0, Time), 0)\nORDER BY 1",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Error and warning messages per hour",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  24,
+                                       "h":  7,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  6,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No site systems found"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#8E8E93",
+                                                                                                                                    "text":  "Not monitored",
+                                                                                                                                    "index":  13
+                                                                                                                                },
+                                                                                                                          "3":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#56A64B",
+                                                                                                                                    "text":  "Healthy",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "-1":  {
+                                                                                                                                     "color":  "#8E8E93",
+                                                                                                                                     "text":  "n/a",
+                                                                                                                                     "index":  14
+                                                                                                                                 },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "unit",
+                                                                                        "value":  "percent"
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  10,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  20,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Free %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  110
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Free %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Free GB"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Down since"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Free %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Free GB"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  CASE WHEN CHARINDEX(\u0027Display=\\\\\u0027, s.SiteSystem) \u003e 0 AND CHARINDEX(\u0027\\\"]\u0027, s.SiteSystem) \u003e 0\n       THEN LOWER(SUBSTRING(s.SiteSystem, CHARINDEX(\u0027Display=\\\\\u0027, s.SiteSystem) + 10, CHARINDEX(\u0027\\\"]\u0027, s.SiteSystem) - CHARINDEX(\u0027Display=\\\\\u0027, s.SiteSystem) - 10))\n       ELSE s.SiteSystem END AS [Server],\n  REPLACE(s.Role, \u0027SMS \u0027, \u0027\u0027) AS [Role],\n  CASE s.Status WHEN 0 THEN 1 WHEN 1 THEN 2 WHEN 2 THEN 3 ELSE 0 END AS [Status],\n  CASE WHEN s.BytesTotal \u003e 0 THEN CAST(s.PercentFree AS int) END AS [Free %],\n  CASE WHEN s.BytesTotal \u003e 0 THEN CAST(s.BytesFree / 1048576.0 AS decimal(10, 1)) END AS [Free GB],\n  s.DownSince AS [Down since],\n  s.TimeReported AS [Last reported]\nFROM dbo.v_SiteSystemSummarizer s\nORDER BY s.Status DESC, 1, 2",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Site system roles",
+                       "gridPos":  {
+                                       "y":  11,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  7,
+                       "type":  "table",
+                       "description":  "Which components logged the most error and warning status messages in the selected time range.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No errors or warnings in range"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Errors"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Warnings"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  80
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Errors"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Warnings"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 50\n  LOWER(MachineName) AS [Server],\n  Component AS [Component],\n  SUM(CASE WHEN Severity = -1073741824 THEN 1 ELSE 0 END) AS [Errors],\n  SUM(CASE WHEN Severity = -2147483648 THEN 1 ELSE 0 END) AS [Warnings],\n  MAX(Time) AS [Latest]\nFROM dbo.v_StatusMessage\nWHERE Time BETWEEN $__timeFrom() AND $__timeTo() AND Severity IN (-1073741824, -2147483648)\nGROUP BY LOWER(MachineName), Component\nORDER BY SUM(CASE WHEN Severity = -1073741824 THEN 1 ELSE 0 END) DESC, SUM(CASE WHEN Severity = -2147483648 THEN 1 ELSE 0 END) DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Components with the most errors (time range)",
+                       "gridPos":  {
+                                       "y":  11,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  8,
+                       "type":  "table",
+                       "description":  "Status of each site component over the last 24 hours, worst first.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No components found"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "mappings",
+                                                                                        "value":  [
+                                                                                                      {
+                                                                                                          "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#8E8E93",
+                                                                                                                                    "text":  "Not monitored",
+                                                                                                                                    "index":  13
+                                                                                                                                },
+                                                                                                                          "3":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Healthy":  {
+                                                                                                                                          "index":  3,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#56A64B",
+                                                                                                                                    "text":  "Healthy",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
+                                                                                                                                      },
+                                                                                                                          "Not monitored":  {
+                                                                                                                                                "index":  4,
+                                                                                                                                                "color":  "#8E8E93"
+                                                                                                                                            },
+                                                                                                                          "Information":  {
+                                                                                                                                              "index":  2,
+                                                                                                                                              "color":  "#5794F2"
+                                                                                                                                          },
+                                                                                                                          "-1":  {
+                                                                                                                                     "color":  "#8E8E93",
+                                                                                                                                     "text":  "n/a",
+                                                                                                                                     "index":  14
+                                                                                                                                 },
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                }
+                                                                                                                      },
+                                                                                                          "type":  "value"
+                                                                                                      }
+                                                                                                  ]
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Errors"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Warnings"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  110
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Status"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  80
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Errors"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Warnings"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  115
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Information"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last contacted"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last heartbeat"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 300\n  LOWER(MachineName) AS [Server],\n  ComponentName AS [Component],\n  CASE Status WHEN 0 THEN 1 WHEN 1 THEN 2 WHEN 2 THEN 3 ELSE 0 END AS [Status],\n  CASE State WHEN 0 THEN \u0027Stopped\u0027 WHEN 1 THEN \u0027Started\u0027 WHEN 2 THEN \u0027Paused\u0027 WHEN 3 THEN \u0027Installing\u0027 WHEN 4 THEN \u0027Re-installing\u0027 WHEN 5 THEN \u0027De-installing\u0027 ELSE \u0027Unknown\u0027 END AS [State],\n  Errors AS [Errors],\n  Warnings AS [Warnings],\n  Infos AS [Information],\n  LastContacted AS [Last contacted],\n  LastHeartbeat AS [Last heartbeat]\nFROM dbo.v_ComponentSummarizer\nWHERE TallyInterval = \u00270001128000100008\u0027\nORDER BY Status DESC, Errors DESC, Warnings DESC, ComponentName",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Site components (last 24 hours)",
+                       "gridPos":  {
+                                       "y":  19,
+                                       "w":  24,
+                                       "h":  9,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  9,
+                       "type":  "table",
+                       "description":  "The latest error status messages. Look up the message ID in the console under Monitoring, Status Message Queries.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No error messages in range"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  115
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Message ID"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 100\n  Time AS [Time],\n  LOWER(MachineName) AS [Server],\n  Component AS [Component],\n  MessageID AS [Message ID],\n  ModuleName AS [Module],\n  Win32Error AS [Win32 error]\nFROM dbo.v_StatusMessage\nWHERE Severity = -1073741824 AND Time BETWEEN $__timeFrom() AND $__timeTo()\nORDER BY Time DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Latest error status messages",
+                       "gridPos":  {
+                                       "y":  28,
+                                       "w":  24,
+                                       "h":  9,
+                                       "x":  0
+                                   }
+                   }
+               ],
+    "description":  "Site system roles, components and status messages: what is failing on the Configuration Manager site and when.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

@@ -256,9 +256,35 @@
                                                                                         "value":  [
                                                                                                       {
                                                                                                           "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#5794F2",
+                                                                                                                                    "text":  "Information",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
                                                                                                                           "Healthy":  {
                                                                                                                                           "index":  3,
                                                                                                                                           "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
                                                                                                                                       },
                                                                                                                           "Not monitored":  {
                                                                                                                                                 "index":  4,
@@ -268,22 +294,11 @@
                                                                                                                                               "index":  2,
                                                                                                                                               "color":  "#5794F2"
                                                                                                                                           },
-                                                                                                                          "Warning":  {
-                                                                                                                                          "index":  1,
-                                                                                                                                          "color":  "#FF9830"
-                                                                                                                                      },
-                                                                                                                          "Present":  {
-                                                                                                                                          "index":  6,
-                                                                                                                                          "color":  "#56A64B"
-                                                                                                                                      },
-                                                                                                                          "MISSING":  {
-                                                                                                                                          "index":  5,
-                                                                                                                                          "color":  "#E02F44"
-                                                                                                                                      },
-                                                                                                                          "Critical":  {
-                                                                                                                                           "index":  0,
-                                                                                                                                           "color":  "#E02F44"
-                                                                                                                                       }
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                }
                                                                                                                       },
                                                                                                           "type":  "value"
                                                                                                       }
@@ -342,7 +357,7 @@
                                                               "uid":  "${ds_om}"
                                                           },
                                            "rawQuery":  true,
-                                           "rawSql":  "SELECT TOP 300\n  CASE a.Severity WHEN 2 THEN \u0027Critical\u0027 WHEN 1 THEN \u0027Warning\u0027 ELSE \u0027Information\u0027 END AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, \u0027\u0027), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState \u003c 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE \u0027Microsoft.SystemCenter.%\u0027\nORDER BY a.Severity DESC, a.TimeRaised DESC",
+                                           "rawSql":  "SELECT TOP 300\n  a.Severity AS Severity,\n  COALESCE(NULLIF(a.AlertStringName, \u0027\u0027), a.Name) AS Alert,\n  CAST(a.Id AS varchar(36)) AS AlertId,\n  a.MonitoringObjectDisplayName AS Source,\n  a.RepeatCount AS Repeats,\n  a.TimeRaised AS Raised\nFROM (SELECT al.AlertId AS Id, al.AlertName AS Name, al.AlertDescription AS Description, al.BaseManagedEntityId AS MonitoringObjectId, bm.DisplayName AS MonitoringObjectDisplayName, bm.FullName AS MonitoringObjectFullName, bm.Path AS MonitoringObjectPath, bm.TopLevelHostEntityId AS TopLevelHostEntityId, al.IsMonitorAlert, al.RuleId AS MonitoringRuleId, al.ResolutionState, al.Priority, al.Severity, al.Category, al.Owner, al.ResolvedBy, al.TimeRaised, al.LastModified, al.TimeResolved, al.RepeatCount, al.TicketId, al.Context, al.AlertParams, al.CustomField1, al.CustomField2, al.CustomField3, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 1 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringName, (SELECT TOP 1 lt.LTValue FROM dbo.LocalizedText lt WHERE lt.LTStringId = al.AlertStringId AND lt.LTStringType = 2 ORDER BY CASE WHEN lt.LanguageCode = \u0027ENU\u0027 THEN 0 ELSE 1 END, lt.LanguageCode) AS AlertStringDescription FROM dbo.Alert al JOIN dbo.BaseManagedEntity bm ON bm.BaseManagedEntityId = al.BaseManagedEntityId) a\nWHERE a.ResolutionState \u003c 255\n  AND a.TimeRaised BETWEEN $__timeFrom() AND $__timeTo()\n  AND a.MonitoringObjectFullName LIKE \u0027Microsoft.SystemCenter.%\u0027\nORDER BY a.Severity DESC, a.TimeRaised DESC",
                                            "format":  "table"
                                        }
                                    ],

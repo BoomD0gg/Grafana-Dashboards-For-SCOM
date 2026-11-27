@@ -1,0 +1,406 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-24h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_dw",
+                                        "label":  "SCOM Data Warehouse",
+                                        "description":  "Microsoft SQL Server data source for the OperationsManagerDW database. Chosen automatically if its name contains \"Warehouse\" or \"DW\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/warehouse|dw/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName IN (\u0027MECM.SiteServer\u0027, \u0027MECM.ManagementPoint\u0027, \u0027MECM.DistributionPoint\u0027, \u0027MECM.SoftwareUpdatePoint\u0027, \u0027MECM.ServiceConnectionPoint\u0027, \u0027MECM.SQLServer\u0027, \u0027MECM.ServerComponent\u0027)\n  AND h.DisplayName IS NOT NULL\nORDER BY 1",
+                                        "type":  "query",
+                                        "includeAll":  true,
+                                        "label":  "Configuration Manager server",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_dw}"
+                                                       },
+                                        "name":  "cmhost",
+                                        "multi":  true,
+                                        "query":  "SELECT DISTINCT h.DisplayName AS __text, h.DisplayName AS __value\nFROM dbo.vManagedEntity e\nJOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId\nJOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\nWHERE t.ManagedEntityTypeSystemName IN (\u0027MECM.SiteServer\u0027, \u0027MECM.ManagementPoint\u0027, \u0027MECM.DistributionPoint\u0027, \u0027MECM.SoftwareUpdatePoint\u0027, \u0027MECM.ServiceConnectionPoint\u0027, \u0027MECM.SQLServer\u0027, \u0027MECM.ServerComponent\u0027)\n  AND h.DisplayName IS NOT NULL\nORDER BY 1",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    }
+                                ]
+                   },
+    "uid":  "scom-cmm-perf",
+    "title":  "SCCM Monitoring - Performance",
+    "tags":  [
+                 "scom",
+                 "scom-pack",
+                 "sccm-monitoring",
+                 "pack:sccm-monitoring"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  1,
+                       "type":  "timeseries",
+                       "description":  "Total processor time of each selected server.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName IN (\u0027% Processor Time\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName = \u0027_Total\u0027\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Processor Information\u0027 AND r.CounterName IN (\u0027% Processor Time\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName = \u0027_Total\u0027\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Processor time (%)",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  2,
+                       "type":  "timeseries",
+                       "description":  "Memory available on each selected server.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "decmbytes",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Memory\u0027 AND r.CounterName IN (\u0027Available MBytes\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) \n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Memory\u0027 AND r.CounterName IN (\u0027Available MBytes\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) \n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Available memory (MB)",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  3,
+                       "type":  "timeseries",
+                       "description":  "Free space of each logical disk of the selected servers (the site server needs room on its content and inbox drives).",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "max":  100,
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName + \u0027 \u0027 + i.InstanceName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027LogicalDisk\u0027 AND r.CounterName IN (\u0027% Free Space\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName \u003c\u003e \u0027_Total\u0027\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName + \u0027 \u0027 + i.InstanceName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName + \u0027 \u0027 + i.InstanceName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027LogicalDisk\u0027 AND r.CounterName IN (\u0027% Free Space\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName \u003c\u003e \u0027_Total\u0027\n  GROUP BY p.DateTime, h.DisplayName + \u0027 \u0027 + i.InstanceName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "Disk free space (%)",
+                       "gridPos":  {
+                                       "y":  8,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  4,
+                       "type":  "timeseries",
+                       "description":  "Processor time used by the Configuration Manager site server process (SMSExec). Collected by the MECM management pack on the site server.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "percent",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Process\u0027 AND r.CounterName IN (\u0027% Processor Time\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName = \u0027smsexec\u0027\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Process\u0027 AND r.CounterName IN (\u0027% Processor Time\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName = \u0027smsexec\u0027\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "SMS Executive processor time (%)",
+                       "gridPos":  {
+                                       "y":  8,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "legend":  {
+                                                      "placement":  "bottom",
+                                                      "calcs":  [
+                                                                    "lastNotNull",
+                                                                    "max"
+                                                                ],
+                                                      "displayMode":  "table"
+                                                  },
+                                       "tooltip":  {
+                                                       "sort":  "desc",
+                                                       "mode":  "multi"
+                                                   }
+                                   },
+                       "id":  5,
+                       "type":  "timeseries",
+                       "description":  "Private memory used by the SMSExec process on the site server.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_dw}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "color":  {
+                                                                          "mode":  "palette-classic"
+                                                                      },
+                                                            "custom":  {
+                                                                           "spanNulls":  3900000,
+                                                                           "lineWidth":  2,
+                                                                           "showPoints":  "never",
+                                                                           "fillOpacity":  8
+                                                                       },
+                                                            "min":  0,
+                                                            "unit":  "bytes",
+                                                            "noValue":  "No data in range"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_dw}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT time, metric, value FROM (\n  SELECT DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0) AS time, h.DisplayName AS metric, AVG(p.SampleValue) AS value\n  FROM Perf.vPerfRaw p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003c= 2880\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Process\u0027 AND r.CounterName IN (\u0027Working Set - Private\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName = \u0027smsexec\u0027\n  GROUP BY DATEADD(minute, (DATEDIFF(minute, 0, p.DateTime) / 5) * 5, 0), h.DisplayName\n  UNION ALL\n  SELECT p.DateTime, h.DisplayName, AVG(p.AverageValue)\n  FROM Perf.vPerfHourly p\n  JOIN dbo.vPerformanceRuleInstance i ON i.PerformanceRuleInstanceRowId = p.PerformanceRuleInstanceRowId\n  JOIN dbo.vPerformanceRule r ON r.RuleRowId = i.RuleRowId\n  JOIN dbo.vManagedEntity e ON e.ManagedEntityRowId = p.ManagedEntityRowId\n  JOIN dbo.vManagedEntity h ON h.ManagedEntityRowId = e.TopLevelHostManagedEntityRowId\n  WHERE (DATEDIFF(minute, $__timeFrom(), $__timeTo()) \u003e 2880 OR NOT EXISTS (SELECT 1 FROM Perf.vPerfRaw x WHERE x.DateTime BETWEEN $__timeFrom() AND $__timeTo()))\n    AND p.DateTime BETWEEN $__timeFrom() AND $__timeTo()\n    AND r.ObjectName = \u0027Process\u0027 AND r.CounterName IN (\u0027Working Set - Private\u0027)\n    AND h.DisplayName IN (${cmhost:singlequote}) AND i.InstanceName = \u0027smsexec\u0027\n  GROUP BY p.DateTime, h.DisplayName\n) x ORDER BY time",
+                                           "format":  "time_series"
+                                       }
+                                   ],
+                       "title":  "SMS Executive memory (private working set)",
+                       "gridPos":  {
+                                       "y":  16,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   }
+               ],
+    "description":  "Configuration Manager server performance from SCOM: processor, memory, disks and the site server process (SMSExec).",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

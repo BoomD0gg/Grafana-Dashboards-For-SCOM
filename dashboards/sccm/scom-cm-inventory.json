@@ -1,0 +1,949 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-24h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_cm",
+                                        "label":  "SCCM Database",
+                                        "description":  "Microsoft SQL Server data source for the Configuration Manager site database (CM_\u003csite code\u003e), with a read-only login. Chosen automatically if its name contains \"SCCM\", \"ConfigMgr\" or \"Configuration Manager\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/sccm|configmgr|configuration manager|\\bcm\\b/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    },
+                                    {
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  2,
+                                        "definition":  "SELECT Name AS __text, CollectionID AS __value\nFROM dbo.v_Collection\nWHERE CollectionType = 2\nORDER BY Name",
+                                        "type":  "query",
+                                        "includeAll":  false,
+                                        "label":  "Collection",
+                                        "datasource":  {
+                                                           "type":  "mssql",
+                                                           "uid":  "${ds_cm}"
+                                                       },
+                                        "name":  "cmcoll",
+                                        "multi":  false,
+                                        "query":  "SELECT Name AS __text, CollectionID AS __value\nFROM dbo.v_Collection\nWHERE CollectionType = 2\nORDER BY Name",
+                                        "sort":  1,
+                                        "current":  {
+
+                                                    }
+                                    }
+                                ]
+                   },
+    "uid":  "scom-cm-inventory",
+    "title":  "SCCM - Hardware Inventory",
+    "tags":  [
+                 "scom-pack",
+                 "sccm",
+                 "pack:sccm"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Devices$/"
+                                                         }
+                                   },
+                       "id":  1,
+                       "type":  "stat",
+                       "description":  "Devices in the selected collection.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM m) AS [Devices],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID) AS [With hardware inventory],\n  (SELECT COUNT(*) FROM m WHERE NOT EXISTS (SELECT 1 FROM dbo.v_GS_WORKSTATION_STATUS w WHERE w.ResourceID = m.ResourceID)) AS [Without hardware inventory],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID WHERE w.LastHWScan \u003c DATEADD(day, -14, GETDATE())) AS [Inventory older than 14 days],\n  (SELECT CAST(ISNULL(SUM(mem.TotalPhysicalMemory0), 0) / 1048576.0 AS decimal(12, 0)) FROM dbo.v_GS_X86_PC_MEMORY mem JOIN m ON m.ResourceID = mem.ResourceID) AS [Total RAM GB],\n  (SELECT COUNT(*) FROM dbo.v_GS_LOGICAL_DISK d JOIN m ON m.ResourceID = d.ResourceID WHERE d.DriveType0 = 3 AND d.Size0 \u003e 0 AND 100.0 * d.FreeSpace0 / d.Size0 \u003c 15) AS [Disks under 15% free]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Devices",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^With hardware inventory$/"
+                                                         }
+                                   },
+                       "id":  2,
+                       "type":  "stat",
+                       "description":  "Devices that have sent a hardware inventory.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM m) AS [Devices],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID) AS [With hardware inventory],\n  (SELECT COUNT(*) FROM m WHERE NOT EXISTS (SELECT 1 FROM dbo.v_GS_WORKSTATION_STATUS w WHERE w.ResourceID = m.ResourceID)) AS [Without hardware inventory],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID WHERE w.LastHWScan \u003c DATEADD(day, -14, GETDATE())) AS [Inventory older than 14 days],\n  (SELECT CAST(ISNULL(SUM(mem.TotalPhysicalMemory0), 0) / 1048576.0 AS decimal(12, 0)) FROM dbo.v_GS_X86_PC_MEMORY mem JOIN m ON m.ResourceID = mem.ResourceID) AS [Total RAM GB],\n  (SELECT COUNT(*) FROM dbo.v_GS_LOGICAL_DISK d JOIN m ON m.ResourceID = d.ResourceID WHERE d.DriveType0 = 3 AND d.Size0 \u003e 0 AND 100.0 * d.FreeSpace0 / d.Size0 \u003c 15) AS [Disks under 15% free]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "With hardware inventory",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  4
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Without hardware inventory$/"
+                                                         }
+                                   },
+                       "id":  3,
+                       "type":  "stat",
+                       "description":  "Devices that have never sent a hardware inventory.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM m) AS [Devices],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID) AS [With hardware inventory],\n  (SELECT COUNT(*) FROM m WHERE NOT EXISTS (SELECT 1 FROM dbo.v_GS_WORKSTATION_STATUS w WHERE w.ResourceID = m.ResourceID)) AS [Without hardware inventory],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID WHERE w.LastHWScan \u003c DATEADD(day, -14, GETDATE())) AS [Inventory older than 14 days],\n  (SELECT CAST(ISNULL(SUM(mem.TotalPhysicalMemory0), 0) / 1048576.0 AS decimal(12, 0)) FROM dbo.v_GS_X86_PC_MEMORY mem JOIN m ON m.ResourceID = mem.ResourceID) AS [Total RAM GB],\n  (SELECT COUNT(*) FROM dbo.v_GS_LOGICAL_DISK d JOIN m ON m.ResourceID = d.ResourceID WHERE d.DriveType0 = 3 AND d.Size0 \u003e 0 AND 100.0 * d.FreeSpace0 / d.Size0 \u003c 15) AS [Disks under 15% free]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Without hardware inventory",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  8
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Inventory older than 14 days$/"
+                                                         }
+                                   },
+                       "id":  4,
+                       "type":  "stat",
+                       "description":  "Devices whose last hardware inventory is more than 14 days old.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#FF9830"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM m) AS [Devices],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID) AS [With hardware inventory],\n  (SELECT COUNT(*) FROM m WHERE NOT EXISTS (SELECT 1 FROM dbo.v_GS_WORKSTATION_STATUS w WHERE w.ResourceID = m.ResourceID)) AS [Without hardware inventory],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID WHERE w.LastHWScan \u003c DATEADD(day, -14, GETDATE())) AS [Inventory older than 14 days],\n  (SELECT CAST(ISNULL(SUM(mem.TotalPhysicalMemory0), 0) / 1048576.0 AS decimal(12, 0)) FROM dbo.v_GS_X86_PC_MEMORY mem JOIN m ON m.ResourceID = mem.ResourceID) AS [Total RAM GB],\n  (SELECT COUNT(*) FROM dbo.v_GS_LOGICAL_DISK d JOIN m ON m.ResourceID = d.ResourceID WHERE d.DriveType0 = 3 AND d.Size0 \u003e 0 AND 100.0 * d.FreeSpace0 / d.Size0 \u003c 15) AS [Disks under 15% free]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Inventory older than 14 days",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Total RAM GB$/"
+                                                         }
+                                   },
+                       "id":  5,
+                       "type":  "stat",
+                       "description":  "Installed memory of the inventoried devices.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM m) AS [Devices],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID) AS [With hardware inventory],\n  (SELECT COUNT(*) FROM m WHERE NOT EXISTS (SELECT 1 FROM dbo.v_GS_WORKSTATION_STATUS w WHERE w.ResourceID = m.ResourceID)) AS [Without hardware inventory],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID WHERE w.LastHWScan \u003c DATEADD(day, -14, GETDATE())) AS [Inventory older than 14 days],\n  (SELECT CAST(ISNULL(SUM(mem.TotalPhysicalMemory0), 0) / 1048576.0 AS decimal(12, 0)) FROM dbo.v_GS_X86_PC_MEMORY mem JOIN m ON m.ResourceID = mem.ResourceID) AS [Total RAM GB],\n  (SELECT COUNT(*) FROM dbo.v_GS_LOGICAL_DISK d JOIN m ON m.ResourceID = d.ResourceID WHERE d.DriveType0 = 3 AND d.Size0 \u003e 0 AND 100.0 * d.FreeSpace0 / d.Size0 \u003c 15) AS [Disks under 15% free]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Total RAM (GB)",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  16
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Disks under 15% free$/"
+                                                         }
+                                   },
+                       "id":  6,
+                       "type":  "stat",
+                       "description":  "Fixed disks with less than 15% free space.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "WITH m AS (SELECT ResourceID FROM dbo.v_ClientCollectionMembers WHERE CollectionID = \u0027${cmcoll}\u0027)\nSELECT\n  (SELECT COUNT(*) FROM m) AS [Devices],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID) AS [With hardware inventory],\n  (SELECT COUNT(*) FROM m WHERE NOT EXISTS (SELECT 1 FROM dbo.v_GS_WORKSTATION_STATUS w WHERE w.ResourceID = m.ResourceID)) AS [Without hardware inventory],\n  (SELECT COUNT(*) FROM m JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID WHERE w.LastHWScan \u003c DATEADD(day, -14, GETDATE())) AS [Inventory older than 14 days],\n  (SELECT CAST(ISNULL(SUM(mem.TotalPhysicalMemory0), 0) / 1048576.0 AS decimal(12, 0)) FROM dbo.v_GS_X86_PC_MEMORY mem JOIN m ON m.ResourceID = mem.ResourceID) AS [Total RAM GB],\n  (SELECT COUNT(*) FROM dbo.v_GS_LOGICAL_DISK d JOIN m ON m.ResourceID = d.ResourceID WHERE d.DriveType0 = 3 AND d.Size0 \u003e 0 AND 100.0 * d.FreeSpace0 / d.Size0 \u003c 15) AS [Disks under 15% free]",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Disks under 15% free",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  20
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  7,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No hardware inventory yet"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Devices"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Average RAM (GB)"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Manufacturer"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Model"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  ISNULL(cs.Manufacturer0, \u0027Unknown\u0027) AS [Manufacturer],\n  ISNULL(cs.Model0, \u0027Unknown\u0027) AS [Model],\n  COUNT(*) AS [Devices],\n  CAST(AVG(mem.TotalPhysicalMemory0) / 1048576.0 AS decimal(10, 1)) AS [Average RAM (GB)]\nFROM dbo.v_GS_COMPUTER_SYSTEM cs\nJOIN dbo.v_ClientCollectionMembers m ON m.ResourceID = cs.ResourceID AND m.CollectionID = \u0027${cmcoll}\u0027\nLEFT JOIN dbo.v_GS_X86_PC_MEMORY mem ON mem.ResourceID = cs.ResourceID\nGROUP BY cs.Manufacturer0, cs.Model0\nORDER BY COUNT(*) DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Devices by manufacturer and model",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  8,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No hardware inventory yet"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Build"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Devices"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Build"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Architecture"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  REPLACE(ISNULL(o.Caption0, \u0027Unknown\u0027), \u0027Microsoft \u0027, \u0027\u0027) AS [Operating system],\n  o.BuildNumber0 AS [Build],\n  o.OSArchitecture0 AS [Architecture],\n  COUNT(*) AS [Devices]\nFROM dbo.v_GS_OPERATING_SYSTEM o\nJOIN dbo.v_ClientCollectionMembers m ON m.ResourceID = o.ResourceID AND m.CollectionID = \u0027${cmcoll}\u0027\nGROUP BY o.Caption0, o.BuildNumber0, o.OSArchitecture0\nORDER BY COUNT(*) DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Operating system and build",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  9,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No disk inventory yet"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "unit",
+                                                                                        "value":  "percent"
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  10,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  20,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Free %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  70
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Drive"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Free %"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 200\n  s.Name0 AS [Device],\n  d.DeviceID0 AS [Drive],\n  CAST(d.Size0 / 1024.0 AS decimal(10, 1)) AS [Size GB],\n  CAST(d.FreeSpace0 / 1024.0 AS decimal(10, 1)) AS [Free GB],\n  CAST(100.0 * d.FreeSpace0 / d.Size0 AS decimal(5, 1)) AS [Free %],\n  d.FileSystem0 AS [File system],\n  d.TimeStamp AS [Inventoried]\nFROM dbo.v_GS_LOGICAL_DISK d\nJOIN dbo.v_ClientCollectionMembers m ON m.ResourceID = d.ResourceID AND m.CollectionID = \u0027${cmcoll}\u0027\nJOIN dbo.v_R_System s ON s.ResourceID = d.ResourceID\nWHERE d.DriveType0 = 3 AND d.Size0 \u003e 0\nORDER BY 100.0 * d.FreeSpace0 / d.Size0, s.Name0",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Fixed disks (least free space first)",
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  12,
+                                       "h":  10,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  10,
+                       "type":  "table",
+                       "description":  "",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No devices in this collection"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last boot"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Last hardware inventory"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Manufacturer"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Model"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPUs"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "RAM GB"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  70
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "CPUs"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "RAM GB"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 500\n  s.Name0 AS [Device],\n  cs.Manufacturer0 AS [Manufacturer],\n  cs.Model0 AS [Model],\n  cs.NumberOfProcessors0 AS [CPUs],\n  CAST(mem.TotalPhysicalMemory0 / 1048576.0 AS decimal(10, 1)) AS [RAM GB],\n  o.LastBootUpTime0 AS [Last boot],\n  w.LastHWScan AS [Last hardware inventory]\nFROM dbo.v_ClientCollectionMembers m\nJOIN dbo.v_R_System s ON s.ResourceID = m.ResourceID\nLEFT JOIN dbo.v_GS_COMPUTER_SYSTEM cs ON cs.ResourceID = m.ResourceID\nLEFT JOIN dbo.v_GS_X86_PC_MEMORY mem ON mem.ResourceID = m.ResourceID\nLEFT JOIN dbo.v_GS_OPERATING_SYSTEM o ON o.ResourceID = m.ResourceID\nLEFT JOIN dbo.v_GS_WORKSTATION_STATUS w ON w.ResourceID = m.ResourceID\nWHERE m.CollectionID = \u0027${cmcoll}\u0027\nORDER BY s.Name0",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Devices",
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  12,
+                                       "h":  10,
+                                       "x":  12
+                                   }
+                   }
+               ],
+    "description":  "Hardware inventory from Configuration Manager: models, operating systems, memory and disk space for the devices in a collection.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

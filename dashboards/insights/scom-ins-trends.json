@@ -466,9 +466,35 @@
                                                                                         "value":  [
                                                                                                       {
                                                                                                           "options":  {
+                                                                                                                          "0":  {
+                                                                                                                                    "color":  "#5794F2",
+                                                                                                                                    "text":  "Information",
+                                                                                                                                    "index":  12
+                                                                                                                                },
+                                                                                                                          "Present":  {
+                                                                                                                                          "index":  6,
+                                                                                                                                          "color":  "#56A64B"
+                                                                                                                                      },
                                                                                                                           "Healthy":  {
                                                                                                                                           "index":  3,
                                                                                                                                           "color":  "#56A64B"
+                                                                                                                                      },
+                                                                                                                          "Critical":  {
+                                                                                                                                           "index":  0,
+                                                                                                                                           "color":  "#E02F44"
+                                                                                                                                       },
+                                                                                                                          "1":  {
+                                                                                                                                    "color":  "#FF9830",
+                                                                                                                                    "text":  "Warning",
+                                                                                                                                    "index":  11
+                                                                                                                                },
+                                                                                                                          "MISSING":  {
+                                                                                                                                          "index":  5,
+                                                                                                                                          "color":  "#E02F44"
+                                                                                                                                      },
+                                                                                                                          "Warning":  {
+                                                                                                                                          "index":  1,
+                                                                                                                                          "color":  "#FF9830"
                                                                                                                                       },
                                                                                                                           "Not monitored":  {
                                                                                                                                                 "index":  4,
@@ -478,22 +504,11 @@
                                                                                                                                               "index":  2,
                                                                                                                                               "color":  "#5794F2"
                                                                                                                                           },
-                                                                                                                          "Warning":  {
-                                                                                                                                          "index":  1,
-                                                                                                                                          "color":  "#FF9830"
-                                                                                                                                      },
-                                                                                                                          "Present":  {
-                                                                                                                                          "index":  6,
-                                                                                                                                          "color":  "#56A64B"
-                                                                                                                                      },
-                                                                                                                          "MISSING":  {
-                                                                                                                                          "index":  5,
-                                                                                                                                          "color":  "#E02F44"
-                                                                                                                                      },
-                                                                                                                          "Critical":  {
-                                                                                                                                           "index":  0,
-                                                                                                                                           "color":  "#E02F44"
-                                                                                                                                       }
+                                                                                                                          "2":  {
+                                                                                                                                    "color":  "#E02F44",
+                                                                                                                                    "text":  "Critical",
+                                                                                                                                    "index":  10
+                                                                                                                                }
                                                                                                                       },
                                                                                                           "type":  "value"
                                                                                                       }
@@ -582,7 +597,7 @@
                                                               "uid":  "${ds_dw}"
                                                           },
                                            "rawQuery":  true,
-                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT e.ManagedEntityRowId, e.DisplayName\n  FROM dbo.vManagedEntity e\n  WHERE e.ManagedEntityRowId IN (SELECT id FROM srv) OR e.TopLevelHostManagedEntityRowId IN (SELECT id FROM srv) OR e.DisplayName IN (SELECT name FROM srv)\n),\na AS (\n  SELECT al.AlertGuid, al.AlertName, al.Severity, al.RaisedDateTime, en.ManagedEntityRowId, al.RepeatCount,\n         (SELECT TOP 1 rs.TimeFromRaisedSeconds FROM Alert.vAlertResolutionState rs WHERE rs.AlertGuid = al.AlertGuid AND rs.ResolutionState = 255) AS secs_to_close\n  FROM Alert.vAlert al JOIN ent en ON en.ManagedEntityRowId = al.ManagedEntityRowId\n  WHERE al.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\nSELECT TOP 25 a.AlertName AS Alert,\n       CASE MAX(a.Severity) WHEN 2 THEN \u0027Critical\u0027 WHEN 1 THEN \u0027Warning\u0027 ELSE \u0027Information\u0027 END AS Severity,\n       COUNT(*) AS Raised,\n       SUM(CAST(a.RepeatCount AS bigint)) AS \"Repeat count\",\n       COUNT(DISTINCT a.ManagedEntityRowId) AS Sources,\n       COUNT(DISTINCT CAST(a.RaisedDateTime AS date)) AS \"Days seen\",\n       MIN(a.RaisedDateTime) AS \"First seen\",\n       MAX(a.RaisedDateTime) AS \"Last seen\",\n       ROUND(AVG(a.secs_to_close) / 60.0, 0) AS \"Average minutes to resolve\",\n       SUM(CASE WHEN a.secs_to_close IS NULL THEN 1 ELSE 0 END) AS \"Still open\"\nFROM a\nGROUP BY a.AlertName\nORDER BY COUNT(*) DESC, a.AlertName",
+                                           "rawSql":  "WITH srv AS (\n  SELECT e.ManagedEntityRowId AS id, e.DisplayName AS name\n  FROM dbo.vManagedEntity e\n  JOIN dbo.vManagedEntityType t ON t.ManagedEntityTypeRowId = e.ManagedEntityTypeRowId AND t.ManagedEntityTypeSystemName = \u0027Microsoft.Windows.Computer\u0027\n  WHERE e.DisplayName IN (${server:singlequote})\n),\nent AS (\n  SELECT e.ManagedEntityRowId, e.DisplayName\n  FROM dbo.vManagedEntity e\n  WHERE e.ManagedEntityRowId IN (SELECT id FROM srv) OR e.TopLevelHostManagedEntityRowId IN (SELECT id FROM srv) OR e.DisplayName IN (SELECT name FROM srv)\n),\na AS (\n  SELECT al.AlertGuid, al.AlertName, al.Severity, al.RaisedDateTime, en.ManagedEntityRowId, al.RepeatCount,\n         (SELECT TOP 1 rs.TimeFromRaisedSeconds FROM Alert.vAlertResolutionState rs WHERE rs.AlertGuid = al.AlertGuid AND rs.ResolutionState = 255) AS secs_to_close\n  FROM Alert.vAlert al JOIN ent en ON en.ManagedEntityRowId = al.ManagedEntityRowId\n  WHERE al.RaisedDateTime BETWEEN $__timeFrom() AND $__timeTo()\n)\nSELECT TOP 25 a.AlertName AS Alert,\n       MAX(a.Severity) AS Severity,\n       COUNT(*) AS Raised,\n       SUM(CAST(a.RepeatCount AS bigint)) AS \"Repeat count\",\n       COUNT(DISTINCT a.ManagedEntityRowId) AS Sources,\n       COUNT(DISTINCT CAST(a.RaisedDateTime AS date)) AS \"Days seen\",\n       MIN(a.RaisedDateTime) AS \"First seen\",\n       MAX(a.RaisedDateTime) AS \"Last seen\",\n       ROUND(AVG(a.secs_to_close) / 60.0, 0) AS \"Average minutes to resolve\",\n       SUM(CASE WHEN a.secs_to_close IS NULL THEN 1 ELSE 0 END) AS \"Still open\"\nFROM a\nGROUP BY a.AlertName\nORDER BY COUNT(*) DESC, a.AlertName",
                                            "format":  "table"
                                        }
                                    ],

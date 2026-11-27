@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.0 - SCCM (Configuration Manager)
+
+### Added
+- **SCCM** (new folder `sccm`, six dashboards) reads the Configuration Manager **site database** through a read-only SQL data source: **Overview**, **Client Health**, **Software Updates**, **Deployments**, **Site Health** and **Hardware Inventory**. Most have a Collection drop-down. See [SCCM.md](docs/SCCM.md) for how to create the read-only login.
+  - Tested on one primary site (version 5.00.9106) with 20 clients: client counts, activity and versions, site system roles, components, status messages, hardware inventory and update scan results were shown from real data.
+  - **Not tested:** application, task sequence and software update deployments (the lab had none, so those panels show "No deployments"), failing or inactive clients (all were healthy), a central administration site, secondary sites and large estates.
+- **SCCM Monitoring (SCOM)** (new folder `sccm-monitoring`, three dashboards) shows the Configuration Manager servers as SCOM sees them: **Overview**, **Performance** and **Server Detail**, built from the Microsoft Configuration Manager (MECM) management pack.
+  - Tested on one primary site with the site database on a separate server (management pack 5.0.2303.2, SCOM 2022). With two services stopped on the site server, SCOM turned the management point, site server, site and hierarchy Critical about 18 minutes later and raised two alerts, and the dashboard showed it. Recovery took between 10 and 31 minutes. The service monitors for the two stopped services did not turn unhealthy themselves.
+  - The management pack collects very little performance data by default (only the SMSExec process); most of its other performance collection rules are disabled, and several monitors are disabled and show as Not monitored.
+- The two folders are independent: use either one or both.
+
+### Changed
+- **Sorting by severity.** Clicking the header of a Health, Status or Severity column used to sort alphabetically, which put Warning after Healthy. The queries now return a severity rank and the dashboards still show the word in its colour, so sorting a column puts Critical first, then Warning. This applies to every folder. The numbers and layout are unchanged. The timeline in Insights keeps its text Severity column, because it mixes alerts, health changes and events. The unhealthy monitors tables also now list Critical above Warning.
+
 ## 0.5.0 - Failover Clustering validated, and a Version column
 
 ### Changed

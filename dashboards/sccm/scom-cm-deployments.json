@@ -1,0 +1,710 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-24h"
+             },
+    "graphTooltip":  1,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "type":  "datasource",
+                                        "name":  "ds_cm",
+                                        "label":  "SCCM Database",
+                                        "description":  "Microsoft SQL Server data source for the Configuration Manager site database (CM_\u003csite code\u003e), with a read-only login. Chosen automatically if its name contains \"SCCM\", \"ConfigMgr\" or \"Configuration Manager\"; otherwise pick it here.",
+                                        "query":  "mssql",
+                                        "regex":  "/sccm|configmgr|configuration manager|\\bcm\\b/i",
+                                        "current":  {
+
+                                                    },
+                                        "hide":  0,
+                                        "includeAll":  false,
+                                        "multi":  false,
+                                        "options":  [
+
+                                                    ],
+                                        "refresh":  1,
+                                        "skipUrlSync":  false
+                                    }
+                                ]
+                   },
+    "uid":  "scom-cm-deployments",
+    "title":  "SCCM - Deployments",
+    "tags":  [
+                 "scom-pack",
+                 "sccm",
+                 "pack:sccm"
+             ],
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "panels":  [
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Deployments$/"
+                                                         }
+                                   },
+                       "id":  1,
+                       "type":  "stat",
+                       "description":  "Application, program, script and task sequence deployments (not software updates).",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  COUNT(*) AS [Deployments],\n  ISNULL(SUM(NumberTotal), 0) AS [Assignments],\n  ISNULL(SUM(NumberSuccess), 0) AS [Succeeded],\n  ISNULL(SUM(NumberInProgress), 0) AS [In progress],\n  ISNULL(SUM(NumberErrors), 0) AS [Failed],\n  SUM(CASE WHEN NumberErrors \u003e 0 THEN 1 ELSE 0 END) AS [Deployments with errors]\nFROM dbo.v_DeploymentSummary\nWHERE FeatureType \u003c\u003e 5",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Deployments",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Succeeded$/"
+                                                         }
+                                   },
+                       "id":  2,
+                       "type":  "stat",
+                       "description":  "Assignments that completed successfully.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  COUNT(*) AS [Deployments],\n  ISNULL(SUM(NumberTotal), 0) AS [Assignments],\n  ISNULL(SUM(NumberSuccess), 0) AS [Succeeded],\n  ISNULL(SUM(NumberInProgress), 0) AS [In progress],\n  ISNULL(SUM(NumberErrors), 0) AS [Failed],\n  SUM(CASE WHEN NumberErrors \u003e 0 THEN 1 ELSE 0 END) AS [Deployments with errors]\nFROM dbo.v_DeploymentSummary\nWHERE FeatureType \u003c\u003e 5",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Succeeded",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  4
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^In progress$/"
+                                                         }
+                                   },
+                       "id":  3,
+                       "type":  "stat",
+                       "description":  "Assignments still installing.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  COUNT(*) AS [Deployments],\n  ISNULL(SUM(NumberTotal), 0) AS [Assignments],\n  ISNULL(SUM(NumberSuccess), 0) AS [Succeeded],\n  ISNULL(SUM(NumberInProgress), 0) AS [In progress],\n  ISNULL(SUM(NumberErrors), 0) AS [Failed],\n  SUM(CASE WHEN NumberErrors \u003e 0 THEN 1 ELSE 0 END) AS [Deployments with errors]\nFROM dbo.v_DeploymentSummary\nWHERE FeatureType \u003c\u003e 5",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "In progress",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  8
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Failed$/"
+                                                         }
+                                   },
+                       "id":  4,
+                       "type":  "stat",
+                       "description":  "Assignments that ended in an error.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  COUNT(*) AS [Deployments],\n  ISNULL(SUM(NumberTotal), 0) AS [Assignments],\n  ISNULL(SUM(NumberSuccess), 0) AS [Succeeded],\n  ISNULL(SUM(NumberInProgress), 0) AS [In progress],\n  ISNULL(SUM(NumberErrors), 0) AS [Failed],\n  SUM(CASE WHEN NumberErrors \u003e 0 THEN 1 ELSE 0 END) AS [Deployments with errors]\nFROM dbo.v_DeploymentSummary\nWHERE FeatureType \u003c\u003e 5",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Failed",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  12
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Deployments with errors$/"
+                                                         }
+                                   },
+                       "id":  5,
+                       "type":  "stat",
+                       "description":  "Deployments with at least one failed assignment.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#56A64B"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  1,
+                                                                                                 "color":  "#E02F44"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  COUNT(*) AS [Deployments],\n  ISNULL(SUM(NumberTotal), 0) AS [Assignments],\n  ISNULL(SUM(NumberSuccess), 0) AS [Succeeded],\n  ISNULL(SUM(NumberInProgress), 0) AS [In progress],\n  ISNULL(SUM(NumberErrors), 0) AS [Failed],\n  SUM(CASE WHEN NumberErrors \u003e 0 THEN 1 ELSE 0 END) AS [Deployments with errors]\nFROM dbo.v_DeploymentSummary\nWHERE FeatureType \u003c\u003e 5",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Deployments with errors",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  16
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "textMode":  "value",
+                                       "colorMode":  "background_solid",
+                                       "graphMode":  "none",
+                                       "justifyMode":  "center",
+                                       "reduceOptions":  {
+                                                             "values":  false,
+                                                             "calcs":  [
+                                                                           "lastNotNull"
+                                                                       ],
+                                                             "fields":  "/^Assignments$/"
+                                                         }
+                                   },
+                       "id":  6,
+                       "type":  "stat",
+                       "description":  "All targeted device assignments across these deployments.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "noValue":  "0",
+                                                            "color":  {
+                                                                          "mode":  "thresholds"
+                                                                      },
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "#5794F2"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT\n  COUNT(*) AS [Deployments],\n  ISNULL(SUM(NumberTotal), 0) AS [Assignments],\n  ISNULL(SUM(NumberSuccess), 0) AS [Succeeded],\n  ISNULL(SUM(NumberInProgress), 0) AS [In progress],\n  ISNULL(SUM(NumberErrors), 0) AS [Failed],\n  SUM(CASE WHEN NumberErrors \u003e 0 THEN 1 ELSE 0 END) AS [Deployments with errors]\nFROM dbo.v_DeploymentSummary\nWHERE FeatureType \u003c\u003e 5",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Assignments",
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  4,
+                                       "h":  4,
+                                       "x":  20
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  7,
+                       "type":  "table",
+                       "description":  "Applications, programs, scripts and task sequences with their results. Software updates are on the Software Updates dashboard.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No deployments"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "unit",
+                                                                                        "value":  "percent"
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  80,
+                                                                                                                        "color":  "#FF9830"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  95,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Success %"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Failed"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Deadline"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "noValue",
+                                                                                        "value":  "-"
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Success %"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 300\n  d.SoftwareName AS [Software],\n  CASE d.FeatureType WHEN 1 THEN \u0027Application\u0027 WHEN 2 THEN \u0027Program\u0027 WHEN 3 THEN \u0027Mobile program\u0027 WHEN 4 THEN \u0027Script\u0027 WHEN 6 THEN \u0027Baseline\u0027 WHEN 7 THEN \u0027Task sequence\u0027\n       WHEN 8 THEN \u0027Content distribution\u0027 WHEN 11 THEN \u0027Configuration policy\u0027 ELSE \u0027Other\u0027 END AS [Type],\n  d.CollectionName AS [Collection],\n  CASE d.DeploymentIntent WHEN 1 THEN \u0027Required\u0027 WHEN 2 THEN \u0027Available\u0027 WHEN 3 THEN \u0027Simulate\u0027 ELSE \u0027Other\u0027 END AS [Purpose],\n  d.DeploymentTime AS [Available from],\n  d.EnforcementDeadline AS [Deadline],\n  d.NumberTotal AS [Targeted],\n  d.NumberSuccess AS [Succeeded],\n  d.NumberInProgress AS [In progress],\n  d.NumberErrors AS [Failed],\n  d.NumberUnknown AS [Unknown],\n  CASE WHEN d.NumberTotal \u003e 0 THEN CAST(100.0 * d.NumberSuccess / d.NumberTotal AS decimal(5, 1)) END AS [Success %]\nFROM dbo.v_DeploymentSummary d\nWHERE d.FeatureType \u003c\u003e 5\nORDER BY d.NumberErrors DESC, d.DeploymentTime DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Deployments (most errors first)",
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  24,
+                                       "h":  9,
+                                       "x":  0
+                                   }
+                   },
+                   {
+                       "options":  {
+                                       "showHeader":  true,
+                                       "footer":  {
+                                                      "show":  false
+                                                  },
+                                       "cellHeight":  "sm"
+                                   },
+                       "id":  8,
+                       "type":  "table",
+                       "description":  "Task sequence steps that ended with a non-zero exit code.",
+                       "datasource":  {
+                                          "type":  "mssql",
+                                          "uid":  "${ds_cm}"
+                                      },
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "custom":  {
+                                                                           "align":  "auto",
+                                                                           "cellOptions":  {
+                                                                                               "type":  "auto"
+                                                                                           },
+                                                                           "filterable":  true
+                                                                       },
+                                                            "links":  [
+
+                                                                      ],
+                                                            "noValue":  "No task sequence failures"
+                                                        },
+                                           "overrides":  [
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.cellOptions",
+                                                                                        "value":  {
+                                                                                                      "type":  "color-text"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "color",
+                                                                                        "value":  {
+                                                                                                      "mode":  "thresholds"
+                                                                                                  }
+                                                                                    },
+                                                                                    {
+                                                                                        "id":  "thresholds",
+                                                                                        "value":  {
+                                                                                                      "steps":  [
+                                                                                                                    {
+                                                                                                                        "value":  null,
+                                                                                                                        "color":  "#56A64B"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "value":  1,
+                                                                                                                        "color":  "#E02F44"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "mode":  "absolute"
+                                                                                                  }
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Exit code"
+                                                                             }
+                                                             },
+                                                             {
+                                                                 "properties":  [
+                                                                                    {
+                                                                                        "id":  "custom.width",
+                                                                                        "value":  90
+                                                                                    }
+                                                                                ],
+                                                                 "matcher":  {
+                                                                                 "id":  "byName",
+                                                                                 "options":  "Exit code"
+                                                                             }
+                                                             }
+                                                         ]
+                                       },
+                       "targets":  [
+                                       {
+                                           "editorMode":  "code",
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "mssql",
+                                                              "uid":  "${ds_cm}"
+                                                          },
+                                           "rawQuery":  true,
+                                           "rawSql":  "SELECT TOP 100\n  t.ExecutionTime AS [Time],\n  ISNULL(s.Name0, CAST(t.ResourceID AS varchar(20))) AS [Device],\n  t.AdvertisementID AS [Deployment ID],\n  t.GroupName AS [Group],\n  t.ActionName AS [Step],\n  t.ExitCode AS [Exit code],\n  LEFT(t.ActionOutput, 200) AS [Output]\nFROM dbo.v_TaskExecutionStatus t\nLEFT JOIN dbo.v_R_System s ON s.ResourceID = t.ResourceID\nWHERE t.ExitCode \u003c\u003e 0\nORDER BY t.ExecutionTime DESC",
+                                           "format":  "table"
+                                       }
+                                   ],
+                       "title":  "Task sequence failures",
+                       "gridPos":  {
+                                       "y":  13,
+                                       "w":  24,
+                                       "h":  9,
+                                       "x":  0
+                                   }
+                   }
+               ],
+    "description":  "Application, package, script and task sequence deployments: results, failures and task sequence step errors.",
+    "timezone":  "browser",
+    "refresh":  "1m",
+    "schemaVersion":  39,
+    "editable":  true,
+    "links":  [
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-core"
+                               ],
+                      "includeVars":  true,
+                      "type":  "dashboards",
+                      "title":  "SCOM Platform",
+                      "asDropdown":  true
+                  },
+                  {
+                      "keepTime":  true,
+                      "tags":  [
+                                   "scom-pack"
+                               ],
+                      "includeVars":  false,
+                      "type":  "dashboards",
+                      "title":  "Technology packs",
+                      "asDropdown":  true
+                  }
+              ]
+}

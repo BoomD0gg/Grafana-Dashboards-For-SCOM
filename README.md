@@ -7,7 +7,7 @@
 ![Version](https://img.shields.io/badge/version-0.4.0-blue)
 ![Grafana](https://img.shields.io/badge/Grafana-11%2B%20(tested%2013.3)-F46800)
 ![SCOM](https://img.shields.io/badge/SCOM-2022%20validated-0078D4)
-![Dashboards](https://img.shields.io/badge/dashboards-36%20validated%20%2B%202%20untested-brightgreen)
+![Dashboards](https://img.shields.io/badge/dashboards-45%20validated%20%2B%202%20untested-brightgreen)
 ![License](https://img.shields.io/badge/license-Apache--2.0-lightgrey)
 
 **Free Grafana dashboards for System Center Operations Manager (SCOM).**
@@ -52,21 +52,23 @@ Each dashboard is a single `.json` file you import with Grafana's built-in **Imp
 
 | Dashboards | Folder | Version | SCOM management pack needed | Status |
 |---|---|---|---|---|
-| **SCOM Enterprise Overview**, Server Drill-down, Platform Status, **Alerts**, **Alert Details** | [`scom-core`](dashboards/scom-core/) | <!--v:scom-core-->0.2.0<!--/v--> | none | ✅ Validated |
-| **Insights** — Server Timeline, Capacity Planning, Trends | [`insights`](dashboards/insights/) | <!--v:insights-->0.4.0<!--/v--> | none (uses the data SCOM already collects, see [the guide](docs/INSIGHTS.md)) | ✅ Validated (young lab, see the guide) |
-| **Availability** — Overview, Stack Detail, Monthly Report | [`availability`](dashboards/availability/) | <!--v:availability-->0.2.1<!--/v--> | none (needs a SCOM group or distributed application, see [the guide](docs/AVAILABILITY.md)) | ✅ Validated |
-| **Windows Server** — Fleet, Detail | [`windows-server`](dashboards/windows-server/) | <!--v:windows-server-->0.1.4<!--/v--> | Windows Server Operating System | ✅ Validated |
-| **Active Directory** — Overview, DC Detail | [`active-directory`](dashboards/active-directory/) | <!--v:active-directory-->0.1.4<!--/v--> | Active Directory Domain Services | ✅ Validated |
-| **SQL Server** — Overview, Instance Detail | [`sql-server`](dashboards/sql-server/) | <!--v:sql-server-->0.1.4<!--/v--> | SQL Server on Windows | ✅ Validated |
-| **Exchange** — Overview, Server Detail | [`exchange`](dashboards/exchange/) | <!--v:exchange-->0.1.4<!--/v--> | Exchange Server 2013 and above | ✅ Validated (one server) |
-| **Hyper-V** — Overview, Host Detail, Performance (Host, Virtual Machines) | [`hyper-v`](dashboards/hyper-v/) | <!--v:hyper-v-->0.4.0<!--/v--> | Hyper-V; the two Performance dashboards also need Hyper-V Performance (Community), see [the guide](docs/HYPERV-PERFORMANCE.md) | ✅ Validated (performance dashboards tested on an idle lab) |
-| **IIS** — Overview, Server Detail | [`iis`](dashboards/iis/) | <!--v:iis-->0.1.4<!--/v--> | Internet Information Services | ✅ Validated |
-| **DNS Server** — Overview, Server Detail | [`dns-server`](dashboards/dns-server/) | <!--v:dns-server-->0.1.4<!--/v--> | Windows Server DNS | ✅ Validated |
-| **DHCP Server** — Overview, Server Detail | [`dhcp-server`](dashboards/dhcp-server/) | <!--v:dhcp-server-->0.1.4<!--/v--> | Windows Server DHCP | ✅ Validated |
-| **File Services** — Overview, Server Detail | [`file-services`](dashboards/file-services/) | <!--v:file-services-->0.1.4<!--/v--> | Windows Server File Services | ✅ Validated |
-| **SCOM Infrastructure** — Overview (with the architecture diagram), Agents, Alert Noise | [`scom-infrastructure`](dashboards/scom-infrastructure/) | <!--v:scom-infrastructure-->0.3.0<!--/v--> | built in to SCOM | ✅ Validated |
-| **Remote Access** — Overview, Server Detail | [`untested/remote-access`](dashboards/untested/remote-access/) | <!--v:remote-access-->0.1.4<!--/v--> | Remote Access | 🧪 **Untested** |
-| **Failover Clustering** — Overview, Node Detail | [`failover-clustering`](dashboards/failover-clustering/) | <!--v:failover-clustering-->0.5.0<!--/v--> | Failover Cluster | ✅ Validated (one two-node cluster, see the folder page) |
+| **SCOM Enterprise Overview**, Server Drill-down, Platform Status, **Alerts**, **Alert Details** | [`scom-core`](dashboards/scom-core/) | <!--v:scom-core-->0.6.0<!--/v--> | none | ✅ Validated |
+| **Insights** — Server Timeline, Capacity Planning, Trends | [`insights`](dashboards/insights/) | <!--v:insights-->0.6.0<!--/v--> | none (uses the data SCOM already collects, see [the guide](docs/INSIGHTS.md)) | ✅ Validated (young lab, see the guide) |
+| **Availability** — Overview, Stack Detail, Monthly Report | [`availability`](dashboards/availability/) | <!--v:availability-->0.6.0<!--/v--> | none (needs a SCOM group or distributed application, see [the guide](docs/AVAILABILITY.md)) | ✅ Validated |
+| **Windows Server** — Fleet, Detail | [`windows-server`](dashboards/windows-server/) | <!--v:windows-server-->0.6.0<!--/v--> | Windows Server Operating System | ✅ Validated |
+| **Active Directory** — Overview, DC Detail | [`active-directory`](dashboards/active-directory/) | <!--v:active-directory-->0.6.0<!--/v--> | Active Directory Domain Services | ✅ Validated |
+| **SQL Server** — Overview, Instance Detail | [`sql-server`](dashboards/sql-server/) | <!--v:sql-server-->0.6.0<!--/v--> | SQL Server on Windows | ✅ Validated |
+| **Exchange** — Overview, Server Detail | [`exchange`](dashboards/exchange/) | <!--v:exchange-->0.6.0<!--/v--> | Exchange Server 2013 and above | ✅ Validated (one server) |
+| **Hyper-V** — Overview, Host Detail, Performance (Host, Virtual Machines) | [`hyper-v`](dashboards/hyper-v/) | <!--v:hyper-v-->0.6.0<!--/v--> | Hyper-V; the two Performance dashboards also need Hyper-V Performance (Community), see [the guide](docs/HYPERV-PERFORMANCE.md) | ✅ Validated (performance dashboards tested on an idle lab) |
+| **IIS** — Overview, Server Detail | [`iis`](dashboards/iis/) | <!--v:iis-->0.6.0<!--/v--> | Internet Information Services | ✅ Validated |
+| **DNS Server** — Overview, Server Detail | [`dns-server`](dashboards/dns-server/) | <!--v:dns-server-->0.6.0<!--/v--> | Windows Server DNS | ✅ Validated |
+| **DHCP Server** — Overview, Server Detail | [`dhcp-server`](dashboards/dhcp-server/) | <!--v:dhcp-server-->0.6.0<!--/v--> | Windows Server DHCP | ✅ Validated |
+| **File Services** — Overview, Server Detail | [`file-services`](dashboards/file-services/) | <!--v:file-services-->0.6.0<!--/v--> | Windows Server File Services | ✅ Validated |
+| **SCOM Infrastructure** — Overview (with the architecture diagram), Agents, Alert Noise | [`scom-infrastructure`](dashboards/scom-infrastructure/) | <!--v:scom-infrastructure-->0.6.0<!--/v--> | built in to SCOM | ✅ Validated |
+| **Remote Access** — Overview, Server Detail | [`untested/remote-access`](dashboards/untested/remote-access/) | <!--v:remote-access-->0.6.0<!--/v--> | Remote Access | 🧪 **Untested** |
+| **Failover Clustering** — Overview, Node Detail | [`failover-clustering`](dashboards/failover-clustering/) | <!--v:failover-clustering-->0.6.0<!--/v--> | Failover Cluster | ✅ Validated (one two-node cluster, see the folder page) |
+| **SCCM** — Overview, Client Health, Software Updates, Deployments, Site Health, Hardware Inventory | [`sccm`](dashboards/sccm/) | <!--v:sccm-->0.6.0<!--/v--> | none: reads the Configuration Manager **site database** through a read-only SQL data source, see [the guide](docs/SCCM.md) | ✅ Validated (one site, deployments not exercised, see the guide) |
+| **SCCM Monitoring (SCOM)** — Overview, Performance, Server Detail | [`sccm-monitoring`](dashboards/sccm-monitoring/) | <!--v:sccm-monitoring-->0.6.0<!--/v--> | Microsoft Configuration Manager (MECM) management pack, see [the guide](docs/SCCM.md) | ✅ Validated (one site, see the guide) |
 
 The **Version** column is the release in which that folder last changed: when it goes up, re-import that folder. Click a folder to see **screenshots of every dashboard**, the panels it contains and its management packs. Full details and known limits: [docs/PACKS.md](docs/PACKS.md).
 
